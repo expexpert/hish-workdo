@@ -7,6 +7,7 @@
 ### Namespaces
 
 * [\YooKassa\Model\Payment\PaymentMethod\B2b](../namespaces/yookassa-model-payment-paymentmethod-b2b.md)
+* [\YooKassa\Model\Payment\PaymentMethod\ElectronicCertificate](../namespaces/yookassa-model-payment-paymentmethod-electroniccertificate.md)
 
 ### Classes
 
@@ -22,6 +23,7 @@
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodB2bSberbank](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodB2bSberbank.md) | Класс, представляющий модель PaymentMethodB2bSberbank. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodBankCard](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodBankCard.md) | Класс, представляющий модель PaymentMethodBankCard. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodCash](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodCash.md) | Класс, представляющий модель PaymentMethodCash. |
+| [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodElectronicCertificate](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodElectronicCertificate.md) | Класс, представляющий модель PaymentMethodElectronicCertificate. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodFactory](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodFactory.md) | Класс, представляющий модель PaymentMethodFactory. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodGooglePay](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodGooglePay.md) | Класс, представляющий модель PaymentMethodGooglePay. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodInstallments](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodInstallments.md) | Класс, представляющий модель PaymentMethodInstallments. |
@@ -29,6 +31,7 @@
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodPsb](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodPsb.md) | Класс, представляющий модель PaymentMethodPsb. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodQiwi](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodQiwi.md) | Класс, представляющий модель PaymentMethodQiwi. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodSberbank](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodSberbank.md) | Класс, представляющий модель PaymentMethodSberbank. |
+| [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodSberBnpl](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodSberBnpl.md) | Класс, представляющий модель PaymentMethodSberBnpl. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodSberLoan](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodSberLoan.md) | Класс, представляющий модель PaymentMethodSberLoan. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodSbp](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodSbp.md) | Класс, представляющий модель PaymentMethodSbp. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodTinkoffBank](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodTinkoffBank.md) | Класс, представляющий модель PaymentMethodTinkoffBank. |
@@ -36,6 +39,7 @@
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodWebmoney](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodWebmoney.md) | Класс, представляющий модель PaymentMethodWebmoney. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodWechat](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodWechat.md) | Класс, представляющий модель PaymentMethodWeChat. |
 | [\YooKassa\Model\Payment\PaymentMethod\PaymentMethodYooMoney](../classes/YooKassa-Model-Payment-PaymentMethod-PaymentMethodYooMoney.md) | Класс, представляющий модель PaymentMethodYooMoney. |
+| [\YooKassa\Model\Payment\PaymentMethod\SbpPayerBankDetails](../classes/YooKassa-Model-Payment-PaymentMethod-SbpPayerBankDetails.md) | Класс, представляющий модель SbpPayerBankDetails. |
 
 ---
 
@@ -48,10 +52,10 @@
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

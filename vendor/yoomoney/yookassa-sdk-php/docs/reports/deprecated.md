@@ -2,8 +2,12 @@
 
 # Deprecated Elements
 ### Table of Contents
+* [lib/Common/Exceptions/ApiException.php](../../lib/Common/Exceptions/ApiException.php)
+* [lib/Model/Invoice/DeliveryMethod/DeliveryMethodType.php](../../lib/Model/Invoice/DeliveryMethod/DeliveryMethodType.php)
+* [lib/Model/Invoice/DeliveryMethod/DeliveryMethodUnknown.php](../../lib/Model/Invoice/DeliveryMethod/DeliveryMethodUnknown.php)
 * [lib/Model/Payment/CancellationDetailsPartyCode.php](../../lib/Model/Payment/CancellationDetailsPartyCode.php)
 * [lib/Model/Payment/ConfirmationType.php](../../lib/Model/Payment/ConfirmationType.php)
+* [lib/Model/Payment/PaymentMethod/B2b/Sberbank/VatDataRate.php](../../lib/Model/Payment/PaymentMethod/B2b/Sberbank/VatDataRate.php)
 * [lib/Model/Payment/PaymentMethod/PaymentMethodAlfaBank.php](../../lib/Model/Payment/PaymentMethod/PaymentMethodAlfaBank.php)
 * [lib/Model/Payment/PaymentMethod/PaymentMethodFactory.php](../../lib/Model/Payment/PaymentMethod/PaymentMethodFactory.php)
 * [lib/Model/Payment/PaymentMethod/PaymentMethodInstallments.php](../../lib/Model/Payment/PaymentMethod/PaymentMethodInstallments.php)
@@ -17,10 +21,33 @@
 * [lib/Model/Refund/RefundMethod/RefundMethodUnknown.php](../../lib/Model/Refund/RefundMethod/RefundMethodUnknown.php)
 * [lib/Model/Refund/RefundMethodType.php](../../lib/Model/Refund/RefundMethodType.php)
 * [lib/Model/Settings/Me.php](../../lib/Model/Settings/Me.php)
+* [lib/Request/Payments/CreatePaymentRequest.php](../../lib/Request/Payments/CreatePaymentRequest.php)
+* [lib/Request/Payments/CreatePaymentRequestBuilder.php](../../lib/Request/Payments/CreatePaymentRequestBuilder.php)
+* [lib/Request/Payments/FraudData.php](../../lib/Request/Payments/FraudData.php)
 * [lib/Request/Payments/PaymentData/PaymentDataAlfabank.php](../../lib/Request/Payments/PaymentData/PaymentDataAlfabank.php)
 * [lib/Request/Payments/PaymentData/PaymentDataInstallments.php](../../lib/Request/Payments/PaymentData/PaymentDataInstallments.php)
 * [lib/Request/Payments/PaymentData/PaymentDataQiwi.php](../../lib/Request/Payments/PaymentData/PaymentDataQiwi.php)
 
+<a id="lib/Common/Exceptions/ApiException.php"></a>
+#### [lib/Common/Exceptions/ApiException.php](../../lib/Common/Exceptions/ApiException.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 154 | \YooKassa\Common\Exceptions\ApiException::getErrorId() | Устарело. Вместо него нужно использовать getError()-&gt;getId() |
+| 161 | \YooKassa\Common\Exceptions\ApiException::getErrorCode() | Устарело. Вместо него нужно использовать getError()-&gt;getCode() |
+| 168 | \YooKassa\Common\Exceptions\ApiException::getErrorDescription() | Устарело. Вместо него нужно использовать getError()-&gt;getDescription() |
+| 175 | \YooKassa\Common\Exceptions\ApiException::getErrorParameter() | Устарело. Вместо него нужно использовать getError()-&gt;getParameter() |
+| 57 | \YooKassa\Common\Exceptions\ApiException::$type | Устарело. Вместо него нужно использовать getError()-&gt;getType(). |
+| 63 | \YooKassa\Common\Exceptions\ApiException::$retryAfter | Устарело. Вместо него нужно использовать getError()-&gt;getRetryAfter(). |
+<a id="lib/Model/Invoice/DeliveryMethod/DeliveryMethodType.php"></a>
+#### [lib/Model/Invoice/DeliveryMethod/DeliveryMethodType.php](../../lib/Model/Invoice/DeliveryMethod/DeliveryMethodType.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 55 | \YooKassa\Model\Invoice\DeliveryMethod\DeliveryMethodType::UNKNOWN | Не используется для реальных платежей |
+<a id="lib/Model/Invoice/DeliveryMethod/DeliveryMethodUnknown.php"></a>
+#### [lib/Model/Invoice/DeliveryMethod/DeliveryMethodUnknown.php](../../lib/Model/Invoice/DeliveryMethod/DeliveryMethodUnknown.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 41 | \YooKassa\Model\Invoice\DeliveryMethod\DeliveryMethodUnknown | Не используется в реальных счетах |
 <a id="lib/Model/Payment/CancellationDetailsPartyCode.php"></a>
 #### [lib/Model/Payment/CancellationDetailsPartyCode.php](../../lib/Model/Payment/CancellationDetailsPartyCode.php)
 | Line | Element | Description |
@@ -31,6 +58,11 @@
 | Line | Element | Description |
 | ---- | ------- | ----------- |
 | 62 | \YooKassa\Model\Payment\ConfirmationType::CODE_VERIFICATION | Будет удален в следующих версиях |
+<a id="lib/Model/Payment/PaymentMethod/B2b/Sberbank/VatDataRate.php"></a>
+#### [lib/Model/Payment/PaymentMethod/B2b/Sberbank/VatDataRate.php](../../lib/Model/Payment/PaymentMethod/B2b/Sberbank/VatDataRate.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 63 | \YooKassa\Model\Payment\PaymentMethod\B2b\Sberbank\VatDataRate::RATE_18 | Больше не применяется |
 <a id="lib/Model/Payment/PaymentMethod/PaymentMethodAlfaBank.php"></a>
 #### [lib/Model/Payment/PaymentMethod/PaymentMethodAlfaBank.php](../../lib/Model/Payment/PaymentMethod/PaymentMethodAlfaBank.php)
 | Line | Element | Description |
@@ -81,7 +113,7 @@
 | 114 | \YooKassa\Model\Payment\PaymentMethodType::PSB | Больше недоступен |
 | 121 | \YooKassa\Model\Payment\PaymentMethodType::INSTALLMENTS | Больше недоступен |
 | 128 | \YooKassa\Model\Payment\PaymentMethodType::WECHAT | Больше недоступен |
-| 141 | \YooKassa\Model\Payment\PaymentMethodType::UNKNOWN | Не используется для реальных платежей |
+| 147 | \YooKassa\Model\Payment\PaymentMethodType::UNKNOWN | Не используется для реальных платежей |
 <a id="lib/Model/Refund/RefundCancellationDetailsPartyCode.php"></a>
 #### [lib/Model/Refund/RefundCancellationDetailsPartyCode.php](../../lib/Model/Refund/RefundCancellationDetailsPartyCode.php)
 | Line | Element | Description |
@@ -96,13 +128,31 @@
 #### [lib/Model/Refund/RefundMethodType.php](../../lib/Model/Refund/RefundMethodType.php)
 | Line | Element | Description |
 | ---- | ------- | ----------- |
-| 53 | \YooKassa\Model\Refund\RefundMethodType::UNKNOWN | Не используется для реальных возвратов |
+| 56 | \YooKassa\Model\Refund\RefundMethodType::UNKNOWN | Не используется для реальных возвратов |
 <a id="lib/Model/Settings/Me.php"></a>
 #### [lib/Model/Settings/Me.php](../../lib/Model/Settings/Me.php)
 | Line | Element | Description |
 | ---- | ------- | ----------- |
 | 252 | \YooKassa\Model\Settings\Me::getFiscalizationEnabled() | Устарел. |
 | 265 | \YooKassa\Model\Settings\Me::setFiscalizationEnabled() | Устарел. |
+<a id="lib/Request/Payments/CreatePaymentRequest.php"></a>
+#### [lib/Request/Payments/CreatePaymentRequest.php](../../lib/Request/Payments/CreatePaymentRequest.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 587 | \YooKassa\Request\Payments\CreatePaymentRequest::getFraudData() | Больше не поддерживается. Вместо него нужно использовать `getReceiver()` |
+| 598 | \YooKassa\Request\Payments\CreatePaymentRequest::setFraudData() | Больше не поддерживается. Вместо него нужно использовать `setReceiver()` |
+| 609 | \YooKassa\Request\Payments\CreatePaymentRequest::hasFraudData() | Больше не поддерживается. Вместо него нужно использовать `hasReceiver()` |
+<a id="lib/Request/Payments/CreatePaymentRequestBuilder.php"></a>
+#### [lib/Request/Payments/CreatePaymentRequestBuilder.php](../../lib/Request/Payments/CreatePaymentRequestBuilder.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 95 | \YooKassa\Request\Payments\CreatePaymentRequestBuilder::setAccountId() | Больше не используется |
+| 332 | \YooKassa\Request\Payments\CreatePaymentRequestBuilder::setFraudData() | Больше не поддерживается. Вместо него нужно использовать `setReceiver()` |
+<a id="lib/Request/Payments/FraudData.php"></a>
+#### [lib/Request/Payments/FraudData.php](../../lib/Request/Payments/FraudData.php)
+| Line | Element | Description |
+| ---- | ------- | ----------- |
+| 49 | \YooKassa\Request\Payments\FraudData | Больше не поддерживается. Вместо него нужно использовать `receiver`. |
 <a id="lib/Request/Payments/PaymentData/PaymentDataAlfabank.php"></a>
 #### [lib/Request/Payments/PaymentData/PaymentDataAlfabank.php](../../lib/Request/Payments/PaymentData/PaymentDataAlfabank.php)
 | Line | Element | Description |
@@ -130,10 +180,10 @@
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -141,7 +141,7 @@ class ReceiptItemAmount extends AbstractObject implements AmountInterface
      *
      * @return self
      */
-    public function setCurrency(string $currency = null): self
+    public function setCurrency(?string $currency = null): self
     {
         $this->_currency = $this->validatePropertyValue('_currency', $currency);
         return $this;

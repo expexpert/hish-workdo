@@ -16,7 +16,7 @@ class ArrayAccessClass implements ArrayAccess {
         ];
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         if (is_null($offset)) {
             $this->container[] = $value;
@@ -30,12 +30,12 @@ class ArrayAccessClass implements ArrayAccess {
         return isset($this->container[$offset]);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset(mixed $offset): void
     {
         unset($this->container[$offset]);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet(mixed $offset): mixed
     {
         return $this->container[$offset] ?? null;
     }

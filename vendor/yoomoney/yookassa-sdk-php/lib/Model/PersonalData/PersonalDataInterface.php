@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ use YooKassa\Model\Metadata;
  * @package  YooKassa\Model
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
+ *
  * @property string $id Идентификатор персональных данных
  * @property string $type Тип персональных данных
  * @property string $status Текущий статус персональных данных
@@ -115,7 +116,7 @@ interface PersonalDataInterface
      *
      * @return self
      */
-    public function setCancellationDetails($cancellation_details): self;
+    public function setCancellationDetails(mixed $cancellation_details): self;
 
     /**
      * Возвращает created_at.

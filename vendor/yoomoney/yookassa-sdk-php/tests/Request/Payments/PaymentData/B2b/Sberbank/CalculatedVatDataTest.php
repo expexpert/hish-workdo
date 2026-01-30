@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -133,10 +133,10 @@ class CalculatedVatDataTest extends AbstractTestCase
         $instance->setRate($value);
         self::assertNotNull($instance->getRate());
         self::assertNotNull($instance->rate);
-        self::assertEquals($value, is_array($value) ? $instance->getRate()->toArray() : $instance->getRate());
-        self::assertEquals($value, is_array($value) ? $instance->rate->toArray() : $instance->rate);
-        self::assertContains($instance->getRate(), ['7', '10', '18', '20']);
-        self::assertContains($instance->rate, ['7', '10', '18', '20']);
+        self::assertEquals($value, $instance->getRate());
+        self::assertEquals($value, $instance->rate);
+        self::assertContains($instance->getRate(), ['5', '7', '10', '18', '20', '22']);
+        self::assertContains($instance->rate, ['5', '7', '10', '18', '20', '22']);
     }
 
     /**

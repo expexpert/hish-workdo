@@ -372,7 +372,7 @@ use Throwable;
  * @method        CarbonInterface  microseconds(int $value)                                                           Set current instance microsecond to the given value.
  * @method        CarbonInterface  microsecond(int $value)                                                            Set current instance microsecond to the given value.
  * @method        CarbonInterface  setMicroseconds(int $value)                                                        Set current instance microsecond to the given value.
- * @method        CarbonInterface  setMicrosecond(int $value)                                                         Set current instance microsecond to the given value.
+ * @method        self             setMicrosecond(int $value)                                                         Set current instance microsecond to the given value.
  * @method        CarbonInterface  addYears(int|float $value = 1)                                                     Add years (the $value count passed in) to the instance (using date interval).
  * @method        CarbonInterface  addYear()                                                                          Add one year to the instance (using date interval).
  * @method        CarbonInterface  subYears(int|float $value = 1)                                                     Sub years (the $value count passed in) to the instance (using date interval).
@@ -1702,16 +1702,17 @@ trait Date
     public function setUnitNoOverflow(string $valueUnit, int $value, string $overflowUnit): static
     {
         try {
-            $original = $this->avoidMutation();
+            $start = $this->avoidMutation()->startOf($overflowUnit);
+            $end = $this->avoidMutation()->endOf($overflowUnit);
             /** @var static $date */
             $date = $this->$valueUnit($value);
-            $start = $original->avoidMutation()->startOf($overflowUnit);
-            $end = $original->avoidMutation()->endOf($overflowUnit);
 
             if ($date < $start) {
-                $date = $date->setDateTimeFrom($start);
-            } elseif ($date > $end) {
-                $date = $date->setDateTimeFrom($end);
+                return $date->mutateIfMutable($start);
+            }
+
+            if ($date > $end) {
+                return $date->mutateIfMutable($end);
             }
 
             return $date;
@@ -1835,6 +1836,8 @@ trait Date
 
     /**
      * Set the timezone or returns the timezone name if no arguments passed.
+     *
+     * @return ($value is null ? string : static)
      */
     public function tz(DateTimeZone|string|int|null $value = null): static|string
     {
@@ -2667,7 +2670,7 @@ trait Date
     protected function getTranslatedFormByRegExp($baseKey, $keySuffix, $context, $subKey, $defaultValue)
     {
         $key = $baseKey.$keySuffix;
-        $standaloneKey = "{$key}_standalone";
+        $standaloneKey = $key.'_standalone';
         $baseTranslation = $this->getTranslationMessage($key);
 
         if ($baseTranslation instanceof Closure) {
@@ -2676,7 +2679,7 @@ trait Date
 
         if (
             $this->getTranslationMessage("$standaloneKey.$subKey") &&
-            (!$context || (($regExp = $this->getTranslationMessage("{$baseKey}_regexp")) && !preg_match($regExp, $context)))
+            (!$context || (($regExp = $this->getTranslationMessage($baseKey.'_regexp')) && !preg_match($regExp, $context)))
         ) {
             $key = $standaloneKey;
         }
@@ -2952,5 +2955,19 @@ trait Date
     private static function floorZeroPad(int|float $value, int $length): string
     {
         return str_pad((string) floor($value), $length, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * @template T of CarbonInterface
+     *
+     * @param T $date
+     *
+     * @return T
+     */
+    private function mutateIfMutable(CarbonInterface $date): CarbonInterface
+    {
+        return $this instanceof DateTimeImmutable
+            ? $date
+            : $this->modify('@'.$date->rawFormat('U.u'))->setTimezone($date->getTimezone());
     }
 }

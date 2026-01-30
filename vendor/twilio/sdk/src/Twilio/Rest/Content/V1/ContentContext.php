@@ -81,8 +81,30 @@ class ContentContext extends InstanceContext
     public function fetch(): ContentInstance
     {
 
-        $headers = Values::of(['Content-Type' => 'application/x-www-form-urlencoded' ]);
+        $headers = Values::of(['Content-Type' => 'application/x-www-form-urlencoded', 'Accept' => 'application/json' ]);
         $payload = $this->version->fetch('GET', $this->uri, [], [], $headers);
+
+        return new ContentInstance(
+            $this->version,
+            $payload,
+            $this->solution['sid']
+        );
+    }
+
+
+    /**
+     * Update the ContentInstance
+     *
+     * @param ContentUpdateRequest $contentUpdateRequest
+     * @return ContentInstance Updated ContentInstance
+     * @throws TwilioException When an HTTP error occurs.
+     */
+    public function update(ContentUpdateRequest $contentUpdateRequest): ContentInstance
+    {
+
+        $headers = Values::of(['Content-Type' => 'application/json', 'Accept' => 'application/json' ]);
+        $data = $contentUpdateRequest->toArray();
+        $payload = $this->version->update('PUT', $this->uri, [], $data, $headers);
 
         return new ContentInstance(
             $this->version,

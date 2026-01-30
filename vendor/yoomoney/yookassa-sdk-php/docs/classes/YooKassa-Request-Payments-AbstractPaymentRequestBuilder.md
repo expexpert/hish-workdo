@@ -209,7 +209,7 @@ public addTransfer(array|\YooKassa\Request\Payments\TransferDataInterface $value
 #### public build() : \YooKassa\Common\AbstractRequestInterface
 
 ```php
-public build(array $options = null) : \YooKassa\Common\AbstractRequestInterface
+public build(?array $options = null) : \YooKassa\Common\AbstractRequestInterface
 ```
 
 **Summary**
@@ -222,7 +222,7 @@ public build(array $options = null) : \YooKassa\Common\AbstractRequestInterface
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">array</code> | options  | Массив свойств запроса, если нужно их установить перед сборкой |
+| <code lang="php">?array</code> | options  | Массив свойств запроса, если нужно их установить перед сборкой |
 
 **Returns:** \YooKassa\Common\AbstractRequestInterface - Инстанс собранного запроса
 
@@ -471,10 +471,10 @@ protected initCurrentObject() : \YooKassa\Common\AbstractRequestInterface|null
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

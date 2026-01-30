@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,12 @@ use YooKassa\Common\AbstractEnum;
  * - `insufficient_funds` - Не хватает денег, чтобы сделать возврат
  * - `rejected_by_payee` - Эмитент платежного средства отклонил возврат по неизвестным причинам
  * - `yoo_money_account_closed` - Пользователь закрыл кошелек ЮMoney, на который вы пытаетесь вернуть платеж
+ * - `payment_basket_id_not_found` - НСПК не нашла для этого возврата одобренную корзину покупки
+ * - `payment_article_number_not_found` - Указаны товары, для оплаты которых не использовался электронный сертификат: значение `payment_article_number` отсутствует
+ * - `payment_tru_code_not_found` - Указаны товары, для оплаты которых не использовался электронный сертификат: значение `tru_code` отсутствует
+ * - `too_many_refunding_articles` - Для одного или нескольких товаров количество возвращаемых единиц (`quantity`) больше, чем указано в одобренной корзине покупки
+ * - `some_articles_already_refunded` - Некоторые товары уже возвращены
+ * - `rejected_by_timeout` - Технические неполадки на стороне инициатора отмены возврата.
  */
 class RefundCancellationDetailsReasonCode extends AbstractEnum
 {
@@ -51,10 +57,34 @@ class RefundCancellationDetailsReasonCode extends AbstractEnum
     /** Пользователь закрыл кошелек ЮMoney, на который вы пытаетесь вернуть платеж. Сделать возврат через ЮKassa нельзя. Договоритесь с пользователем напрямую, каким способом вы вернете ему деньги. */
     public const YOO_MONEY_ACCOUNT_CLOSED = 'yoo_money_account_closed';
 
+    /** НСПК не нашла для этого возврата одобренную корзину покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. */
+    public const PAYMENT_BASKET_ID_NOT_FOUND = 'payment_basket_id_not_found';
+
+    /** Указаны товары, для оплаты которых не использовался электронный сертификат: значение `payment_article_number` отсутствует в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. */
+    public const PAYMENT_ARTICLE_NUMBER_NOT_FOUND = 'payment_article_number_not_found';
+
+    /** Указаны товары, для оплаты которых не использовался электронный сертификат: значение tru_code отсутствует в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. */
+    public const PAYMENT_TRU_CODE_NOT_FOUND = 'payment_tru_code_not_found';
+
+    /** Для одного или нескольких товаров количество возвращаемых единиц (`quantity`) больше, чем указано в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. */
+    public const TOO_MANY_REFUNDING_ARTICLES = 'too_many_refunding_articles';
+
+    /** Некоторые товары уже возвращены. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. */
+    public const SOME_ARTICLES_ALREADY_REFUNDED = 'some_articles_already_refunded';
+
+    /** Технические неполадки на стороне инициатора отмены возврата. Повторите запрос с новым ключом идемпотентности. */
+    public const REJECTED_BY_TIMEOUT = 'rejected_by_timeout';
+
     protected static array $validValues = [
         self::GENERAL_DECLINE => true,
         self::INSUFFICIENT_FUNDS => true,
         self::REJECTED_BY_PAYEE => true,
         self::YOO_MONEY_ACCOUNT_CLOSED => true,
+        self::PAYMENT_BASKET_ID_NOT_FOUND => true,
+        self::PAYMENT_ARTICLE_NUMBER_NOT_FOUND => true,
+        self::PAYMENT_TRU_CODE_NOT_FOUND => true,
+        self::TOO_MANY_REFUNDING_ARTICLES => true,
+        self::SOME_ARTICLES_ALREADY_REFUNDED => true,
+        self::REJECTED_BY_TIMEOUT => true,
     ];
 }

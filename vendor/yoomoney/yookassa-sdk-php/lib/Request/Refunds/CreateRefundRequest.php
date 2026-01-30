@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,11 +31,14 @@ use YooKassa\Common\ListObject;
 use YooKassa\Common\ListObjectInterface;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\Deal\RefundDealData;
+use YooKassa\Model\Metadata;
 use YooKassa\Model\MonetaryAmount;
 use YooKassa\Model\Receipt\Receipt;
 use YooKassa\Model\Receipt\ReceiptInterface;
 use YooKassa\Model\Refund\Source;
 use YooKassa\Model\Refund\SourceInterface;
+use YooKassa\Request\Refunds\RefundMethodData\AbstractRefundMethodData;
+use YooKassa\Request\Refunds\RefundMethodData\RefundMethodDataFactory;
 use YooKassa\Validator\Constraints as Assert;
 
 /**
@@ -50,12 +53,16 @@ use YooKassa\Validator\Constraints as Assert;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property string $paymentId Айди платежа для которого создаётся возврат
+ * @property string $payment_id Идентификатор платежа для которого создаётся возврат
+ * @property string $paymentId Идентификатор платежа для которого создаётся возврат
  * @property AmountInterface $amount Сумма возврата
  * @property string $description Комментарий к операции возврата, основание для возврата средств покупателю.
  * @property null|ReceiptInterface $receipt Инстанс чека или null
  * @property null|ListObjectInterface|SourceInterface[] $sources Информация о распределении денег — сколько и в какой магазин нужно перевести
  * @property null|RefundDealData $deal Информация о сделке
+ * @property null|AbstractRefundMethodData $refund_method_data Метод возврата
+ * @property null|AbstractRefundMethodData $refundMethodData Метод возврата
+ * @property Metadata|null $metadata Метаданные возврата указанные мерчантом
  */
 class CreateRefundRequest extends AbstractRequest implements CreateRefundRequestInterface
 {
@@ -96,7 +103,7 @@ class CreateRefundRequest extends AbstractRequest implements CreateRefundRequest
     #[Assert\Valid]
     #[Assert\AllType(Source::class)]
     #[Assert\Type(ListObject::class)]
-    private ?ListObject $_sources = null;
+    private ?ListObjectInterface $_sources = null;
 
     /**
      * @var RefundDealData|null Данные о сделке, в составе которой проходит возврат
@@ -104,6 +111,20 @@ class CreateRefundRequest extends AbstractRequest implements CreateRefundRequest
     #[Assert\Valid]
     #[Assert\Type(RefundDealData::class)]
     private ?RefundDealData $_deal = null;
+
+    /**
+     * @var AbstractRefundMethodData|null
+     */
+    #[Assert\Type(AbstractRefundMethodData::class)]
+    private ?AbstractRefundMethodData $_refund_method_data = null;
+
+    /**
+     * @var Metadata|null Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8.
+     */
+    #[Assert\AllType('string')]
+    #[Assert\Type(Metadata::class)]
+    protected ?Metadata $_metadata = null;
+
     /**
      * Возвращает идентификатор платежа для которого создаётся возврат средств.
      *
@@ -308,6 +329,75 @@ class CreateRefundRequest extends AbstractRequest implements CreateRefundRequest
     public function setDeal(mixed $deal = null): self
     {
         $this->_deal = $this->validatePropertyValue('_deal', $deal);
+        return $this;
+    }
+
+    /**
+     * Возвращает метод возврата.
+     *
+     * @return AbstractRefundMethodData|null Метод возврата
+     */
+    public function getRefundMethodData(): ?AbstractRefundMethodData
+    {
+        return $this->_refund_method_data;
+    }
+
+    /**
+     * Проверяет установлен ли объект с методом возврата.
+     *
+     * @return bool True если объект метода возврата установлен, false если нет
+     */
+    public function hasRefundMethodData(): bool
+    {
+        return !empty($this->_refund_method_data);
+    }
+
+    /**
+     * Устанавливает метод возврата.
+     *
+     * @param AbstractRefundMethodData|array|null $refund_method_data Метод возврата
+     *
+     * @return self
+     */
+    public function setRefundMethodData(mixed $refund_method_data = null): self
+    {
+        if (is_array($refund_method_data)) {
+            $refund_method_data = (new RefundMethodDataFactory)->factoryFromArray($refund_method_data);
+        }
+        $this->_refund_method_data = $this->validatePropertyValue('_refund_method_data', $refund_method_data);
+        return $this;
+    }
+
+    /**
+     * Возвращает метаданные возврата.
+     *
+     * @return Metadata|null
+     */
+    public function getMetadata(): ?Metadata
+    {
+        return $this->_metadata;
+    }
+
+    /**
+     * Проверяет, были ли установлены метаданные возврата.
+     *
+     * @return bool True если метаданные были установлены, false если нет
+     */
+    public function hasMetadata(): bool
+    {
+        return !empty($this->_metadata) && $this->_metadata->count() > 0;
+    }
+
+    /**
+     * Устанавливает метаданные возврата.
+     *
+     * @param Metadata|array|null $metadata Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8.
+     *
+     * @return self
+     */
+    public function setMetadata(mixed $metadata = null): self
+    {
+        $this->_metadata = $this->validatePropertyValue('_metadata', $metadata);
         return $this;
     }
 

@@ -3,7 +3,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2023 "YooMoney", NBСO LLC
+ * Copyright (c) 2024 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,13 +44,13 @@ class Length extends AbstractConstraint
     public string $charset = 'UTF-8';
 
     public function __construct(
-        int $exactly = null,
-        int $min = null,
-        int $max = null,
-        string $charset = null,
-        string $exactMessage = null,
-        string $minMessage = null,
-        string $maxMessage = null,
+        ?int $exactly = null,
+        ?int $min = null,
+        ?int $max = null,
+        ?string $charset = null,
+        ?string $exactMessage = null,
+        ?string $minMessage = null,
+        ?string $maxMessage = null,
     )
     {
         if (null !== $exactly && null === $min && null === $max) {

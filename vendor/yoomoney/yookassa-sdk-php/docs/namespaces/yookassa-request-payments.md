@@ -8,6 +8,9 @@
 
 * [\YooKassa\Request\Payments\ConfirmationAttributes](../namespaces/yookassa-request-payments-confirmationattributes.md)
 * [\YooKassa\Request\Payments\PaymentData](../namespaces/yookassa-request-payments-paymentdata.md)
+* [\YooKassa\Request\Payments\PaymentOrderData](../namespaces/yookassa-request-payments-paymentorderdata.md)
+* [\YooKassa\Request\Payments\ReceiverData](../namespaces/yookassa-request-payments-receiverdata.md)
+* [\YooKassa\Request\Payments\StatementData](../namespaces/yookassa-request-payments-statementdata.md)
 
 ### Interfaces
 
@@ -43,11 +46,13 @@
 | [\YooKassa\Request\Payments\Locale](../classes/YooKassa-Request-Payments-Locale.md) | Класс, представляющий модель Locale. |
 | [\YooKassa\Request\Payments\MerchantCustomerBankAccount](../classes/YooKassa-Request-Payments-MerchantCustomerBankAccount.md) | Класс, представляющий модель MerchantCustomerBankAccount. |
 | [\YooKassa\Request\Payments\Passenger](../classes/YooKassa-Request-Payments-Passenger.md) | Класс, представляющий модель PaymentsRequest. |
+| [\YooKassa\Request\Payments\PaymentPeriod](../classes/YooKassa-Request-Payments-PaymentPeriod.md) | Класс, представляющий модель PaymentPeriod. |
 | [\YooKassa\Request\Payments\PaymentResponse](../classes/YooKassa-Request-Payments-PaymentResponse.md) | Класс, представляющий модель PaymentResponse. |
 | [\YooKassa\Request\Payments\PaymentsRequest](../classes/YooKassa-Request-Payments-PaymentsRequest.md) | Класс, представляющий модель PaymentsRequest. |
 | [\YooKassa\Request\Payments\PaymentsRequestBuilder](../classes/YooKassa-Request-Payments-PaymentsRequestBuilder.md) | Класс, представляющий модель PaymentsRequestBuilder. |
 | [\YooKassa\Request\Payments\PaymentsRequestSerializer](../classes/YooKassa-Request-Payments-PaymentsRequestSerializer.md) | Класс, представляющий модель PaymentsRequestSerializer. |
 | [\YooKassa\Request\Payments\PaymentsResponse](../classes/YooKassa-Request-Payments-PaymentsResponse.md) | Класс, представляющий модель PaymentsResponse. |
+| [\YooKassa\Request\Payments\Recipient](../classes/YooKassa-Request-Payments-Recipient.md) | Класс, представляющий модель Recipient. |
 | [\YooKassa\Request\Payments\TransferData](../classes/YooKassa-Request-Payments-TransferData.md) | Класс, представляющий модель Transfer. |
 
 ---
@@ -61,10 +66,10 @@
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

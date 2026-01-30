@@ -13,9 +13,9 @@
   ],
   "dist": {
     "type": "zip",
-    "url": "https://git.yoomoney.ru/rest/api/latest/projects/SDK/repos/yookassa-sdk-php/archive?at=refs%2Ftags%2F3.5.0&format=zip"
+    "url": "https://git.yoomoney.ru/rest/api/latest/projects/SDK/repos/yookassa-sdk-php/archive?at=refs%2Ftags%2F3.12.0&format=zip"
   },
-  "version": "3.5.0",
+  "version": "3.12.0",
   "require": {
     "php": ">=8.0",
     "ext-curl": "*",
@@ -48,7 +48,7 @@
       "@phpmd"
     ],
     "phplint": "vendor/bin/parallel-lint --exclude vendor/ --exclude .idea/ --exclude tests/ --exclude lsp/ -e php .",
-    "phpunit": "vendor/bin/phpunit --configuration=phpunit.xml.dist",
+    "phpunit": "vendor/bin/phpunit -derror_reporting=32759 --configuration=phpunit.xml.dist --no-coverage",
     "phpcsf": "vendor/bin/php-cs-fixer fix . --config=.php-cs-fixer.dist.php",
     "phpmd": "vendor/bin/phpmd --exclude vendor/,.idea/,tests/,lsp/ --suffixes php . text phpmd.xml"
   },

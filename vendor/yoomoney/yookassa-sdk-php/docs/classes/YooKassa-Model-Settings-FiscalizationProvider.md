@@ -13,7 +13,7 @@
 Возможные значения:
 - [Чеки для самозанятых](https://yookassa.ru/developers/payment-acceptance/receipts/self-employed/basics) — `fns`
 - [54-ФЗ: Чеки от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — `avanpost`
-- [54-ФЗ: сторонняя онлайн-касса](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) (наименование онлайн-кассы) — `a_qsi` (aQsi online), `atol` (АТОЛ Онлайн), `business_ru` (Бизнес.ру), `evotor` (Эвотор), `first_ofd` (Первый ОФД), `kit_invest` (Кит Инвест), `life_pay` (LIFE PAY), `mertrade` (Mertrade), `modul_kassa` (МодульКасса), `rocket` (RocketR), `shtrih_m` (Orange Data).
+- [54-ФЗ: сторонняя онлайн-касса](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) (наименование онлайн-кассы) — ~`a_qsi` (aQsi online), ~`atol` (АТОЛ Онлайн), ~`business_ru` (Бизнес.ру), ~`digital_kassa` (digitalkassa), ~`evotor` (Эвотор), ~`first_ofd` (Первый ОФД), ~`kit_invest` (Кит Инвест), ~`komtet` (КОМТЕТ Касса), ~`life_pay` (LIFE PAY), ~`mertrade` (Mertrade), ~`modul_kassa` (МодульКасса), ~`rocket` (RocketR), ~`shtrih_m` (Orange Data).
 
 ---
 ### Constants
@@ -32,6 +32,8 @@
 | public | [FIRST_OFD](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_FIRST_OFD) |  | Первый ОФД |
 | public | [LIFE_PAY](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_LIFE_PAY) |  | LIFE PAY |
 | public | [ROCKET](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_ROCKET) |  | RocketR |
+| public | [DIGITAL_KASSA](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_DIGITAL_KASSA) |  | digitalkassa |
+| public | [KOMTET](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_KOMTET) |  | КОМТЕТ Касса |
 
 ---
 ### Properties
@@ -184,6 +186,24 @@ ROCKET = 'rocket'
 ```
 
 
+<a name="constant_DIGITAL_KASSA" class="anchor"></a>
+###### DIGITAL_KASSA
+digitalkassa
+
+```php
+DIGITAL_KASSA = 'digital_kassa'
+```
+
+
+<a name="constant_KOMTET" class="anchor"></a>
+###### KOMTET
+КОМТЕТ Касса
+
+```php
+KOMTET = 'komtet'
+```
+
+
 
 ---
 ## Properties
@@ -275,10 +295,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

@@ -78,12 +78,14 @@ var_dump($response);
 | public | [setCurrency()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setCurrency) |  | Устанавливает валюту в которой будет происходить подтверждение оплаты заказа. |
 | public | [setDeal()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setDeal) |  | Устанавливает сделку. |
 | public | [setDescription()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setDescription) |  | Устанавливает комментарий к возврату. |
+| public | [setMetadata()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setMetadata) |  | Устанавливает метаданные, привязанные к возврату. |
 | public | [setOptions()](../classes/YooKassa-Common-AbstractRequestBuilder.md#method_setOptions) |  | Устанавливает свойства запроса из массива. |
 | public | [setPaymentId()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setPaymentId) |  | Устанавливает айди платежа для которого создаётся возврат |
 | public | [setReceipt()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setReceipt) |  | Устанавливает чек. |
 | public | [setReceiptEmail()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setReceiptEmail) |  | Устанавливает адрес электронной почты получателя чека. |
 | public | [setReceiptItems()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setReceiptItems) |  | Устанавливает список товаров для создания чека. |
 | public | [setReceiptPhone()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setReceiptPhone) |  | Устанавливает телефон получателя чека. |
+| public | [setRefundMethodData()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setRefundMethodData) |  | Устанавливает метод возврата. |
 | public | [setSources()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setSources) |  | Устанавливает источники возврата. |
 | public | [setTaxSystemCode()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setTaxSystemCode) |  | Устанавливает код системы налогообложения. |
 | public | [setTransfers()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setTransfers) |  | Устанавливает трансферы. |
@@ -396,6 +398,33 @@ public setDescription(string|null $value) : \YooKassa\Request\Refunds\CreateRefu
 **Returns:** \YooKassa\Request\Refunds\CreateRefundRequestBuilder - Инстанс текущего билдера
 
 
+<a name="method_setMetadata" class="anchor"></a>
+#### public setMetadata() : \YooKassa\Request\Refunds\CreateRefundRequestBuilder
+
+```php
+public setMetadata(null|array|\YooKassa\Model\Metadata $value) : \YooKassa\Request\Refunds\CreateRefundRequestBuilder
+```
+
+**Summary**
+
+Устанавливает метаданные, привязанные к возврату.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Refunds\CreateRefundRequestBuilder](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">null OR array OR \YooKassa\Model\Metadata</code> | value  | Метаданные возврата, устанавливаемые мерчантом |
+
+##### Throws:
+| Type | Description |
+| ---- | ----------- |
+| \YooKassa\Common\Exceptions\InvalidPropertyValueTypeException | Выбрасывается если переданные данные не удалось интерпретировать как метаданные возврата |
+
+**Returns:** \YooKassa\Request\Refunds\CreateRefundRequestBuilder - Инстанс текущего билдера
+
+
 <a name="method_setOptions" class="anchor"></a>
 #### public setOptions() : \YooKassa\Common\AbstractRequestBuilder
 
@@ -551,6 +580,28 @@ public setReceiptPhone(string|null $value) : self
 **Returns:** self - Инстанс билдера запросов
 
 
+<a name="method_setRefundMethodData" class="anchor"></a>
+#### public setRefundMethodData() : self
+
+```php
+public setRefundMethodData(\YooKassa\Request\Refunds\RefundMethodData\AbstractRefundMethodData|array|null $value = null) : self
+```
+
+**Summary**
+
+Устанавливает метод возврата.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Refunds\CreateRefundRequestBuilder](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Request\Refunds\RefundMethodData\AbstractRefundMethodData OR array OR null</code> | value  |  |
+
+**Returns:** self - 
+
+
 <a name="method_setSources" class="anchor"></a>
 #### public setSources() : self
 
@@ -646,10 +697,10 @@ protected initCurrentObject() : \YooKassa\Request\Refunds\CreateRefundRequest
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

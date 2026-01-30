@@ -4,7 +4,9 @@ namespace Illuminate\Database\Query\Grammars;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinLateralClause;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class MySqlGrammar extends Grammar
 {
@@ -104,6 +106,10 @@ class MySqlGrammar extends Grammar
      */
     protected function compileIndexHint(Builder $query, $indexHint)
     {
+        if (! preg_match('/^[a-zA-Z0-9_$]+$/', $indexHint->index)) {
+            throw new InvalidArgumentException('Index name contains invalid characters.');
+        }
+
         return match ($indexHint->type) {
             'hint' => "use index ({$indexHint->index})",
             'force' => "force index ({$indexHint->index})",
@@ -287,7 +293,7 @@ class MySqlGrammar extends Grammar
      */
     public function compileRandom($seed)
     {
-        return 'RAND('.$seed.')';
+        return 'RAND('.((int) $seed).')';
     }
 
     /**
@@ -331,7 +337,7 @@ class MySqlGrammar extends Grammar
      */
     protected function compileUpdateColumns(Builder $query, array $values)
     {
-        return collect($values)->map(function ($value, $key) {
+        return (new Collection($values))->map(function ($value, $key) {
             if ($this->isJsonSelector($key)) {
                 return $this->compileJsonUpdateColumn($key, $value);
             }
@@ -361,7 +367,7 @@ class MySqlGrammar extends Grammar
 
         $sql .= ' on duplicate key update ';
 
-        $columns = collect($update)->map(function ($value, $key) use ($useUpsertAlias) {
+        $columns = (new Collection($update))->map(function ($value, $key) use ($useUpsertAlias) {
             if (! is_numeric($key)) {
                 return $this->wrap($key).' = '.$this->parameter($value);
             }
@@ -443,11 +449,10 @@ class MySqlGrammar extends Grammar
      */
     public function prepareBindingsForUpdate(array $bindings, array $values)
     {
-        $values = collect($values)->reject(function ($value, $column) {
-            return $this->isJsonSelector($column) && is_bool($value);
-        })->map(function ($value) {
-            return is_array($value) ? json_encode($value) : $value;
-        })->all();
+        $values = (new Collection($values))
+            ->reject(fn ($value, $column) => $this->isJsonSelector($column) && is_bool($value))
+            ->map(fn ($value) => is_array($value) ? json_encode($value) : $value)
+            ->all();
 
         return parent::prepareBindingsForUpdate($bindings, $values);
     }

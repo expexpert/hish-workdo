@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -117,8 +117,8 @@ class RefundMethodSbpTest extends AbstractTestCase
         self::assertEmpty($instance->getSbpOperationId());
         self::assertEmpty($instance->sbp_operation_id);
         $instance->setSbpOperationId($value);
-        self::assertEquals($value, is_array($value) ? $instance->getSbpOperationId()->toArray() : $instance->getSbpOperationId());
-        self::assertEquals($value, is_array($value) ? $instance->sbp_operation_id->toArray() : $instance->sbp_operation_id);
+        self::assertEquals($value, $instance->getSbpOperationId());
+        self::assertEquals($value, $instance->sbp_operation_id);
         if (!empty($value)) {
             self::assertNotNull($instance->getSbpOperationId());
             self::assertNotNull($instance->sbp_operation_id);

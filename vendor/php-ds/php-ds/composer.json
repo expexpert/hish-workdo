@@ -1,6 +1,7 @@
 {
     "name": "php-ds/php-ds",
     "license": "MIT",
+    "description": "Specialized data structures as alternatives to the PHP array",
     "keywords": ["php", "ds", "data structures", "polyfill"],
     "authors": [
         {
@@ -9,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=7.0",
+        "php": ">=7.4",
         "ext-json": "*"
     },
     "require-dev": {

@@ -89,6 +89,7 @@ class PermissionServiceProvider extends ServiceProvider
             Commands\CreatePermission::class,
             Commands\Show::class,
             Commands\UpgradeForTeams::class,
+            Commands\AssignRole::class,
         ]);
     }
 
@@ -144,18 +145,32 @@ class PermissionServiceProvider extends ServiceProvider
 
     protected function registerMacroHelpers(): void
     {
-        if (! method_exists(Route::class, 'macro')) { // Lumen
+        if (! method_exists(Route::class, 'macro')) { // @phpstan-ignore-line Lumen
             return;
         }
 
         Route::macro('role', function ($roles = []) {
+            $roles = Arr::wrap($roles);
+            $roles = array_map(fn ($role) => $role instanceof \BackedEnum ? $role->value : $role, $roles);
+
             /** @var Route $this */
-            return $this->middleware('role:'.implode('|', Arr::wrap($roles)));
+            return $this->middleware('role:'.implode('|', $roles));
         });
 
         Route::macro('permission', function ($permissions = []) {
+            $permissions = Arr::wrap($permissions);
+            $permissions = array_map(fn ($permission) => $permission instanceof \BackedEnum ? $permission->value : $permission, $permissions);
+
             /** @var Route $this */
-            return $this->middleware('permission:'.implode('|', Arr::wrap($permissions)));
+            return $this->middleware('permission:'.implode('|', $permissions));
+        });
+
+        Route::macro('roleOrPermission', function ($rolesOrPermissions = []) {
+            $rolesOrPermissions = Arr::wrap($rolesOrPermissions);
+            $rolesOrPermissions = array_map(fn ($item) => $item instanceof \BackedEnum ? $item->value : $item, $rolesOrPermissions);
+
+            /** @var Route $this */
+            return $this->middleware('role_or_permission:'.implode('|', $rolesOrPermissions));
         });
     }
 

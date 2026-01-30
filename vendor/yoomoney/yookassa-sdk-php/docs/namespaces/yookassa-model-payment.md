@@ -28,6 +28,8 @@
 | [\YooKassa\Model\Payment\CancellationDetailsReasonCode](../classes/YooKassa-Model-Payment-CancellationDetailsReasonCode.md) | Класс, представляющий модель CancellationDetailsReasonCode. |
 | [\YooKassa\Model\Payment\ConfirmationType](../classes/YooKassa-Model-Payment-ConfirmationType.md) | Класс, представляющий модель ConfirmationType. |
 | [\YooKassa\Model\Payment\Payment](../classes/YooKassa-Model-Payment-Payment.md) | Класс, представляющий модель Payment. |
+| [\YooKassa\Model\Payment\PaymentInvoiceDetails](../classes/YooKassa-Model-Payment-PaymentInvoiceDetails.md) | Класс, представляющий модель PaymentInvoiceDetails. |
+| [\YooKassa\Model\Payment\PaymentMethodStatus](../classes/YooKassa-Model-Payment-PaymentMethodStatus.md) | Класс, представляющий модель PaymentMethodStatus. |
 | [\YooKassa\Model\Payment\PaymentMethodType](../classes/YooKassa-Model-Payment-PaymentMethodType.md) | Класс, представляющий модель PaymentMethodType. |
 | [\YooKassa\Model\Payment\PaymentStatus](../classes/YooKassa-Model-Payment-PaymentStatus.md) | Класс, представляющий модель PaymentStatus. |
 | [\YooKassa\Model\Payment\ReceiptRegistrationStatus](../classes/YooKassa-Model-Payment-ReceiptRegistrationStatus.md) | Класс, представляющий модель ReceiptRegistrationStatus. |
@@ -47,10 +49,10 @@
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

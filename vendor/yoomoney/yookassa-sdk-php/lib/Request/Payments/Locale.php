@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,11 +31,13 @@ use YooKassa\Common\AbstractEnum;
 /**
  * Класс, представляющий модель Locale.
  *
- * Язык интерфейса, писем и смс, которые будет видеть или получать пользователь.
+ * Язык интерфейса, писем и смс, которые будет видеть или получать пользователь. Формат соответствует [ISO/IEC 15897](https://en.wikipedia.org/wiki/Locale_(computer_software)).
  *
  * Возможные значения:
  * - `ru_RU` - Русский
  * - `en_US` - English
+ *
+ * Регистр важен.
  *
  * @category Class
  * @package  YooKassa\Request

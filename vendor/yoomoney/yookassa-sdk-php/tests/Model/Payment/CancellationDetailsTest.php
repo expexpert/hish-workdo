@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,8 @@ use Tests\YooKassa\AbstractTestCase;
 use Datetime;
 use YooKassa\Model\Metadata;
 use YooKassa\Model\Payment\CancellationDetails;
+use YooKassa\Model\Payment\CancellationDetailsPartyCode;
+use YooKassa\Model\Payment\CancellationDetailsReasonCode;
 
 /**
  * CancellationDetailsTest
@@ -75,10 +77,10 @@ class CancellationDetailsTest extends AbstractTestCase
         $instance->setParty($value);
         self::assertNotNull($instance->getParty());
         self::assertNotNull($instance->party);
-        self::assertEquals($value, is_array($value) ? $instance->getParty()->toArray() : $instance->getParty());
-        self::assertEquals($value, is_array($value) ? $instance->party->toArray() : $instance->party);
-        self::assertContains($instance->getParty(), ['yoo_money', 'payment_network', 'merchant', 'yandex_checkout']);
-        self::assertContains($instance->party, ['yoo_money', 'payment_network', 'merchant', 'yandex_checkout']);
+        self::assertEquals($value, $instance->getParty());
+        self::assertEquals($value, $instance->party);
+        self::assertContains($instance->getParty(), CancellationDetailsPartyCode::getValidValues());
+        self::assertContains($instance->party, CancellationDetailsPartyCode::getValidValues());
     }
 
     /**
@@ -131,10 +133,10 @@ class CancellationDetailsTest extends AbstractTestCase
         $instance->setReason($value);
         self::assertNotNull($instance->getReason());
         self::assertNotNull($instance->reason);
-        self::assertEquals($value, is_array($value) ? $instance->getReason()->toArray() : $instance->getReason());
-        self::assertEquals($value, is_array($value) ? $instance->reason->toArray() : $instance->reason);
-        self::assertContains($instance->getReason(), ['3d_secure_failed', 'call_issuer', 'card_expired', 'payment_method_limit_exceeded', 'payment_method_restricted', 'country_forbidden', 'general_decline', 'fraud_suspected', 'identification_required', 'insufficient_funds', 'invalid_card_number', 'invalid_csc', 'issuer_unavailable', 'canceled_by_merchant', 'permission_revoked', 'internal_timeout', 'expired_on_confirmation', 'expired_on_capture', 'unsupported_mobile_operator', 'deal_expired']);
-        self::assertContains($instance->reason, ['3d_secure_failed', 'call_issuer', 'card_expired', 'payment_method_limit_exceeded', 'payment_method_restricted', 'country_forbidden', 'general_decline', 'fraud_suspected', 'identification_required', 'insufficient_funds', 'invalid_card_number', 'invalid_csc', 'issuer_unavailable', 'canceled_by_merchant', 'permission_revoked', 'internal_timeout', 'expired_on_confirmation', 'expired_on_capture', 'unsupported_mobile_operator', 'deal_expired']);
+        self::assertEquals($value, $instance->getReason());
+        self::assertEquals($value, $instance->reason);
+        self::assertContains($instance->getReason(), CancellationDetailsReasonCode::getValidValues());
+        self::assertContains($instance->reason, CancellationDetailsReasonCode::getValidValues());
     }
 
     /**

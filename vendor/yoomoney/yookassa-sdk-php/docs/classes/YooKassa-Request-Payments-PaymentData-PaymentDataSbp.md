@@ -19,6 +19,10 @@
 ### Properties
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
+| public | [$expires_at](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#property_expires_at) |  | Срок действия Qr-кода — дата и время, до которых можно оплатить указанный платеж |
+| public | [$expiresAt](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#property_expiresAt) |  | Срок действия Qr-кода — дата и время, до которых можно оплатить указанный платеж |
+| public | [$qrc_id](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#property_qrc_id) |  | Идентификатор кассовой ссылки СБП в сервисе НСПК |
+| public | [$qrcId](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#property_qrcId) |  | Идентификатор кассовой ссылки СБП в сервисе НСПК |
 | public | [$type](../classes/YooKassa-Request-Payments-PaymentData-AbstractPaymentData.md#property_type) |  | Тип метода оплаты |
 | protected | [$_type](../classes/YooKassa-Request-Payments-PaymentData-AbstractPaymentData.md#property__type) |  |  |
 
@@ -32,6 +36,8 @@
 | public | [__set()](../classes/YooKassa-Common-AbstractObject.md#method___set) |  | Устанавливает значение свойства. |
 | public | [__unset()](../classes/YooKassa-Common-AbstractObject.md#method___unset) |  | Удаляет свойство. |
 | public | [fromArray()](../classes/YooKassa-Common-AbstractObject.md#method_fromArray) |  | Устанавливает значения свойств текущего объекта из массива. |
+| public | [getExpiresAt()](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#method_getExpiresAt) |  | Возвращает срок действия Qr-кода. |
+| public | [getQrcId()](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#method_getQrcId) |  | Возвращает идентификатор кассовой ссылки СБП в сервисе НСПК |
 | public | [getType()](../classes/YooKassa-Request-Payments-PaymentData-AbstractPaymentData.md#method_getType) |  | Возвращает тип метода оплаты. |
 | public | [getValidator()](../classes/YooKassa-Common-AbstractObject.md#method_getValidator) |  |  |
 | public | [jsonSerialize()](../classes/YooKassa-Common-AbstractObject.md#method_jsonSerialize) |  | Возвращает ассоциативный массив со свойствами текущего объекта для его дальнейшей JSON сериализации. |
@@ -39,6 +45,8 @@
 | public | [offsetGet()](../classes/YooKassa-Common-AbstractObject.md#method_offsetGet) |  | Возвращает значение свойства. |
 | public | [offsetSet()](../classes/YooKassa-Common-AbstractObject.md#method_offsetSet) |  | Устанавливает значение свойства. |
 | public | [offsetUnset()](../classes/YooKassa-Common-AbstractObject.md#method_offsetUnset) |  | Удаляет свойство. |
+| public | [setExpiresAt()](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#method_setExpiresAt) |  | Устанавливает срок действия Qr-кода. |
+| public | [setQrcId()](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md#method_setQrcId) |  | Устанавливает идентификатор кассовой ссылки СБП в сервисе НСПК |
 | public | [toArray()](../classes/YooKassa-Common-AbstractObject.md#method_toArray) |  | Возвращает ассоциативный массив со свойствами текущего объекта для его дальнейшей JSON сериализации Является алиасом метода AbstractObject::jsonSerialize(). |
 | protected | [getUnknownProperties()](../classes/YooKassa-Common-AbstractObject.md#method_getUnknownProperties) |  | Возвращает массив свойств которые не существуют, но были заданы у объекта. |
 | protected | [setType()](../classes/YooKassa-Request-Payments-PaymentData-AbstractPaymentData.md#method_setType) |  | Устанавливает тип метода оплаты. |
@@ -65,6 +73,54 @@
 
 ---
 ## Properties
+<a name="property_expires_at"></a>
+#### public $expires_at : string
+---
+***Description***
+
+Срок действия Qr-кода — дата и время, до которых можно оплатить указанный платеж
+
+**Type:** <a href="../string"><abbr title="string">string</abbr></a>
+
+**Details:**
+
+
+<a name="property_expiresAt"></a>
+#### public $expiresAt : string
+---
+***Description***
+
+Срок действия Qr-кода — дата и время, до которых можно оплатить указанный платеж
+
+**Type:** <a href="../string"><abbr title="string">string</abbr></a>
+
+**Details:**
+
+
+<a name="property_qrc_id"></a>
+#### public $qrc_id : string
+---
+***Description***
+
+Идентификатор кассовой ссылки СБП в сервисе НСПК
+
+**Type:** <a href="../string"><abbr title="string">string</abbr></a>
+
+**Details:**
+
+
+<a name="property_qrcId"></a>
+#### public $qrcId : string
+---
+***Description***
+
+Идентификатор кассовой ссылки СБП в сервисе НСПК
+
+**Type:** <a href="../string"><abbr title="string">string</abbr></a>
+
+**Details:**
+
+
 <a name="property_type"></a>
 #### public $type : string
 ---
@@ -219,6 +275,40 @@ public fromArray(array|\Traversable $sourceArray) : void
 **Returns:** void - 
 
 
+<a name="method_getExpiresAt" class="anchor"></a>
+#### public getExpiresAt() : \DateTime|null
+
+```php
+public getExpiresAt() : \DateTime|null
+```
+
+**Summary**
+
+Возвращает срок действия Qr-кода.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\PaymentData\PaymentDataSbp](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md)
+
+**Returns:** \DateTime|null - Срок действия Qr-кода
+
+
+<a name="method_getQrcId" class="anchor"></a>
+#### public getQrcId() : string|null
+
+```php
+public getQrcId() : string|null
+```
+
+**Summary**
+
+Возвращает идентификатор кассовой ссылки СБП в сервисе НСПК
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\PaymentData\PaymentDataSbp](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md)
+
+**Returns:** string|null - 
+
+
 <a name="method_getType" class="anchor"></a>
 #### public getType() : string|null
 
@@ -355,6 +445,50 @@ public offsetUnset(string $offset) : void
 **Returns:** void - 
 
 
+<a name="method_setExpiresAt" class="anchor"></a>
+#### public setExpiresAt() : self
+
+```php
+public setExpiresAt(\DateTime|string|null $expires_at = null) : self
+```
+
+**Summary**
+
+Устанавливает срок действия Qr-кода.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\PaymentData\PaymentDataSbp](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\DateTime OR string OR null</code> | expires_at  | Срок действия Qr-кода — дата и время, до которых можно оплатить выставленный счет. |
+
+**Returns:** self - 
+
+
+<a name="method_setQrcId" class="anchor"></a>
+#### public setQrcId() : self
+
+```php
+public setQrcId(string|null $qrcId = null) : self
+```
+
+**Summary**
+
+Устанавливает идентификатор кассовой ссылки СБП в сервисе НСПК
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\PaymentData\PaymentDataSbp](../classes/YooKassa-Request-Payments-PaymentData-PaymentDataSbp.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">string OR null</code> | qrcId  | Идентификатор кассовой ссылки СБП в сервисе НСПК |
+
+**Returns:** self - 
+
+
 <a name="method_toArray" class="anchor"></a>
 #### public toArray() : array
 
@@ -443,10 +577,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

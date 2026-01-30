@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,8 @@ use YooKassa\Validator\Constraints as Assert;
  * @package  YooKassa\Request
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
+ *
+ * @deprecated Больше не поддерживается. Вместо него нужно использовать `receiver`.
  *
  * @property string|null $toppedUpPhone Номер телефона для пополнения
  * @property string|null $topped_up_phone Номер телефона для пополнения

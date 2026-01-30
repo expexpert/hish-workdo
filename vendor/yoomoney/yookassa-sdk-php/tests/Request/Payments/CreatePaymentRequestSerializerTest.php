@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -103,7 +103,6 @@ class CreatePaymentRequestSerializerTest extends TestCase
         }
         if (!empty($options['accountId']) && !empty($options['gatewayId'])) {
             $expected['recipient'] = [
-                'account_id' => $options['accountId'],
                 'gateway_id' => $options['gatewayId'],
             ];
         }
@@ -199,6 +198,9 @@ class CreatePaymentRequestSerializerTest extends TestCase
             }
             if (!empty($options['receipt']['tax_system_code'])) {
                 $expected['receipt']['tax_system_code'] = $options['receipt']['tax_system_code'];
+            }
+            if (!empty($options['receipt']['send'])) {
+                $expected['receipt']['send'] = $options['receipt']['send'];
             }
         }
 
@@ -323,6 +325,7 @@ class CreatePaymentRequestSerializerTest extends TestCase
                             'email' => 'johndoe@yoomoney.ru',
                         ],
                         'tax_system_code' => Random::int(1, 6),
+                        'send' => true,
                     ],
                     'description' => Random::str(10),
                     'capture' => true,
@@ -450,6 +453,7 @@ class CreatePaymentRequestSerializerTest extends TestCase
                         'phone' => Random::str(12, '0123456789'),
                     ],
                     'tax_system_code' => Random::int(1, 6),
+                    'send' => true,
                 ],
                 'airline' => $airline->toArray(),
                 'deal' => [

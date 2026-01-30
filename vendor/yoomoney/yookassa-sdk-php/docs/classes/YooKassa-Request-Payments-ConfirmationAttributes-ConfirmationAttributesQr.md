@@ -22,8 +22,8 @@
 | ----------:| ---- | ---- | ------- |
 | public | [$locale](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md#property_locale) |  | Язык интерфейса, писем и смс, которые будет видеть или получать пользователь |
 | public | [$locale](../classes/YooKassa-Request-Payments-ConfirmationAttributes-AbstractConfirmationAttributes.md#property_locale) |  | Язык интерфейса, писем и смс, которые будет видеть или получать пользователь |
-| public | [$return_url](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md#property_return_url) |  | URL или диплинк, на который вернется пользователь после подтверждения или отмены платежа в приложении. |
-| public | [$returnUrl](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md#property_returnUrl) |  | URL или диплинк, на который вернется пользователь после подтверждения или отмены платежа в приложении. |
+| public | [$return_url](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md#property_return_url) |  | Адрес страницы, на которую пользователь вернется после подтверждения или отмены платежа в приложении банка.  Например, если хотите вернуть пользователя на сайт, вы можете передать URL, если в мобильное приложение — диплинк. URI должен соответствовать стандарту [RFC-3986](https://www.ietf.org/rfc/rfc3986.txt). Не более 1024 символов.  Доступно только для платежей через [СБП](https://yookassa.ru/developers/payment-acceptance/integration-scenarios/manual-integration/other/sbp). |
+| public | [$returnUrl](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md#property_returnUrl) |  | Адрес страницы, на которую пользователь вернется после подтверждения или отмены платежа в приложении банка.  Например, если хотите вернуть пользователя на сайт, вы можете передать URL, если в мобильное приложение — диплинк. URI должен соответствовать стандарту [RFC-3986](https://www.ietf.org/rfc/rfc3986.txt). Не более 1024 символов.  Доступно только для платежей через [СБП](https://yookassa.ru/developers/payment-acceptance/integration-scenarios/manual-integration/other/sbp). |
 | public | [$type](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md#property_type) |  | Код сценария подтверждения |
 | public | [$type](../classes/YooKassa-Request-Payments-ConfirmationAttributes-AbstractConfirmationAttributes.md#property_type) |  | Код сценария подтверждения |
 | protected | [$_locale](../classes/YooKassa-Request-Payments-ConfirmationAttributes-AbstractConfirmationAttributes.md#property__locale) |  |  |
@@ -106,7 +106,7 @@
 ---
 ***Description***
 
-URL или диплинк, на который вернется пользователь после подтверждения или отмены платежа в приложении.
+Адрес страницы, на которую пользователь вернется после подтверждения или отмены платежа в приложении банка.  Например, если хотите вернуть пользователя на сайт, вы можете передать URL, если в мобильное приложение — диплинк. URI должен соответствовать стандарту [RFC-3986](https://www.ietf.org/rfc/rfc3986.txt). Не более 1024 символов.  Доступно только для платежей через [СБП](https://yookassa.ru/developers/payment-acceptance/integration-scenarios/manual-integration/other/sbp).
 
 **Type:** <a href="../string|null"><abbr title="string|null">string|null</abbr></a>
 
@@ -118,7 +118,7 @@ URL или диплинк, на который вернется пользова
 ---
 ***Description***
 
-URL или диплинк, на который вернется пользователь после подтверждения или отмены платежа в приложении.
+Адрес страницы, на которую пользователь вернется после подтверждения или отмены платежа в приложении банка.  Например, если хотите вернуть пользователя на сайт, вы можете передать URL, если в мобильное приложение — диплинк. URI должен соответствовать стандарту [RFC-3986](https://www.ietf.org/rfc/rfc3986.txt). Не более 1024 символов.  Доступно только для платежей через [СБП](https://yookassa.ru/developers/payment-acceptance/integration-scenarios/manual-integration/other/sbp).
 
 **Type:** <a href="../string|null"><abbr title="string|null">string|null</abbr></a>
 
@@ -327,7 +327,7 @@ public getReturnUrl() : string|null
 **Details:**
 * Inherited From: [\YooKassa\Request\Payments\ConfirmationAttributes\ConfirmationAttributesQr](../classes/YooKassa-Request-Payments-ConfirmationAttributes-ConfirmationAttributesQr.md)
 
-**Returns:** string|null - URL или диплинк, на который вернется пользователь после подтверждения или отмены платежа в приложении
+**Returns:** string|null - Адрес страницы, на которую пользователь вернется после подтверждения или отмены платежа в приложении банка.
 
 
 <a name="method_getType" class="anchor"></a>
@@ -501,7 +501,7 @@ public setReturnUrl(string|null $return_url = null) : self
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">string OR null</code> | return_url  | URL или диплинк, на который вернется пользователь после подтверждения или отмены платежа в приложении |
+| <code lang="php">string OR null</code> | return_url  | Адрес страницы, на которую пользователь вернется после подтверждения или отмены платежа в приложении банка. |
 
 **Returns:** self - 
 
@@ -594,10 +594,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

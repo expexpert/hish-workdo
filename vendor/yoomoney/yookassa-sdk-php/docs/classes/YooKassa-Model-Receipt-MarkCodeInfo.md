@@ -41,11 +41,11 @@ Class MarkCodeInfo.
 | public | [$egais_20](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_egais_20) |  | Код товара в формате ЕГАИС-2.0 (тег в 54 ФЗ — 1308) |
 | public | [$egais_30](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_egais_30) |  | Код товара в формате ЕГАИС-3.0 (тег в 54 ФЗ — 1309) |
 | public | [$fur](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_fur) |  | Контрольно-идентификационный знак мехового изделия (тег в 54 ФЗ — 1307) |
-| public | [$gs_10](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_gs_10) |  | Код товара в формате GS1.0 (тег в 54 ФЗ — 1304) |
+| public | [$gs_10](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_gs_10) |  | Код товара в формате GS1.0 (тег в 54 ФЗ — 1304). <br/>Можно передавать, если используете онлайн-кассу Orange Data, aQsi, Кит Инвест, АТОЛ Онлайн. |
 | public | [$gs_1m](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_gs_1m) |  | Код товара в формате GS1.M (тег в 54 ФЗ — 1305) |
 | public | [$itf_14](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_itf_14) |  | Код товара в формате ITF-14 (тег в 54 ФЗ — 1303) |
-| public | [$mark_code_raw](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_mark_code_raw) |  | Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000) |
-| public | [$markCodeRaw](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_markCodeRaw) |  | Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000) |
+| public | [$mark_code_raw](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_mark_code_raw) |  | Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000). <br/>Нужно передавать, если используете онлайн-кассу Orange Data. <br/>Пример: ~`010460406000590021N4N57RTCBUZTQ\\u001d2403054002410161218\\u001d1424010191ffd0\\u001g92tIAF/YVpU4roQS3M/m4z78yFq0nc/WsSmLeX6QkF/YVWwy5IMYAeiQ91Xa2m/fFSJcOkb2N+uUUtfr4n0mOX0Q==` |
+| public | [$markCodeRaw](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_markCodeRaw) |  | Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000). <br/>Нужно передавать, если используете онлайн-кассу Orange Data. <br/>Пример: ~`010460406000590021N4N57RTCBUZTQ\\u001d2403054002410161218\\u001d1424010191ffd0\\u001g92tIAF/YVpU4roQS3M/m4z78yFq0nc/WsSmLeX6QkF/YVWwy5IMYAeiQ91Xa2m/fFSJcOkb2N+uUUtfr4n0mOX0Q==` |
 | public | [$short](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_short) |  | Код товара в формате короткого кода маркировки (тег в 54 ФЗ — 1306) |
 | public | [$unknown](../classes/YooKassa-Model-Receipt-MarkCodeInfo.md#property_unknown) |  | Нераспознанный код товара (тег в 54 ФЗ — 1300) |
 
@@ -256,7 +256,7 @@ EGAIS_30_LENGTH = 14 : int
 ---
 ***Description***
 
-Код товара в формате GS1.0 (тег в 54 ФЗ — 1304)
+Код товара в формате GS1.0 (тег в 54 ФЗ — 1304). <br/>Можно передавать, если используете онлайн-кассу Orange Data, aQsi, Кит Инвест, АТОЛ Онлайн.
 
 **Type:** <a href="../string"><abbr title="string">string</abbr></a>
 
@@ -292,7 +292,7 @@ EGAIS_30_LENGTH = 14 : int
 ---
 ***Description***
 
-Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000)
+Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000). <br/>Нужно передавать, если используете онлайн-кассу Orange Data. <br/>Пример: ~`010460406000590021N4N57RTCBUZTQ\\u001d2403054002410161218\\u001d1424010191ffd0\\u001g92tIAF/YVpU4roQS3M/m4z78yFq0nc/WsSmLeX6QkF/YVWwy5IMYAeiQ91Xa2m/fFSJcOkb2N+uUUtfr4n0mOX0Q==`
 
 **Type:** <a href="../string"><abbr title="string">string</abbr></a>
 
@@ -304,7 +304,7 @@ EGAIS_30_LENGTH = 14 : int
 ---
 ***Description***
 
-Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000)
+Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000). <br/>Нужно передавать, если используете онлайн-кассу Orange Data. <br/>Пример: ~`010460406000590021N4N57RTCBUZTQ\\u001d2403054002410161218\\u001d1424010191ffd0\\u001g92tIAF/YVpU4roQS3M/m4z78yFq0nc/WsSmLeX6QkF/YVWwy5IMYAeiQ91Xa2m/fFSJcOkb2N+uUUtfr4n0mOX0Q==`
 
 **Type:** <a href="../string"><abbr title="string">string</abbr></a>
 
@@ -1085,10 +1085,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ use Tests\YooKassa\AbstractTestCase;
 use Datetime;
 use YooKassa\Model\Metadata;
 use YooKassa\Model\Refund\RefundCancellationDetails;
+use YooKassa\Model\Refund\RefundCancellationDetailsReasonCode;
 
 /**
  * RefundCancellationDetailsTest
@@ -133,8 +134,8 @@ class RefundCancellationDetailsTest extends AbstractTestCase
         self::assertNotNull($instance->reason);
         self::assertEquals($value, is_array($value) ? $instance->getReason()->toArray() : $instance->getReason());
         self::assertEquals($value, is_array($value) ? $instance->reason->toArray() : $instance->reason);
-        self::assertContains($instance->getReason(), ['yoo_money_account_closed', 'insufficient_funds', 'general_decline', 'rejected_by_payee']);
-        self::assertContains($instance->reason, ['yoo_money_account_closed', 'insufficient_funds', 'general_decline', 'rejected_by_payee']);
+        self::assertContains($instance->getReason(), RefundCancellationDetailsReasonCode::getValidValues());
+        self::assertContains($instance->reason, RefundCancellationDetailsReasonCode::getValidValues());
     }
 
     /**

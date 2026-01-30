@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -67,6 +67,12 @@ class CreatePostReceiptRequestSerializerTest extends TestCase
         }
         if (!empty($options['tax_system_code'])) {
             $expected['tax_system_code'] = $options['tax_system_code'];
+        }
+        if (isset($options['internet'])) {
+            $expected['internet'] = $options['internet'];
+        }
+        if (!empty($options['timezone'])) {
+            $expected['timezone'] = $options['timezone'];
         }
         if (!empty($options['items'])) {
             foreach ($options['items'] as $item) {
@@ -157,6 +163,8 @@ class CreatePostReceiptRequestSerializerTest extends TestCase
                 'tax_system_code' => Random::int(1, 6),
                 'type' => $type,
                 'send' => true,
+                'internet' => Random::bool(),
+                'timezone' => Random::int(1, 11),
                 'settlements' => $this->getSettlements($i + 1),
                 'receipt_industry_details' => [],
                 $type . '_id' => uniqid('', true),

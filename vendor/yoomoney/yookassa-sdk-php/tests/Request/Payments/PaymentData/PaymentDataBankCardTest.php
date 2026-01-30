@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,10 @@ namespace Tests\YooKassa\Request\Payments\PaymentData;
 use Exception;
 use Tests\YooKassa\AbstractTestCase;
 use Datetime;
+use YooKassa\Helpers\Random;
 use YooKassa\Model\Metadata;
 use YooKassa\Request\Payments\PaymentData\PaymentDataBankCard;
+use YooKassa\Request\Payments\PaymentData\PaymentDataBankCardCard;
 
 /**
  * PaymentDataBankCardTest
@@ -75,11 +77,12 @@ class PaymentDataBankCardTest extends AbstractTestCase
         self::assertEmpty($instance->getCard());
         self::assertEmpty($instance->card);
         $instance->setCard($value);
-        self::assertEquals($value, is_array($value) ? $instance->getCard()->toArray() : $instance->getCard());
-        self::assertEquals($value, is_array($value) ? $instance->card->toArray() : $instance->card);
         if (!empty($value)) {
             self::assertNotNull($instance->getCard());
             self::assertNotNull($instance->card);
+        } else {
+            self::assertEquals($value, is_array($value) ? $instance->getCard()->toArray() : $instance->getCard());
+            self::assertEquals($value, is_array($value) ? $instance->card->toArray() : $instance->card);
         }
     }
 
@@ -105,8 +108,22 @@ class PaymentDataBankCardTest extends AbstractTestCase
      */
     public function validCardDataProvider(): array
     {
-        $instance = $this->getTestInstance();
-        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_card'));
+        return [
+            [null],
+            [new PaymentDataBankCardCard([
+                'number' => Random::str(16, '0123456789'),
+                'expiry_year' => (string) Random::int(2023, 2045),
+                'expiry_month' => str_pad((string) Random::int(1, 12), 2, '0', STR_PAD_LEFT),
+                'cardholder' => Random::str(1, 26, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ \'-'),
+            ])],
+            [''],
+            [[
+                'number' => Random::str(16, '0123456789'),
+                'expiry_year' => (string) Random::int(2023, 2030),
+                'expiry_month' => str_pad((string) Random::int(1, 12), 2, '0', STR_PAD_LEFT),
+                'cardholder' => Random::str(1, 26, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ \'-'),
+            ]],
+        ];
     }
 
     /**

@@ -21,6 +21,8 @@ $client->setAuth('xxxxxx', 'test_XXXXXXX');
 // или по oauth токену
 $client->setAuthToken('token_XXXXXXX');
 
+// Получение информации о подключенном магазине
+
 ```
 
 ---
@@ -37,6 +39,8 @@ $client->setAuthToken('token_XXXXXXX');
 | public | [PERSONAL_DATA_PATH](../classes/YooKassa-Client-BaseClient.md#constant_PERSONAL_DATA_PATH) |  | Точка входа для запросов к API по персональным данным |
 | public | [SBP_BANKS_PATH](../classes/YooKassa-Client-BaseClient.md#constant_SBP_BANKS_PATH) |  | Точка входа для запросов к API по участникам СБП |
 | public | [SELF_EMPLOYED_PATH](../classes/YooKassa-Client-BaseClient.md#constant_SELF_EMPLOYED_PATH) |  | Точка входа для запросов к API по самозанятым |
+| public | [INVOICES_PATH](../classes/YooKassa-Client-BaseClient.md#constant_INVOICES_PATH) |  | Точка входа для запросов к API по счетам |
+| public | [PAYMENT_METHODS_PATH](../classes/YooKassa-Client-BaseClient.md#constant_PAYMENT_METHODS_PATH) |  | Точка входа для запросов к API по способам оплаты |
 | public | [IDEMPOTENCE_KEY_HEADER](../classes/YooKassa-Client-BaseClient.md#constant_IDEMPOTENCE_KEY_HEADER) |  | Имя HTTP заголовка, используемого для передачи idempotence key |
 | public | [DEFAULT_DELAY](../classes/YooKassa-Client-BaseClient.md#constant_DEFAULT_DELAY) |  | Значение по умолчанию времени ожидания между запросами при отправке повторного запроса в случае получения ответа с HTTP статусом 202. |
 | public | [DEFAULT_TRIES_COUNT](../classes/YooKassa-Client-BaseClient.md#constant_DEFAULT_TRIES_COUNT) |  | Значение по умолчанию количества попыток получения информации от API если пришёл ответ с HTTP статусом 202 |
@@ -64,7 +68,9 @@ $client->setAuthToken('token_XXXXXXX');
 | public | [cancelPayment()](../classes/YooKassa-Client.md#method_cancelPayment) |  | Отменить незавершенную оплату заказа. |
 | public | [capturePayment()](../classes/YooKassa-Client.md#method_capturePayment) |  | Подтверждение платежа. |
 | public | [createDeal()](../classes/YooKassa-Client.md#method_createDeal) |  | Создание сделки. |
+| public | [createInvoice()](../classes/YooKassa-Client.md#method_createInvoice) |  | Создание счета. |
 | public | [createPayment()](../classes/YooKassa-Client.md#method_createPayment) |  | Создание платежа. |
+| public | [createPaymentMethod()](../classes/YooKassa-Client.md#method_createPaymentMethod) |  | Создание способа оплаты. |
 | public | [createPayout()](../classes/YooKassa-Client.md#method_createPayout) |  | Создание выплаты. |
 | public | [createPersonalData()](../classes/YooKassa-Client.md#method_createPersonalData) |  | Создание персональных данных. |
 | public | [createReceipt()](../classes/YooKassa-Client.md#method_createReceipt) |  | Отправка чека в облачную кассу. |
@@ -74,7 +80,9 @@ $client->setAuthToken('token_XXXXXXX');
 | public | [getConfig()](../classes/YooKassa-Client-BaseClient.md#method_getConfig) |  | Возвращает настройки клиента. |
 | public | [getDealInfo()](../classes/YooKassa-Client.md#method_getDealInfo) |  | Получить информацию о сделке. |
 | public | [getDeals()](../classes/YooKassa-Client.md#method_getDeals) |  | Получить список сделок магазина. |
+| public | [getInvoiceInfo()](../classes/YooKassa-Client.md#method_getInvoiceInfo) |  | Получить информацию о счете |
 | public | [getPaymentInfo()](../classes/YooKassa-Client.md#method_getPaymentInfo) |  | Получить информацию о платеже. |
+| public | [getPaymentMethodInfo()](../classes/YooKassa-Client.md#method_getPaymentMethodInfo) |  | Получить информацию о способе оплаты |
 | public | [getPayments()](../classes/YooKassa-Client.md#method_getPayments) |  | Получить список платежей магазина. |
 | public | [getPayoutInfo()](../classes/YooKassa-Client.md#method_getPayoutInfo) |  | Получить информацию о выплате. |
 | public | [getPersonalDataInfo()](../classes/YooKassa-Client.md#method_getPersonalDataInfo) |  | Получить информацию о персональных данных. |
@@ -221,6 +229,28 @@ SELF_EMPLOYED_PATH = '/self_employed'
 ```
 
 
+<a name="constant_INVOICES_PATH" class="anchor"></a>
+###### INVOICES_PATH
+Inherited from [\YooKassa\Client\BaseClient](../classes/YooKassa-Client-BaseClient.md)
+
+Точка входа для запросов к API по счетам
+
+```php
+INVOICES_PATH = '/invoices'
+```
+
+
+<a name="constant_PAYMENT_METHODS_PATH" class="anchor"></a>
+###### PAYMENT_METHODS_PATH
+Inherited from [\YooKassa\Client\BaseClient](../classes/YooKassa-Client-BaseClient.md)
+
+Точка входа для запросов к API по способам оплаты
+
+```php
+PAYMENT_METHODS_PATH = '/payment_methods'
+```
+
+
 <a name="constant_IDEMPOTENCE_KEY_HEADER" class="anchor"></a>
 ###### IDEMPOTENCE_KEY_HEADER
 Inherited from [\YooKassa\Client\BaseClient](../classes/YooKassa-Client-BaseClient.md)
@@ -270,7 +300,7 @@ DEFAULT_ATTEMPTS_COUNT = 3
 Текущая версия библиотеки.
 
 ```php
-SDK_VERSION = '3.5.0'
+SDK_VERSION = '3.12.0'
 ```
 
 
@@ -383,7 +413,7 @@ shopId магазина.
 #### public __construct() : mixed
 
 ```php
-public __construct(\YooKassa\Client\ApiClientInterface $apiClient = null, \YooKassa\Helpers\Config\ConfigurationLoaderInterface $configLoader = null) : mixed
+public __construct(?\YooKassa\Client\ApiClientInterface $apiClient = null, ?\YooKassa\Helpers\Config\ConfigurationLoaderInterface $configLoader = null) : mixed
 ```
 
 **Summary**
@@ -396,8 +426,8 @@ Constructor.
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">\YooKassa\Client\ApiClientInterface</code> | apiClient  |  |
-| <code lang="php">\YooKassa\Helpers\Config\ConfigurationLoaderInterface</code> | configLoader  |  |
+| <code lang="php">?\YooKassa\Client\ApiClientInterface</code> | apiClient  |  |
+| <code lang="php">?\YooKassa\Helpers\Config\ConfigurationLoaderInterface</code> | configLoader  |  |
 
 **Returns:** mixed - 
 
@@ -536,11 +566,10 @@ $paymentId = '24e89cb0-000f-5000-9000-1de77fa0d6df';
 try {
     $response = $client->cancelPayment($paymentId, uniqid('', true));
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -625,11 +654,10 @@ try {
         uniqid('', true)
     );
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -702,11 +730,127 @@ try {
         uniqid('', true)
     );
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
 
-var_dump($response);
+```
+
+
+<a name="method_createInvoice" class="anchor"></a>
+#### public createInvoice() : \YooKassa\Model\Invoice\InvoiceInterface|null
+
+```php
+public createInvoice(array|\YooKassa\Request\Invoices\CreateInvoiceRequestInterface $invoice, string|null $idempotenceKey = null) : \YooKassa\Model\Invoice\InvoiceInterface|null
+```
+
+**Summary**
+
+Создание счета.
+
+**Description**
+
+Используйте этот запрос, чтобы создать в ЮKassa [объект счета](https://yookassa.ru/developers/api?codeLang=bash#create_invoice).
+
+**Details:**
+* Inherited From: [\YooKassa\Client](../classes/YooKassa-Client.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">array OR \YooKassa\Request\Invoices\CreateInvoiceRequestInterface</code> | invoice  |  |
+| <code lang="php">string OR null</code> | idempotenceKey  |  |
+
+##### Throws:
+| Type | Description |
+| ---- | ----------- |
+| \YooKassa\Common\Exceptions\ApiConnectionException |  |
+| \YooKassa\Common\Exceptions\ApiException |  |
+| \YooKassa\Common\Exceptions\AuthorizeException |  |
+| \YooKassa\Common\Exceptions\BadApiRequestException |  |
+| \YooKassa\Common\Exceptions\ExtensionNotFoundException |  |
+| \YooKassa\Common\Exceptions\ForbiddenException |  |
+| \YooKassa\Common\Exceptions\InternalServerError |  |
+| \YooKassa\Common\Exceptions\NotFoundException |  |
+| \YooKassa\Common\Exceptions\ResponseProcessingException |  |
+| \YooKassa\Common\Exceptions\TooManyRequestsException |  |
+| \YooKassa\Common\Exceptions\UnauthorizedException |  |
+| \JsonException |  |
+
+**Returns:** \YooKassa\Model\Invoice\InvoiceInterface|null - 
+##### Examples:
+Запрос на создание счёта:
+
+```php
+$invoiceData = [
+    'payment_data'=> [
+        'amount'=> [
+            'value'=> '7.00',
+            'currency'=> 'RUB',
+        ],
+        'capture'=> true,
+        'description'=> 'Заказ №96',
+        'metadata'=> [
+            'order_id'=> '96',
+        ],
+        'receipt'=> [
+            'customer' => [
+                'email' => 'example@email.com'
+            ],
+            'items' => [
+                [
+                    'description'=> 'Товар арт. 12345',
+                    'amount'=> [
+                        'value'=> '7.00',
+                        'currency'=> 'RUB',
+                    ],
+                    'quantity'=> 1.000,
+                    'vat_code' => 1,
+                    'payment_mode' => 'full_payment',
+                    'payment_subject' => 'commodity',
+                ],
+            ],
+            'tax_system_code' => 1,
+        ],
+    ],
+    'cart'=> [
+        [
+            'description'=> 'Товар арт. 12345',
+            'price'=> [
+                'value'=> '9.00',
+                'currency'=> 'RUB',
+            ],
+            'discount_price'=> [
+                'value'=> '7.00',
+                'currency'=> 'RUB',
+            ],
+            'quantity'=> 1.000,
+        ],
+    ],
+    'delivery_method'=> [
+        'type'=> 'self',
+    ],
+    'expires_at'=> '2024-10-20T10:58:18.139Z',
+    'description'=> 'Счет на оплату заказа номер 96',
+    'metadata'=> [
+        'order_id'=> '96',
+    ],
+];
+$idempotenceKey = uniqid('', true);
+try {
+    $response = $client->createInvoice(
+        $invoiceData,
+        $idempotenceKey
+    );
+    if ($response->getDeliveryMethod() && $response->getDeliveryMethod()->getType() === \YooKassa\Model\Invoice\DeliveryMethod\DeliveryMethodType::SELF) {
+        $redirectUrl = $response->getDeliveryMethod()->getUrl();
+        // Далее производим редирект на полученный URL
+    }
+    var_dump($response->toArray());
+} catch (\Exception $e) {
+    var_dump($e);
+}
 
 ```
 
@@ -796,11 +940,96 @@ try {
     $confirmation = $response->getConfirmation();
     $redirectUrl = $confirmation->getConfirmationUrl();
     // Далее производим редирект на полученный URL
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
 
-var_dump($response);
+```
+
+
+<a name="method_createPaymentMethod" class="anchor"></a>
+#### public createPaymentMethod() : \YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null
+
+```php
+public createPaymentMethod(array|\YooKassa\Request\PaymentMethods\CreatePaymentMethodRequestInterface $paymentMethod, string|null $idempotenceKey = null) : \YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null
+```
+
+**Summary**
+
+Создание способа оплаты.
+
+**Description**
+
+Используйте этот запрос, чтобы создать в ЮKassa [объект способа оплаты](https://yookassa.ru/developers/api#create_payment_method).
+В запросе необходимо передать код способа оплаты, который вы хотите сохранить, и при необходимости дополнительные параметры, связанные с той функциональностью, которую вы хотите использовать.
+
+Идентификатор созданного способа оплаты вы можете использовать при проведении [автоплатежей](/developers/payment-acceptance/scenario-extensions/recurring-payments/create-recurring) или [выплат](/developers/payouts/scenario-extensions/multipurpose-token).
+
+**Details:**
+* Inherited From: [\YooKassa\Client](../classes/YooKassa-Client.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">array OR \YooKassa\Request\PaymentMethods\CreatePaymentMethodRequestInterface</code> | paymentMethod  |  |
+| <code lang="php">string OR null</code> | idempotenceKey  |  |
+
+##### Throws:
+| Type | Description |
+| ---- | ----------- |
+| \YooKassa\Common\Exceptions\ApiConnectionException |  |
+| \YooKassa\Common\Exceptions\ApiException |  |
+| \YooKassa\Common\Exceptions\AuthorizeException |  |
+| \YooKassa\Common\Exceptions\BadApiRequestException |  |
+| \YooKassa\Common\Exceptions\ExtensionNotFoundException |  |
+| \YooKassa\Common\Exceptions\ForbiddenException |  |
+| \YooKassa\Common\Exceptions\InternalServerError |  |
+| \YooKassa\Common\Exceptions\NotFoundException |  |
+| \YooKassa\Common\Exceptions\ResponseProcessingException |  |
+| \YooKassa\Common\Exceptions\TooManyRequestsException |  |
+| \YooKassa\Common\Exceptions\UnauthorizedException |  |
+| \JsonException |  |
+
+**Returns:** \YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null - 
+##### Examples:
+Запрос на создание способа оплаты:
+
+```php
+$paymentMethod = [
+    'confirmation' => [
+        'enforce' => true,
+        'type' => 'redirect',
+        'return_url' => 'https://www.example.com/return_url',
+        'locale' => 'ru_RU'
+    ],
+    'type' => 'bank_card',
+    'card' => [
+        'number' => '4100000000000002',
+        'expiry_year' => '2025',
+        'expiry_month' => '12',
+        'cardholder' => 'Inna Ivanovna',
+        'csc' => '123'
+    ],
+    'holder' => [
+        'gateway_id' => '123456'
+    ],
+    'client_ip' => '127.0.0.1',
+];
+$idempotenceKey = uniqid('', true);
+try {
+    $response = $client->createPaymentMethod(
+        $paymentMethod,
+        $idempotenceKey
+    );
+    if ($response->getStatus() && $response->getStatus() === \YooKassa\Model\SavePaymentMethod\SavePaymentMethodStatus::PENDING) {
+        $redirectUrl = $response->getConfirmation()->getConfirmationUrl();
+        // Далее производим редирект на полученный URL
+    }
+    var_dump($response->toArray());
+} catch (\Exception $e) {
+    var_dump($e);
+}
 
 ```
 
@@ -886,12 +1115,11 @@ $request = [
 
 try {
     $idempotenceKey = uniqid('', true);
-    $result = $client->createPayout($request, $idempotenceKey);
+    $response = $client->createPayout($request, $idempotenceKey);
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $result = $e;
+    var_dump($e);
 }
-
-var_dump($result);
 
 ```
 
@@ -953,12 +1181,11 @@ $idempotenceKey = uniqid('', true);
 
 try {
     $idempotenceKey = uniqid('', true);
-    $result = $client->createPersonalData($request, $idempotenceKey);
+    $response = $client->createPersonalData($request, $idempotenceKey);
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $result = $e;
+    var_dump($e);
 }
-
-var_dump($result);
 
 ```
 
@@ -1046,11 +1273,10 @@ try {
         uniqid('', true)
     );
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1123,11 +1349,10 @@ try {
         uniqid('', true)
     );
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1188,12 +1413,11 @@ $idempotenceKey = uniqid('', true);
 
 try {
     $idempotenceKey = uniqid('', true);
-    $result = $client->createSelfEmployed($request, $idempotenceKey);
+    $response = $client->createSelfEmployed($request, $idempotenceKey);
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $result = $e;
+    var_dump($e);
 }
-
-var_dump($result);
 
 ```
 
@@ -1277,11 +1501,10 @@ public getDealInfo(string $dealId) : ?\YooKassa\Model\Deal\DealInterface
 try {
     $response = $client->getDealInfo('dl-2909e77d-1022-5003-8004-0c37205b3208');
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1364,6 +1587,67 @@ try {
 ```
 
 
+<a name="method_getInvoiceInfo" class="anchor"></a>
+#### public getInvoiceInfo() : \YooKassa\Model\Invoice\InvoiceInterface|null
+
+```php
+public getInvoiceInfo(string $invoiceId) : \YooKassa\Model\Invoice\InvoiceInterface|null
+```
+
+**Summary**
+
+Получить информацию о счете
+
+**Description**
+
+С помощью этого запроса вы можете получить информацию о текущем статусе счета по его уникальному идентификатору.
+
+**Details:**
+* Inherited From: [\YooKassa\Client](../classes/YooKassa-Client.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">string</code> | invoiceId  | Идентификатор счета |
+
+##### Throws:
+| Type | Description |
+| ---- | ----------- |
+| \YooKassa\Common\Exceptions\ApiConnectionException |  |
+| \YooKassa\Common\Exceptions\ApiException |  |
+| \YooKassa\Common\Exceptions\AuthorizeException |  |
+| \YooKassa\Common\Exceptions\BadApiRequestException |  |
+| \YooKassa\Common\Exceptions\ExtensionNotFoundException |  |
+| \YooKassa\Common\Exceptions\ForbiddenException |  |
+| \YooKassa\Common\Exceptions\InternalServerError |  |
+| \JsonException |  |
+| \YooKassa\Common\Exceptions\NotFoundException |  |
+| \YooKassa\Common\Exceptions\ResponseProcessingException |  |
+| \YooKassa\Common\Exceptions\TooManyRequestsException |  |
+| \YooKassa\Common\Exceptions\UnauthorizedException |  |
+
+**Returns:** \YooKassa\Model\Invoice\InvoiceInterface|null - 
+##### Examples:
+Получить информацию о счете:
+
+```php
+$invoiceId = 'in-285c0ab7-0003-5000-9000-0e1166498fda';
+
+try {
+    $response = $client->getInvoiceInfo($invoiceId);
+    if ($response->getPaymentDetails()) {
+        print_r($response->getPaymentDetails()->toArray());
+        $paymentResponse = $client->getPaymentInfo($response->getPaymentDetails()->getId());
+        print_r($paymentResponse->toArray());
+    }
+    var_dump($response->toArray());
+} catch (\Exception $e) {
+    var_dump($e);
+}
+
+```
+
+
 <a name="method_getPaymentInfo" class="anchor"></a>
 #### public getPaymentInfo() : null|\YooKassa\Model\Payment\PaymentInterface
 
@@ -1410,11 +1694,68 @@ public getPaymentInfo(string $paymentId) : null|\YooKassa\Model\Payment\PaymentI
 try {
     $response = $client->getPaymentInfo('24e89cb0-000f-5000-9000-1de77fa0d6df');
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
 
-var_dump($response);
+```
+
+
+<a name="method_getPaymentMethodInfo" class="anchor"></a>
+#### public getPaymentMethodInfo() : \YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null
+
+```php
+public getPaymentMethodInfo(string $paymentMethodId) : \YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null
+```
+
+**Summary**
+
+Получить информацию о способе оплаты
+
+**Description**
+
+Используйте этот запрос, чтобы получить информацию о текущем состоянии способа оплаты по его уникальному идентификатору.
+
+**Details:**
+* Inherited From: [\YooKassa\Client](../classes/YooKassa-Client.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">string</code> | paymentMethodId  | Идентификатор способа оплаты |
+
+##### Throws:
+| Type | Description |
+| ---- | ----------- |
+| \YooKassa\Common\Exceptions\ApiConnectionException |  |
+| \YooKassa\Common\Exceptions\ApiException |  |
+| \YooKassa\Common\Exceptions\AuthorizeException |  |
+| \YooKassa\Common\Exceptions\BadApiRequestException |  |
+| \YooKassa\Common\Exceptions\ExtensionNotFoundException |  |
+| \YooKassa\Common\Exceptions\ForbiddenException |  |
+| \YooKassa\Common\Exceptions\InternalServerError |  |
+| \JsonException |  |
+| \YooKassa\Common\Exceptions\NotFoundException |  |
+| \YooKassa\Common\Exceptions\ResponseProcessingException |  |
+| \YooKassa\Common\Exceptions\TooManyRequestsException |  |
+| \YooKassa\Common\Exceptions\UnauthorizedException |  |
+
+**Returns:** \YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null - 
+##### Examples:
+Получить информацию о способе оплаты:
+
+```php
+$paymentMethodId = '285c0ab7-0003-5000-9000-0e1166498fda';
+try {
+    $response = $client->getPaymentMethodInfo($paymentMethodId);
+    if ($response->getCard()) {
+        print_r($response->getCard()->toArray());
+    }
+    var_dump($response->toArray());
+} catch (\Exception $e) {
+    var_dump($e);
+}
 
 ```
 
@@ -1539,11 +1880,10 @@ $payoutId = 'po-285c0ab7-0003-5000-9000-0e1166498fda';
 
 try {
     $response = $client->getPayoutInfo($payoutId);
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1594,11 +1934,10 @@ $payoutId = 'pd-285c0ab7-0003-5000-9000-0e1166498fda';
 
 try {
     $response = $client->getPersonalDataInfo($payoutId);
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1648,11 +1987,10 @@ public getReceiptInfo(string $receiptId) : ?\YooKassa\Request\Receipts\ReceiptRe
 try {
     $response = $client->getPaymentInfo('24e89cb0-000f-5000-9000-1de77fa0d6df');
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1778,11 +2116,10 @@ public getRefundInfo(string $refundId) : ?\YooKassa\Request\Refunds\RefundRespon
 try {
     $response = $client->getReceiptInfo('ra-27ed1660-0001-0050-7a5e-10f80e0f0f29');
     echo $response->getStatus();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1901,11 +2238,10 @@ public getSbpBanks() : ?\YooKassa\Request\Payouts\SbpBanksResponse
 ```php
 try {
     $response = $client->getSbpBanks();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -1955,11 +2291,10 @@ $payoutId = 'se-285c0ab7-0003-5000-9000-0e1166498fda';
 
 try {
     $response = $client->getSelfEmployedInfo($payoutId);
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -2112,11 +2447,10 @@ public me(null|array|int|string $filter = null) : null|array
 ```php
 try {
     $response = $client->me();
+    var_dump($response->toArray());
 } catch (\Exception $e) {
-    $response = $e;
+    var_dump($e);
 }
-
-var_dump($response);
 
 ```
 
@@ -2516,6 +2850,7 @@ protected handleError(\YooKassa\Common\ResponseObject $response) : void
 | \YooKassa\Common\Exceptions\ForbiddenException | секретный ключ или OAuth-токен верный, но не хватает прав для совершения операции |
 | \YooKassa\Common\Exceptions\InternalServerError | Технические неполадки на стороне ЮKassa. Результат обработки запроса неизвестен. Повторите запрос позднее с тем же ключом идемпотентности. |
 | \YooKassa\Common\Exceptions\NotFoundException | ресурс не найден |
+| \YooKassa\Common\Exceptions\GoneException | ресурс удален |
 | \YooKassa\Common\Exceptions\ResponseProcessingException | запрос был принят на обработку, но она не завершена |
 | \YooKassa\Common\Exceptions\TooManyRequestsException | Превышен лимит запросов в единицу времени. Попробуйте снизить интенсивность запросов. |
 | \YooKassa\Common\Exceptions\UnauthorizedException | неверное имя пользователя или пароль или невалидный OAuth-токен при аутентификации |
@@ -2536,10 +2871,10 @@ protected handleError(\YooKassa\Common\ResponseObject $response) : void
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

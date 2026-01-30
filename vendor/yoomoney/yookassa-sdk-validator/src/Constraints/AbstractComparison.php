@@ -3,7 +3,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2023 "YooMoney", NBСO LLC
+ * Copyright (c) 2024 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ abstract class AbstractComparison extends AbstractConstraint
 {
     protected mixed $value;
 
-    public function __construct(mixed $value, string $message = null)
+    public function __construct(mixed $value, ?string $message = null)
     {
         $this->message = $message ?? $this->message;
         $this->value = $value;

@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ use YooKassa\Common\AbstractEnum;
  * Возможные значения:
  * - [Чеки для самозанятых](https://yookassa.ru/developers/payment-acceptance/receipts/self-employed/basics) — `fns`
  * - [54-ФЗ: Чеки от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — `avanpost`
- * - [54-ФЗ: сторонняя онлайн-касса](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) (наименование онлайн-кассы) — `a_qsi` (aQsi online), `atol` (АТОЛ Онлайн), `business_ru` (Бизнес.ру), `evotor` (Эвотор), `first_ofd` (Первый ОФД), `kit_invest` (Кит Инвест), `life_pay` (LIFE PAY), `mertrade` (Mertrade), `modul_kassa` (МодульКасса), `rocket` (RocketR), `shtrih_m` (Orange Data).
+ * - [54-ФЗ: сторонняя онлайн-касса](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) (наименование онлайн-кассы) — ~`a_qsi` (aQsi online), ~`atol` (АТОЛ Онлайн), ~`business_ru` (Бизнес.ру), ~`digital_kassa` (digitalkassa), ~`evotor` (Эвотор), ~`first_ofd` (Первый ОФД), ~`kit_invest` (Кит Инвест), ~`komtet` (КОМТЕТ Касса), ~`life_pay` (LIFE PAY), ~`mertrade` (Mertrade), ~`modul_kassa` (МодульКасса), ~`rocket` (RocketR), ~`shtrih_m` (Orange Data).
  *
  * @category Class
  * @package  YooKassa\Model
@@ -70,6 +70,10 @@ class FiscalizationProvider extends AbstractEnum
     public const LIFE_PAY = 'life_pay';
     /** RocketR */
     public const ROCKET = 'rocket';
+    /** digitalkassa */
+    public const DIGITAL_KASSA = 'digital_kassa';
+    /** КОМТЕТ Касса */
+    public const KOMTET = 'komtet';
 
     /**
      * Возвращает список доступных значений
@@ -77,18 +81,20 @@ class FiscalizationProvider extends AbstractEnum
      */
     protected static array $validValues = [
         self::ATOL => true,
-        self::BUSINESS_RU => true,
-        self::SHTRIH_M => true,
-        self::MODUL_KASSA => true,
-        self::EVOTOR => true,
-        self::KIT_INVEST => true,
-        self::A_QSI => true,
-        self::FNS => true,
         self::AVANPOST => true,
-        self::MERTRADE => true,
+        self::A_QSI => true,
+        self::BUSINESS_RU => true,
+        self::DIGITAL_KASSA => true,
+        self::EVOTOR => true,
         self::FIRST_OFD => true,
+        self::FNS => true,
+        self::KIT_INVEST => true,
+        self::KOMTET => true,
         self::LIFE_PAY => true,
-        self::ROCKET => true
+        self::MERTRADE => true,
+        self::MODUL_KASSA => true,
+        self::ROCKET => true,
+        self::SHTRIH_M => true,
     ];
 }
 

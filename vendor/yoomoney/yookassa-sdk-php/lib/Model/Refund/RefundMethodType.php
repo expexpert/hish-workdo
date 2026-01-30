@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@ use YooKassa\Common\AbstractEnum;
  *
  * Возможные значения:
  * - `sbp` - Возврат через сервис быстрых платежей
+ * - `electronic_certificate` - Возврат платежа по электронному сертификату
  *
  * @category Class
  * @package  YooKassa\Model
@@ -45,6 +46,8 @@ class RefundMethodType extends AbstractEnum
 {
     /** Возврат через сервис быстрых платежей */
     public const SBP = 'sbp';
+    /** Прием платежей по электронному сертификату, привязанному к карте «Мир» */
+    public const ELECTRONIC_CERTIFICATE = 'electronic_certificate';
     /**
      * Для неизвестных методов возврата
      *
@@ -54,6 +57,7 @@ class RefundMethodType extends AbstractEnum
 
     protected static array $validValues = [
         self::SBP => true,
+        self::ELECTRONIC_CERTIFICATE => true,
         self::UNKNOWN => false,
     ];
 }

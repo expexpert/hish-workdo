@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -133,8 +133,8 @@ class PayoutCancellationDetailsTest extends AbstractTestCase
         self::assertNotNull($instance->reason);
         self::assertEquals($value, is_array($value) ? $instance->getReason()->toArray() : $instance->getReason());
         self::assertEquals($value, is_array($value) ? $instance->reason->toArray() : $instance->reason);
-        self::assertContains($instance->getReason(), ['insufficient_funds', 'fraud_suspected', 'one_time_limit_exceeded', 'periodic_limit_exceeded', 'rejected_by_payee', 'general_decline', 'issuer_unavailable', 'recipient_not_found', 'recipient_check_failed', 'identification_required']);
-        self::assertContains($instance->reason, ['insufficient_funds', 'fraud_suspected', 'one_time_limit_exceeded', 'periodic_limit_exceeded', 'rejected_by_payee', 'general_decline', 'issuer_unavailable', 'recipient_not_found', 'recipient_check_failed', 'identification_required']);
+        self::assertContains($instance->getReason(), ['insufficient_funds', 'fraud_suspected', 'one_time_limit_exceeded', 'periodic_limit_exceeded', 'rejected_by_payee', 'general_decline', 'issuer_unavailable', 'recipient_not_found', 'recipient_check_failed', 'identification_required', 'self_employed_annual_limit_exceeded']);
+        self::assertContains($instance->reason, ['insufficient_funds', 'fraud_suspected', 'one_time_limit_exceeded', 'periodic_limit_exceeded', 'rejected_by_payee', 'general_decline', 'issuer_unavailable', 'recipient_not_found', 'recipient_check_failed', 'identification_required', 'self_employed_annual_limit_exceeded']);
     }
 
     /**

@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,13 +44,13 @@ use YooKassa\Validator\Constraints as Assert;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property string $markCodeRaw Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000)
- * @property string $mark_code_raw Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000)
+ * @property string $markCodeRaw Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000). <br/>Нужно передавать, если используете онлайн-кассу Orange Data. <br/>Пример: ~`010460406000590021N4N57RTCBUZTQ\\u001d2403054002410161218\\u001d1424010191ffd0\\u001g92tIAF/YVpU4roQS3M/m4z78yFq0nc/WsSmLeX6QkF/YVWwy5IMYAeiQ91Xa2m/fFSJcOkb2N+uUUtfr4n0mOX0Q==`
+ * @property string $mark_code_raw Код товара в том виде, в котором он был прочитан сканером (тег в 54 ФЗ — 2000). <br/>Нужно передавать, если используете онлайн-кассу Orange Data. <br/>Пример: ~`010460406000590021N4N57RTCBUZTQ\\u001d2403054002410161218\\u001d1424010191ffd0\\u001g92tIAF/YVpU4roQS3M/m4z78yFq0nc/WsSmLeX6QkF/YVWwy5IMYAeiQ91Xa2m/fFSJcOkb2N+uUUtfr4n0mOX0Q==`
  * @property string $unknown Нераспознанный код товара (тег в 54 ФЗ — 1300)
  * @property string $ean_8 Код товара в формате EAN-8 (тег в 54 ФЗ — 1301)
  * @property string $ean_13 Код товара в формате EAN-13 (тег в 54 ФЗ — 1302)
  * @property string $itf_14 Код товара в формате ITF-14 (тег в 54 ФЗ — 1303)
- * @property string $gs_10 Код товара в формате GS1.0 (тег в 54 ФЗ — 1304)
+ * @property string $gs_10 Код товара в формате GS1.0 (тег в 54 ФЗ — 1304). <br/>Можно передавать, если используете онлайн-кассу Orange Data, aQsi, Кит Инвест, АТОЛ Онлайн.
  * @property string $gs_1m Код товара в формате GS1.M (тег в 54 ФЗ — 1305)
  * @property string $short Код товара в формате короткого кода маркировки (тег в 54 ФЗ — 1306)
  * @property string $fur Контрольно-идентификационный знак мехового изделия (тег в 54 ФЗ — 1307)

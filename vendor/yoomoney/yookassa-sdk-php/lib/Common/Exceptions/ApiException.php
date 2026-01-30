@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@
 namespace YooKassa\Common\Exceptions;
 
 use Exception;
+use YooKassa\Common\Errors\AbstractError;
+use YooKassa\Common\Errors\ErrorFactory;
 
 /**
  * Неожиданный код ошибки.
@@ -44,6 +46,23 @@ class ApiException extends Exception
     protected array $responseHeaders = [];
 
     /**
+     * @var AbstractError|null Объект ошибки
+     */
+    protected ?AbstractError $error = null;
+
+    /**
+     * @var mixed|null Тип ошибки
+     * @deprecated Устарело. Вместо него нужно использовать getError()->getType().
+     */
+    public mixed $type = null;
+
+    /**
+     * @var mixed|null Время в секундах до повторной попытки
+     * @deprecated Устарело. Вместо него нужно использовать getError()->getRetryAfter().
+     */
+    public mixed $retryAfter = null;
+
+    /**
      * Constructor.
      *
      * @param string $message Error message
@@ -59,6 +78,7 @@ class ApiException extends Exception
     }
 
     /**
+     *
      * @return string[]
      */
     public function getResponseHeaders(): array
@@ -70,4 +90,91 @@ class ApiException extends Exception
     {
         return $this->responseBody;
     }
+
+    /**
+     * Создает сообщение из объекта ошибки
+     * @param mixed $responseBody
+     * @return string
+     */
+    protected function createMessageFromError(mixed $responseBody): string
+    {
+        $errorData = json_decode($responseBody, true);
+        $this->parseErrorBody($errorData ?? []);
+        $message = '';
+
+        if (!$this->getError()) {
+            return $message;
+        }
+
+        if ($this->getError()->getType() !== null) {
+            $this->type = $this->getError()->getType();
+        }
+
+        if ($this->getError()->getRetryAfter() !== null) {
+            $this->retryAfter = $this->getError()->getRetryAfter();
+        }
+
+        if ($this->getError()->getDescription() !== null) {
+            $message .= $this->getError()->getDescription() . '. ';
+        }
+
+        if ($this->getError()->getCode() !== null) {
+            $message .= sprintf('Error code: %s. ', $this->getError()->getCode());
+        }
+
+        if ($this->getError()->getParameter() !== null) {
+            $message .= sprintf('Parameter name: %s. ', $this->getError()->getParameter());
+        }
+
+        return $message;
+    }
+
+    /**
+     * Подготавливает объект ошибки
+     * @param array $errorData
+     * @return void
+     */
+    protected function parseErrorBody(array $errorData): void
+    {
+        $this->error = (new ErrorFactory())->factoryFromArray($errorData);
+    }
+
+    /**
+     * Возвращает объект ошибки
+     * @return AbstractError|null
+     */
+    public function getError(): ?AbstractError
+    {
+        return $this->error;
+    }
+
+    /**
+     * @deprecated Устарело. Вместо него нужно использовать getError()->getId()
+     */
+    public function getErrorId(): ?string
+    {
+        return $this->getError()?->getId();
+    }
+    /**
+     * @deprecated Устарело. Вместо него нужно использовать getError()->getCode()
+     */
+    public function getErrorCode(): ?string
+    {
+        return $this->getError()?->getCode();
+    }
+    /**
+     * @deprecated Устарело. Вместо него нужно использовать getError()->getDescription()
+     */
+    public function getErrorDescription(): ?string
+    {
+        return $this->getError()?->getDescription();
+    }
+    /**
+     * @deprecated Устарело. Вместо него нужно использовать getError()->getParameter()
+     */
+    public function getErrorParameter(): ?string
+    {
+        return $this->getError()?->getParameter();
+    }
+
 }

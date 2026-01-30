@@ -22,6 +22,9 @@ use Closure;
 use ReflectionClass;
 use ReflectionObject;
 
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
 final class CallableType extends Type
 {
     private bool $allowsNull;
@@ -161,12 +164,6 @@ final class CallableType extends Type
 
             [$className, $methodName] = $type->value();
         }
-
-        /** @phpstan-ignore isset.variable */
-        assert(isset($className));
-
-        /** @phpstan-ignore isset.variable */
-        assert(isset($methodName));
 
         if (!class_exists($className)) {
             return false;

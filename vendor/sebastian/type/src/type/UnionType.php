@@ -9,12 +9,14 @@
  */
 namespace SebastianBergmann\Type;
 
-use function array_is_list;
 use function assert;
 use function count;
 use function implode;
 use function sort;
 
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
 final class UnionType extends Type
 {
     /**
@@ -30,7 +32,7 @@ final class UnionType extends Type
         $this->ensureMinimumOfTwoTypes(...$types);
         $this->ensureOnlyValidTypes(...$types);
 
-        assert(array_is_list($types) && !empty($types));
+        assert(!empty($types));
 
         $this->types = $types;
     }
@@ -73,12 +75,7 @@ final class UnionType extends Type
 
         sort($types);
 
-        $name = implode('|', $types);
-
-        /** @phpstan-ignore empty.variable */
-        assert(!empty($name));
-
-        return $name;
+        return implode('|', $types);
     }
 
     public function allowsNull(): bool

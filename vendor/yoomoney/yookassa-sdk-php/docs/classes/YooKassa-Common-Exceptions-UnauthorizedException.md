@@ -21,8 +21,9 @@
 ### Properties
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
-| public | [$retryAfter](../classes/YooKassa-Common-Exceptions-UnauthorizedException.md#property_retryAfter) |  |  |
-| public | [$type](../classes/YooKassa-Common-Exceptions-UnauthorizedException.md#property_type) |  |  |
+| public | [$retryAfter](../classes/YooKassa-Common-Exceptions-ApiException.md#property_retryAfter) | *deprecated* |  |
+| public | [$type](../classes/YooKassa-Common-Exceptions-ApiException.md#property_type) | *deprecated* |  |
+| protected | [$error](../classes/YooKassa-Common-Exceptions-ApiException.md#property_error) |  |  |
 | protected | [$responseBody](../classes/YooKassa-Common-Exceptions-ApiException.md#property_responseBody) |  |  |
 | protected | [$responseHeaders](../classes/YooKassa-Common-Exceptions-ApiException.md#property_responseHeaders) |  |  |
 
@@ -31,8 +32,15 @@
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
 | public | [__construct()](../classes/YooKassa-Common-Exceptions-UnauthorizedException.md#method___construct) |  | Constructor. |
+| public | [getError()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getError) |  | Возвращает объект ошибки |
+| public | [getErrorCode()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getErrorCode) | *deprecated* |  |
+| public | [getErrorDescription()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getErrorDescription) | *deprecated* |  |
+| public | [getErrorId()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getErrorId) | *deprecated* |  |
+| public | [getErrorParameter()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getErrorParameter) | *deprecated* |  |
 | public | [getResponseBody()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getResponseBody) |  |  |
 | public | [getResponseHeaders()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_getResponseHeaders) |  |  |
+| protected | [createMessageFromError()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_createMessageFromError) |  | Создает сообщение из объекта ошибки |
+| protected | [parseErrorBody()](../classes/YooKassa-Common-Exceptions-ApiException.md#method_parseErrorBody) |  | Подготавливает объект ошибки |
 
 ---
 ### Details
@@ -56,19 +64,30 @@ HTTP_CODE = 401
 ---
 ## Properties
 <a name="property_retryAfter"></a>
-#### public $retryAfter : mixed
+#### public $retryAfter : mixed - (deprecated)
 ---
 **Type:** <a href="../mixed"><abbr title="mixed">mixed</abbr></a>
-
+Время в секундах до повторной попытки
 **Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
 
 
 <a name="property_type"></a>
-#### public $type : mixed
+#### public $type : mixed - (deprecated)
 ---
 **Type:** <a href="../mixed"><abbr title="mixed">mixed</abbr></a>
-
+Тип ошибки
 **Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+
+<a name="property_error"></a>
+#### protected $error : ?\YooKassa\Common\Errors\AbstractError
+---
+**Type:** <a href="../?\YooKassa\Common\Errors\AbstractError"><abbr title="?\YooKassa\Common\Errors\AbstractError">AbstractError</abbr></a>
+Объект ошибки
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
 
 
 <a name="property_responseBody"></a>
@@ -115,6 +134,83 @@ Constructor.
 **Returns:** mixed - 
 
 
+<a name="method_getError" class="anchor"></a>
+#### public getError() : \YooKassa\Common\Errors\AbstractError|null
+
+```php
+public getError() : \YooKassa\Common\Errors\AbstractError|null
+```
+
+**Summary**
+
+Возвращает объект ошибки
+
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+**Returns:** \YooKassa\Common\Errors\AbstractError|null - 
+
+
+<a name="method_getErrorCode" class="anchor"></a>
+#### (deprecated) - public getErrorCode() : ?string
+
+```php
+public getErrorCode() : ?string
+```
+
+**Deprecated**
+DeprecatedУстарело. Вместо него нужно использовать getError()-&gt;getCode()
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+**Returns:** ?string - 
+
+
+<a name="method_getErrorDescription" class="anchor"></a>
+#### (deprecated) - public getErrorDescription() : ?string
+
+```php
+public getErrorDescription() : ?string
+```
+
+**Deprecated**
+DeprecatedУстарело. Вместо него нужно использовать getError()-&gt;getDescription()
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+**Returns:** ?string - 
+
+
+<a name="method_getErrorId" class="anchor"></a>
+#### (deprecated) - public getErrorId() : ?string
+
+```php
+public getErrorId() : ?string
+```
+
+**Deprecated**
+DeprecatedУстарело. Вместо него нужно использовать getError()-&gt;getId()
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+**Returns:** ?string - 
+
+
+<a name="method_getErrorParameter" class="anchor"></a>
+#### (deprecated) - public getErrorParameter() : ?string
+
+```php
+public getErrorParameter() : ?string
+```
+
+**Deprecated**
+DeprecatedУстарело. Вместо него нужно использовать getError()-&gt;getParameter()
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+**Returns:** ?string - 
+
+
 <a name="method_getResponseBody" class="anchor"></a>
 #### public getResponseBody() : ?string
 
@@ -141,6 +237,50 @@ public getResponseHeaders() : string[]
 **Returns:** string[] - 
 
 
+<a name="method_createMessageFromError" class="anchor"></a>
+#### protected createMessageFromError() : string
+
+```php
+protected createMessageFromError(mixed $responseBody) : string
+```
+
+**Summary**
+
+Создает сообщение из объекта ошибки
+
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">mixed</code> | responseBody  |  |
+
+**Returns:** string - 
+
+
+<a name="method_parseErrorBody" class="anchor"></a>
+#### protected parseErrorBody() : void
+
+```php
+protected parseErrorBody(array $errorData) : void
+```
+
+**Summary**
+
+Подготавливает объект ошибки
+
+**Details:**
+* Inherited From: [\YooKassa\Common\Exceptions\ApiException](../classes/YooKassa-Common-Exceptions-ApiException.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">array</code> | errorData  |  |
+
+**Returns:** void - 
+
+
 
 ---
 
@@ -153,10 +293,10 @@ public getResponseHeaders() : string[]
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney
