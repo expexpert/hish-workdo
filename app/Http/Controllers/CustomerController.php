@@ -36,7 +36,8 @@ class CustomerController extends Controller
     public function index()
     {
         if (\Auth::user()->can('manage customer')) {
-            $customers = Customer::where('created_by', \Auth::user()->creatorId())->get();
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers = Customer::whereIn('created_by', $filterIds)->get();
 
             return view('customer.index', compact('customers'));
         } else {
@@ -113,7 +114,7 @@ class CustomerController extends Controller
 
                 $request['password'] = !empty($userpassword) ? \Hash::make($userpassword) : null;
 
-                $customer->created_by      = \Auth::user()->creatorId();
+                $customer->created_by      = \Auth::user()->id;
                 $customer->billing_name    = $request->billing_name;
                 $customer->billing_country = $request->billing_country;
                 $customer->billing_state   = $request->billing_state;
@@ -284,7 +285,7 @@ class CustomerController extends Controller
 
     function customerNumber()
     {
-        $latest = Customer::where('created_by', '=', \Auth::user()->creatorId())->latest()->first();
+        $latest = Customer::where('created_by', '=', \Auth::user()->customerFilterId())->latest()->first();
         if (!$latest) {
             return 1;
         }

@@ -24,23 +24,25 @@
 @endsection
 
 @section('action-btn')
-    <div class="d-flex">
-        <a href="#" data-size="md" data-bs-toggle="tooltip" title="{{ __('Import') }}"
-            data-url="{{ route('customer.file.import') }}" data-ajax-popup="true"
-            data-title="{{ __('Import customer CSV file') }}" class="btn btn-sm btn-primary me-2">
-            <i class="ti ti-file-import"></i>
-        </a>
-        <a href="{{ route('customer.export') }}" data-bs-toggle="tooltip" title="{{ __('Export') }}"
-            class="btn btn-sm btn-primary me-2">
-            <i class="ti ti-file-export"></i>
-        </a>
+    @if (\Auth::user()->type !== 'company')
+        <div class="d-flex">
+            <a href="#" data-size="md" data-bs-toggle="tooltip" title="{{ __('Import') }}"
+                data-url="{{ route('customer.file.import') }}" data-ajax-popup="true"
+                data-title="{{ __('Import customer CSV file') }}" class="btn btn-sm btn-primary me-2">
+                <i class="ti ti-file-import"></i>
+            </a>
+            <a href="{{ route('customer.export') }}" data-bs-toggle="tooltip" title="{{ __('Export') }}"
+                class="btn btn-sm btn-primary me-2">
+                <i class="ti ti-file-export"></i>
+            </a>
 
-        <a href="#" data-size="xl" data-url="{{ route('customer.create') }}" data-ajax-popup="true"
-            data-bs-toggle="tooltip" title="{{ __('Create') }}" data-title="{{ __('Create Customer') }}"
-            class="btn btn-sm btn-primary">
-            <i class="ti ti-plus"></i>
-        </a>
-    </div>
+            <a href="#" data-size="xl" data-url="{{ route('customer.create') }}" data-ajax-popup="true"
+                data-bs-toggle="tooltip" title="{{ __('Create') }}" data-title="{{ __('Create Customer') }}"
+                class="btn btn-sm btn-primary">
+                <i class="ti ti-plus"></i>
+            </a>
+        </div>
+    @endif
 @endsection
 
 @section('content')
@@ -113,6 +115,9 @@
                                                             </a>
                                                         </div>
                                                     @endcan
+
+                                                    @if (\Auth::user()->type !== 'company')
+
                                                     @can('edit customer')
                                                         <div class="action-btn me-2">
                                                             <a href="#" class="mx-3 btn btn-sm  align-items-center bg-info"
@@ -141,6 +146,8 @@
                                                             {!! Form::close() !!}
                                                         </div>
                                                     @endcan
+
+                                                    @endif
                                                 @endif
                                             </span>
                                         </td>

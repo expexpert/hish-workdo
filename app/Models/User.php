@@ -87,6 +87,28 @@ class User extends Authenticatable implements MustVerifyEmail
         }
     }
 
+    public function customerFilterId()
+    {
+        if ($this->type == 'accountant') {
+            return $this->id;
+        } else {
+            return $this->creatorId();
+        }
+    }
+
+    public function getCustomerFilterIds()
+    {
+        if ($this->type == 'accountant') {
+            return [$this->id];
+        } elseif ($this->type == 'company') {
+            // Get the company's ID and all accountants' IDs created by this company
+            $accountantIds = User::where('created_by', $this->id)->where('type', 'accountant')->pluck('id')->toArray();
+            return array_merge([$this->id], $accountantIds);
+        } else {
+            return [$this->creatorId()];
+        }
+    }
+
     public function creatorId1()
     {
         if ($this->type == 'super admin') {
