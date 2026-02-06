@@ -19,6 +19,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Customer;
 use App\Models\ClientNotification;
 
@@ -112,15 +113,14 @@ class DashboardController extends Controller
 
                 $users = User::find(\Auth::user()->creatorId());
                 $plan = Plan::find($users->plan);
-                if(!empty($plan)){
+                if (!empty($plan)) {
                     if ($plan->storage_limit > 0) {
                         $storage_limit = ($users->storage_limit / $plan->storage_limit) * 100;
                     } else {
                         $storage_limit = 0;
                     }
-                }
-                else{
-                    return view('dashboard.index', $data, compact('users','plan'));
+                } else {
+                    return view('dashboard.index', $data, compact('users', 'plan'));
                 }
 
                 return view('dashboard.index', $data, compact('users', 'plan', 'storage_limit'));
@@ -175,6 +175,7 @@ class DashboardController extends Controller
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
             'recipients' => 'required',
+            'document' => 'nullable|file|max:10240',
         ]);
 
         $auth = Auth::user();
@@ -199,6 +200,13 @@ class DashboardController extends Controller
             return back()->with('error', __('No recipients found.'));
         }
 
+        $documentPath = null;
+        if ($request->hasFile('document')) {
+            $file = $request->file('document');
+            // $documentPath = $file->store('client_notifications', 'public');
+            $documentPath = $file->store('client_notifications', 'local');
+        }
+
         // Create client notifications
         foreach ($customers as $cust) {
             ClientNotification::create([
@@ -208,9 +216,46 @@ class DashboardController extends Controller
                 'message' => $request->message,
                 'is_read' => false,
                 'data' => null,
+                'document' => $documentPath,
             ]);
         }
 
         return back()->with('success', __('Notification sent successfully.'));
+    }
+
+
+    public function destroy($id)
+    {
+        $notification = ClientNotification::where('id', $id)
+            ->where('customer_id', Auth::guard('customer')->user()->id)
+            ->firstOrFail();
+
+        // Check if document exists and delete it from storage
+        if (!empty($notification->document)) {
+            if (Storage::disk('local')->exists($notification->document)) {
+                Storage::disk('local')->delete($notification->document);
+            }
+        }
+
+        $notification->delete();
+
+        return back()->with('success', __('Notification and associated document deleted.'));
+    }
+
+    // Clear all notifications and all associated files
+    public function clearAll()
+    {
+        $notifications = ClientNotification::where('customer_id', Auth::guard('customer')->user()->id)->get();
+
+        foreach ($notifications as $note) {
+            if (!empty($note->document)) {
+                if (Storage::disk('local')->exists($note->document)) {
+                    Storage::disk('local')->delete($note->document);
+                }
+            }
+            $note->delete();
+        }
+
+        return back()->with('success', __('All notifications and documents cleared.'));
     }
 }

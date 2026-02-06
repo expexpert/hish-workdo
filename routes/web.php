@@ -123,6 +123,9 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middl
 
 Route::post('dashboard/send-clients-notification', [DashboardController::class, 'sendClientsNotification'])->name('dashboard.send.clients.notification')->middleware(['auth', 'XSS']);
 
+Route::delete('/notifications/{id}/delete', [DashboardController::class, 'destroy'])->name('customer.notification.destroy');
+Route::delete('/notifications/clear-all', [DashboardController::class, 'clearAll'])->name('customer.notification.clearAll');
+
 Route::get('/bill/pay/{bill}', [BillController::class, 'paybill'])->name('pay.billpay');
 Route::get('/proposal/pay/{proposal}', [ProposalController::class, 'payproposal'])->name('pay.proposalpay');
 Route::get('/retainer/pay/{retainer}', [RetainerController::class, 'payretainer'])->name('pay.retainerpay');

@@ -15,6 +15,7 @@ class ClientNotification extends Model
         'message',
         'is_read',
         'data',
+        'document',
     ];
 
     protected $casts = [

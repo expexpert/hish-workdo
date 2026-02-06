@@ -250,7 +250,7 @@
             <div class="modal fade" id="sendClientsNotificationModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <form method="POST" action="{{ route('dashboard.send.clients.notification') }}">
+                        <form method="POST" action="{{ route('dashboard.send.clients.notification') }}" enctype="multipart/form-data">
                             @csrf
                             <div class="modal-header">
                                 <h5 class="modal-title">{{ __('Send Notification to Clients') }}</h5>
@@ -276,6 +276,12 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ __('Message') }}</label>
                                     <textarea name="message" class="form-control" rows="6" required></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Attach Document (optional)') }}</label>
+                                    <input type="file" name="document" class="form-control">
+                                    <small class="text-muted">{{ __('Optional: attach a document to send as doc notification') }}</small>
                                 </div>
                             </div>
                             <div class="modal-footer">
