@@ -93,6 +93,35 @@
 @section('content')
     <div class="row">
         <div class="col-md-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ __('Notifications') }} @if(!empty($notifications)) <span class="badge bg-danger ms-2">{{ $notifications->where('is_read', false)->count() }}</span> @endif</h5>
+                </div>
+                <div class="card-body">
+                    @if(!empty($notifications) && $notifications->count())
+                        <ul class="list-group">
+                            @foreach($notifications as $note)
+                                <li class="list-group-item d-flex justify-content-between align-items-start @if(!$note->is_read) bg-light @endif">
+                                    <div>
+                                        <strong>{{ $note->title }}</strong>
+                                        <div class="small text-muted">{{ $note->created_at->diffForHumans() }}</div>
+                                        <div class="mt-2">{{ $note->message }}</div>
+                                    </div>
+                                    <div class="ms-3">
+                                        @if(!$note->is_read)
+                                            <a href="{{ route('customer.notification.read', $note->id) }}" class="btn btn-sm btn-primary">{{ __('Mark read') }}</a>
+                                        @else
+                                            <span class="badge bg-success">{{ __('Read') }}</span>
+                                        @endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <div class="text-center text-muted">{{ __('No notifications') }}</div>
+                    @endif
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header">
                     <div class="row">

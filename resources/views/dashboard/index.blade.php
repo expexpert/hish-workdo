@@ -240,6 +240,53 @@
 @endsection
 @section('content')
     <div class="row">
+        @if (Auth::user()->type == 'accountant')
+            <!-- Accountant: Send notification to clients modal trigger -->
+            <div class="col-12 mb-3">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendClientsNotificationModal">{{ __('Send Notification to Clients') }}</button>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="sendClientsNotificationModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ route('dashboard.send.clients.notification') }}">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ __('Send Notification to Clients') }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Recipients') }}</label>
+                                    <select name="recipients" class="form-select">
+                                        <option value="all">{{ __('All Clients') }}</option>
+                                        @foreach(\App\Models\Customer::whereIn('created_by', [Auth::user()->creatorId(), Auth::user()->id])->get() as $cust)
+                                            <option value="{{ $cust->id }}">{{ $cust->name }} — {{ $cust->email }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">{{ __('Select specific client or choose All Clients') }}</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Subject') }}</label>
+                                    <input type="text" name="subject" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Message') }}</label>
+                                    <textarea name="message" class="form-control" rows="6" required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                <button type="submit" class="btn btn-primary">{{ __('Send') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
         <!-- [ sample-page ] start -->
         <div class="col-sm-12">
             <div class="row">
@@ -253,7 +300,7 @@
                                     </div>
                                     <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
                                     <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-primary" >{{__('Customers')}}</a></h6>
-                                    <h3 class="mb-0 text-primary">{{ \Auth::user()->countCustomers() }}
+                                    <h3 class="mb-0 text-primary">{{ \Auth::user()->countFilteredCustomers() }}
 
                                     </h3>
                                 </div>

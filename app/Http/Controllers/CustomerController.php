@@ -29,6 +29,8 @@ class CustomerController extends Controller
     public function dashboard()
     {
         $data['invoiceChartData'] = \Auth::user()->invoiceChartData();
+        $customer = \Auth::user();
+        $data['notifications'] = \App\Models\ClientNotification::where('customer_id', $customer->id)->orderBy('created_at', 'desc')->limit(20)->get();
 
         return view('customer.dashboard', $data);
     }
@@ -201,6 +203,17 @@ class CustomerController extends Controller
         $id       = \Crypt::decrypt($ids);
         $customer = Customer::find($id);
         return view('customer.show', compact('customer'));
+    }
+
+    public function markNotificationRead($id)
+    {
+        $notification = \App\Models\ClientNotification::where('id', $id)->where('customer_id', \Auth::user()->id)->first();
+        if ($notification) {
+            $notification->is_read = true;
+            $notification->save();
+        }
+
+        return redirect()->back();
     }
 
 

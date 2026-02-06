@@ -17,6 +17,10 @@ use App\Models\Tax;
 use App\Models\Utility;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Customer;
+use App\Models\ClientNotification;
 
 class DashboardController extends Controller
 {
@@ -160,5 +164,53 @@ class DashboardController extends Controller
         }
 
         return $arrTask;
+    }
+
+    /**
+     * Send notification/email to one or many clients from accountant dashboard.
+     */
+    public function sendClientsNotification(Request $request)
+    {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'recipients' => 'required',
+        ]);
+
+        $auth = Auth::user();
+
+        // Determine accessible customer owners: company and accountant (if accountant)
+        $creatorId = $auth->creatorId();
+        $ownerIds = [$creatorId];
+        if ($auth->type === 'accountant') {
+            $ownerIds[] = $auth->id;
+        }
+
+        // recipients can be 'all' or array of customer ids
+        $customers = collect();
+        if ($request->recipients === 'all') {
+            $customers = Customer::whereIn('created_by', $ownerIds)->where('is_active', 1)->get();
+        } else {
+            $ids = is_array($request->recipients) ? $request->recipients : explode(',', $request->recipients);
+            $customers = Customer::whereIn('id', $ids)->whereIn('created_by', $ownerIds)->get();
+        }
+
+        if ($customers->isEmpty()) {
+            return back()->with('error', __('No recipients found.'));
+        }
+
+        // Create client notifications
+        foreach ($customers as $cust) {
+            ClientNotification::create([
+                'customer_id' => $cust->id,
+                'sender_id' => $auth->id,
+                'title' => $request->subject,
+                'message' => $request->message,
+                'is_read' => false,
+                'data' => null,
+            ]);
+        }
+
+        return back()->with('success', __('Notification sent successfully.'));
     }
 }

@@ -54,7 +54,7 @@
                     @endif
                     {{-- @endcan --}}
                 </li>
-<!-- 
+
                 @if (Gate::check('manage customer proposal'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'customer.proposal' || Request::segment(1) == 'customer.retainer' ? ' active dash-trigger' : '' }}">
@@ -79,7 +79,7 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Customer Proposal ---------- --}}
 
@@ -238,14 +238,14 @@
                 @endif
 
                 {{-- -------  Vendor ---------- --}}
-                <!-- @if (Gate::check('manage vender'))
+                @if (Gate::check('manage vender'))
                     <li class="dash-item {{ Request::segment(1) == 'vender' ? 'active' : '' }}">
                         <a href="{{ route('vender.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-note"></i></span>
                             <span class="dash-mtext">{{ __('Vendor') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Proposal ---------- --}}
                 <!-- @if (Gate::check('manage proposal'))
@@ -259,7 +259,7 @@
 
 
                 {{-- -------  Presale ---------- --}}
-<!-- 
+
                 @if (Gate::check('manage proposal') || Gate::check('manage retainer'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'proposal' || Request::segment(1) == 'retainer' ? ' active dash-trigger' : '' }}">
@@ -284,7 +284,7 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
 
                 {{-- -------  Banking ---------- --}}
@@ -348,7 +348,7 @@
                 @endif
 
                 {{-- -------  Expense ---------- --}}
-                <!-- @if (Gate::check('manage bill') || Gate::check('manage payment') || Gate::check('manage debit note'))
+                @if (Gate::check('manage bill') || Gate::check('manage payment') || Gate::check('manage debit note'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'bill' || Request::segment(1) == 'payment' || Request::segment(1) == 'debit-note' ? ' active dash-trigger' : '' }}">
                         <a href="#!" class="dash-link "><span class="dash-micon"><i
@@ -377,10 +377,10 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Double Entry ---------- --}}
-                <!-- @if (Gate::check('manage chart of account') ||
+                @if (Gate::check('manage chart of account') ||
                         Gate::check('manage journal entry') ||
                         Gate::check('balance sheet report') ||
                         Gate::check('ledger report') ||
@@ -431,9 +431,9 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
-                <!-- {{-- -------  Budget Planner ---------- --}}
+                {{-- -------  Budget Planner ---------- --}}
                 @if (\Auth::user()->type == 'company')
                     <li class="dash-item {{ Request::segment(1) == 'budget' ? 'active' : '' }}">
                         <a href="{{ route('budget.index') }}" class="dash-link ">
@@ -481,7 +481,7 @@
                             <span class="dash-mtext">{{ __('Assets') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Plan---------- --}}
                 @if (Gate::check('manage plan'))
@@ -495,34 +495,34 @@
                 @endif
 
                 {{-- -------  Plan Request---------- --}}
-                <!-- @if (\Auth::user()->type == 'super admin')
+                @if (\Auth::user()->type == 'super admin')
                     <li class="dash-item  {{ request()->is('plan_request*') ? 'active' : '' }}">
                         <a href="{{ route('plan_request.index') }}" class="dash-link">
                             <span class="dash-micon"><i class="ti ti-arrow-up-right-circle"></i></span>
                             <span class="dash-mtext">{{ __('Plan Request') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Coupon ---------- --}}
-                <!-- @if (Gate::check('manage coupon'))
+                @if (Gate::check('manage coupon'))
                     <li class="dash-item {{ Request::segment(1) == 'coupons' ? 'active' : '' }}">
                         <a href="{{ route('coupons.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-gift"></i></span>
                             <span class="dash-mtext">{{ __('Coupon') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Order ---------- --}}
-                <!-- @if (Gate::check('manage order'))
+                @if (Gate::check('manage order'))
                     <li class="dash-item {{ Request::segment(1) == 'order' ? 'active' : '' }}">
                         <a href="{{ route('order.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-shopping-cart-plus"></i></span>
                             <span class="dash-mtext">{{ __('Order') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
 
                 {{-- -------  Email Notification ---------- --}}
@@ -696,7 +696,7 @@
                 {{-- @if (\Auth::user()->type == 'super admin')
                     @include('landingpage::menu.landingpage')
                 @endif --}}
-                <!-- @if (\Auth::user()->type == 'super admin')
+                @if (\Auth::user()->type == 'super admin')
                     <li
                         class="dash-item {{ Request::route()->getName() == 'landingpage.index' ||
                         Request::route()->getName() == 'custom_page.index' ||
@@ -715,16 +715,16 @@
                                 class="dash-mtext">{{ __('Landing Page') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
                 {{-- -------  System Setting ---------- --}}
                 @if (Gate::check('manage system settings'))
-                    <!-- <li class="dash-item ">
+                    <li class="dash-item ">
                         <a href="{{ route('referral-program.index') }}"
                             class="dash-link {{ Request::route()->getName() == 'referral-program.index' ? ' active' : '' }}">
                             <span class="dash-micon"><i class="ti ti-discount-2"></i></span>
                             <span class="dash-mtext">{{ __('Referral Program') }}</span>
                         </a>
-                    </li> -->
+                    </li>
                     <li class="dash-item {{ Request::route()->getName() == 'settings.index' ? ' active' : '' }}">
                         <a href="{{ route('settings.index') }}" class="dash-link">
                             <span class="dash-micon"><i class="ti ti-settings"></i></span>
@@ -737,13 +737,13 @@
                 @if (\Auth::user()->type == 'company')
 
                     @if (Gate::check('manage company settings'))
-                        <!-- <li class="dash-item ">
+                        <li class="dash-item ">
                             <a href="{{ route('referral-program.company') }}"
                                 class="dash-link {{ Request::route()->getName() == 'referral-program.company' ? ' active' : '' }}">
                                 <span class="dash-micon"><i class="ti ti-discount-2"></i></span>
                                 <span class="dash-mtext">{{ __('Referral Program') }}</span>
                             </a>
-                        </li> -->
+                        </li>
                         <li class="dash-item {{ Request::route()->getName() == 'systems.index' ? ' active' : '' }}">
                             <a href="{{ route('company.setting') }}" class="dash-link ">
                                 <span class="dash-micon"><i class="ti ti-settings"></i></span>

@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_expire_date',
         'referral_code',
         'used_referral_code',
+        'allow_super_admin_login',
     ];
 
     protected $hidden = [
@@ -403,6 +404,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function countBills()
     {
         return Bill::where('created_by', '=', $this->creatorId())->count();
+    }
+
+    public function countFilteredCustomers()
+    {
+        // Reuse your existing logic to get the IDs
+        $filterIds = $this->getCustomerFilterIds();
+
+        // Return the count directly from the database (more efficient than ->get()->count())
+        return Customer::whereIn('created_by', $filterIds)->count();
     }
 
     public function todayIncome()
