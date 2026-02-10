@@ -45,6 +45,18 @@
                 </div>
             </div>
         </div>
+        @if(\Auth::user()->type === 'accountant')
+            {{ Form::hidden('accountant', \Auth::user()->id) }}
+        @else
+            <div class="col-lg-4 col-md-4 col-sm-6">
+                <div class="form-group">
+                    {{ Form::label('accountant', __('Accountant'), ['class' => 'form-label']) }}<x-required></x-required>
+                    <div class="form-icon-user">
+                        {{ Form::select('accountant', $accountant, null, ['class' => 'form-control', 'required' => 'required', 'placeholder' => __('Select Accountant')]) }}
+                    </div>
+                </div>
+            </div>
+        @endif
         @if (!$customFields->isEmpty())
             <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="tab-pane fade show" id="tab-2" role="tabpanel">

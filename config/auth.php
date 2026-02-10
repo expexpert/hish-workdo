@@ -50,9 +50,12 @@ return [
             'provider' => 'venders',
         ],
         'api' => [
-            'driver' => 'token',
+            'driver' => 'sanctum',
             'provider' => 'users',
-            'hash' => false,
+        ],
+        'customer_api' => [
+            'driver' => 'sanctum',
+            'provider' => 'customers',
         ],
     ],
 

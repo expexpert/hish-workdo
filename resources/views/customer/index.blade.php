@@ -24,7 +24,6 @@
 @endsection
 
 @section('action-btn')
-    @if (\Auth::user()->type !== 'company')
         <div class="d-flex">
             <a href="#" data-size="md" data-bs-toggle="tooltip" title="{{ __('Import') }}"
                 data-url="{{ route('customer.file.import') }}" data-ajax-popup="true"
@@ -42,7 +41,6 @@
                 <i class="ti ti-plus"></i>
             </a>
         </div>
-    @endif
 @endsection
 
 @section('content')

@@ -456,8 +456,8 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         ),
         'Spatie\\Ignition\\' => 
         array (
-            0 => __DIR__ . '/..' . '/spatie/ignition/src',
-            1 => __DIR__ . '/..' . '/spatie/error-solutions/legacy/ignition',
+            0 => __DIR__ . '/..' . '/spatie/error-solutions/legacy/ignition',
+            1 => __DIR__ . '/..' . '/spatie/ignition/src',
         ),
         'Spatie\\FlareClient\\' => 
         array (
@@ -558,8 +558,8 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         ),
         'Nette\\' => 
         array (
-            0 => __DIR__ . '/..' . '/nette/utils/src',
-            1 => __DIR__ . '/..' . '/nette/schema/src',
+            0 => __DIR__ . '/..' . '/nette/schema/src',
+            1 => __DIR__ . '/..' . '/nette/utils/src',
         ),
         'Monolog\\' => 
         array (
@@ -599,8 +599,8 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         ),
         'League\\Uri\\' => 
         array (
-            0 => __DIR__ . '/..' . '/league/uri-interfaces',
-            1 => __DIR__ . '/..' . '/league/uri',
+            0 => __DIR__ . '/..' . '/league/uri',
+            1 => __DIR__ . '/..' . '/league/uri-interfaces',
         ),
         'League\\MimeTypeDetection\\' => 
         array (
@@ -750,8 +750,8 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         ),
         'Doctrine\\Common\\' => 
         array (
-            0 => __DIR__ . '/..' . '/doctrine/event-manager/src',
-            1 => __DIR__ . '/..' . '/doctrine/common/src',
+            0 => __DIR__ . '/..' . '/doctrine/common/src',
+            1 => __DIR__ . '/..' . '/doctrine/event-manager/src',
         ),
         'Dflydev\\DotAccessData\\' => 
         array (
@@ -923,6 +923,7 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         'App\\Exports\\TrialBalancExport' => __DIR__ . '/../..' . '/app/Exports/TrialBalancExport.php',
         'App\\Exports\\VenderExport' => __DIR__ . '/../..' . '/app/Exports/VenderExport.php',
         'App\\Http\\Controllers\\AamarpayController' => __DIR__ . '/../..' . '/app/Http/Controllers/AamarpayController.php',
+        'App\\Http\\Controllers\\AdminActivityLogController' => __DIR__ . '/../..' . '/app/Http/Controllers/AdminActivityLogController.php',
         'App\\Http\\Controllers\\AiTemplateController' => __DIR__ . '/../..' . '/app/Http/Controllers/AiTemplateController.php',
         'App\\Http\\Controllers\\AssetController' => __DIR__ . '/../..' . '/app/Http/Controllers/AssetController.php',
         'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
@@ -1026,6 +1027,7 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         'App\\Khalti\\Khalti' => __DIR__ . '/../..' . '/app/Khalti/Khalti.php',
         'App\\Listeners\\VerifyReCaptchaTokenLis' => __DIR__ . '/../..' . '/app/Listeners/VerifyReCaptchaTokenLis.php',
         'App\\Mail\\CommonEmailTemplate' => __DIR__ . '/../..' . '/app/Mail/CommonEmailTemplate.php',
+        'App\\Models\\AdminActivityLog' => __DIR__ . '/../..' . '/app/Models/AdminActivityLog.php',
         'App\\Models\\Asset' => __DIR__ . '/../..' . '/app/Models/Asset.php',
         'App\\Models\\BankAccount' => __DIR__ . '/../..' . '/app/Models/BankAccount.php',
         'App\\Models\\BankTransfer' => __DIR__ . '/../..' . '/app/Models/BankTransfer.php',
@@ -1038,6 +1040,7 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         'App\\Models\\ChartOfAccountParent' => __DIR__ . '/../..' . '/app/Models/ChartOfAccountParent.php',
         'App\\Models\\ChartOfAccountSubType' => __DIR__ . '/../..' . '/app/Models/ChartOfAccountSubType.php',
         'App\\Models\\ChartOfAccountType' => __DIR__ . '/../..' . '/app/Models/ChartOfAccountType.php',
+        'App\\Models\\ClientNotification' => __DIR__ . '/../..' . '/app/Models/ClientNotification.php',
         'App\\Models\\Contract' => __DIR__ . '/../..' . '/app/Models/Contract.php',
         'App\\Models\\ContractAttachment' => __DIR__ . '/../..' . '/app/Models/ContractAttachment.php',
         'App\\Models\\ContractComment' => __DIR__ . '/../..' . '/app/Models/ContractComment.php',
@@ -1102,6 +1105,7 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         'App\\Models\\Utility' => __DIR__ . '/../..' . '/app/Models/Utility.php',
         'App\\Models\\Vender' => __DIR__ . '/../..' . '/app/Models/Vender.php',
         'App\\Models\\Webhook' => __DIR__ . '/../..' . '/app/Models/Webhook.php',
+        'App\\Observers\\AdminActivityObserver' => __DIR__ . '/../..' . '/app/Observers/AdminActivityObserver.php',
         'App\\Package\\Payment' => __DIR__ . '/../..' . '/app/Package/Payment.php',
         'App\\Package\\Reference' => __DIR__ . '/../..' . '/app/Package/Reference.php',
         'App\\Package\\Tap' => __DIR__ . '/../..' . '/app/Package/Tap.php',
@@ -1113,6 +1117,7 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         'App\\Providers\\BroadcastServiceProvider' => __DIR__ . '/../..' . '/app/Providers/BroadcastServiceProvider.php',
         'App\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/app/Providers/EventServiceProvider.php',
         'App\\Providers\\RouteServiceProvider' => __DIR__ . '/../..' . '/app/Providers/RouteServiceProvider.php',
+        'App\\Services\\AdminActivityLogger' => __DIR__ . '/../..' . '/app/Services/AdminActivityLogger.php',
         'App\\View\\Components\\AppLayout' => __DIR__ . '/../..' . '/app/View/Components/AppLayout.php',
         'App\\View\\Components\\GuestLayout' => __DIR__ . '/../..' . '/app/View/Components/GuestLayout.php',
         'App\\View\\Components\\Mobile' => __DIR__ . '/../..' . '/app/View/Components/Mobile.php',

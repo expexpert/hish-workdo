@@ -203,8 +203,8 @@ class DashboardController extends Controller
         $documentPath = null;
         if ($request->hasFile('document')) {
             $file = $request->file('document');
-            // $documentPath = $file->store('client_notifications', 'public');
-            $documentPath = $file->store('client_notifications', 'local');
+            // Change 'local' to 'public' here
+            $documentPath = $file->store('client_notifications', 'public');
         }
 
         // Create client notifications
@@ -232,11 +232,12 @@ class DashboardController extends Controller
 
         // Check if document exists and delete it from storage
         if (!empty($notification->document)) {
-            if (Storage::disk('local')->exists($notification->document)) {
-                Storage::disk('local')->delete($notification->document);
+            // Change 'local' to 'public'
+            if (Storage::disk('public')->exists($notification->document)) {
+                Storage::disk('public')->delete($notification->document);
             }
         }
-
+    
         $notification->delete();
 
         return back()->with('success', __('Notification and associated document deleted.'));
@@ -249,8 +250,9 @@ class DashboardController extends Controller
 
         foreach ($notifications as $note) {
             if (!empty($note->document)) {
-                if (Storage::disk('local')->exists($note->document)) {
-                    Storage::disk('local')->delete($note->document);
+                // Change 'local' to 'public'
+                if (Storage::disk('public')->exists($note->document)) {
+                    Storage::disk('public')->delete($note->document);
                 }
             }
             $note->delete();

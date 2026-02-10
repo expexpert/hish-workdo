@@ -51,8 +51,9 @@ class CustomerController extends Controller
     {
         if (\Auth::user()->can('create customer')) {
             $customFields = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'customer')->get();
+            $accountant = User::where('created_by', \Auth::user()->creatorId())->where('type', 'accountant')->pluck('name', 'id');
 
-            return view('customer.create', compact('customFields'));
+            return view('customer.create', compact('customFields', 'accountant'));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
@@ -116,7 +117,7 @@ class CustomerController extends Controller
 
                 $request['password'] = !empty($userpassword) ? \Hash::make($userpassword) : null;
 
-                $customer->created_by      = \Auth::user()->id;
+                $customer->created_by      = $request->accountant;
                 $customer->billing_name    = $request->billing_name;
                 $customer->billing_country = $request->billing_country;
                 $customer->billing_state   = $request->billing_state;

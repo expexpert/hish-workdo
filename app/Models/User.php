@@ -23,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasRoles;
     use Notifiable;
     use Impersonate;
+    use HasApiTokens;
 
     protected $appends = ['profile'];
 
