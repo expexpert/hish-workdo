@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Hash;
 
+
+
 class CustomerAuthController extends Controller
 {
     public function login(Request $request)
