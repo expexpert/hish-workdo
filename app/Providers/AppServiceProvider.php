@@ -34,6 +34,10 @@ use App\Models\ContractNote;
 use App\Models\Budget;
 use App\Models\JournalEntry;
 use App\Models\JournalItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -104,6 +108,10 @@ class AppServiceProvider extends ServiceProvider
         Contract::observe(AdminActivityObserver::class);
         ContractNote::observe(AdminActivityObserver::class);
         Budget::observe(AdminActivityObserver::class);
+
+        RateLimiter::for('api', function (Request $request) {
+        return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+    });
     }
 }
 
