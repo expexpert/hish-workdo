@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,34 +33,9 @@ class TooManyRequestsException extends ApiException
 {
     public const HTTP_CODE = 429;
 
-    public mixed $type = null;
-
-    public mixed $retryAfter = null;
-
     public function __construct(array $responseHeaders = [], ?string $responseBody = '')
     {
-        $errorData = json_decode($responseBody, true);
-        $message = '';
-
-        if (isset($errorData['description'])) {
-            $message .= $errorData['description'] . '. ';
-        }
-
-        if (isset($errorData['code'])) {
-            $message .= sprintf('Error code: %s. ', $errorData['code']);
-        }
-
-        if (isset($errorData['parameter'])) {
-            $message .= sprintf('Parameter name: %s. ', $errorData['parameter']);
-        }
-
-        if (isset($errorData['retry_after'])) {
-            $this->retryAfter = $errorData['retry_after'];
-        }
-
-        if (isset($errorData['type'])) {
-            $this->type = $errorData['type'];
-        }
+        $message = $this->createMessageFromError($responseBody);
 
         parent::__construct(trim($message), self::HTTP_CODE, $responseHeaders, $responseBody);
     }

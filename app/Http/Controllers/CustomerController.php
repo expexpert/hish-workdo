@@ -29,6 +29,8 @@ class CustomerController extends Controller
     public function dashboard()
     {
         $data['invoiceChartData'] = \Auth::user()->invoiceChartData();
+        $customer = \Auth::user();
+        $data['notifications'] = \App\Models\ClientNotification::where('customer_id', $customer->id)->orderBy('created_at', 'desc')->limit(20)->get();
 
         return view('customer.dashboard', $data);
     }
@@ -36,7 +38,8 @@ class CustomerController extends Controller
     public function index()
     {
         if (\Auth::user()->can('manage customer')) {
-            $customers = Customer::where('created_by', \Auth::user()->creatorId())->get();
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers = Customer::whereIn('created_by', $filterIds)->get();
 
             return view('customer.index', compact('customers'));
         } else {
@@ -48,8 +51,9 @@ class CustomerController extends Controller
     {
         if (\Auth::user()->can('create customer')) {
             $customFields = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'customer')->get();
+            $accountant = User::where('created_by', \Auth::user()->creatorId())->where('type', 'accountant')->pluck('name', 'id');
 
-            return view('customer.create', compact('customFields'));
+            return view('customer.create', compact('customFields', 'accountant'));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
@@ -113,7 +117,7 @@ class CustomerController extends Controller
 
                 $request['password'] = !empty($userpassword) ? \Hash::make($userpassword) : null;
 
-                $customer->created_by      = \Auth::user()->creatorId();
+                $customer->created_by      = $request->accountant;
                 $customer->billing_name    = $request->billing_name;
                 $customer->billing_country = $request->billing_country;
                 $customer->billing_state   = $request->billing_state;
@@ -202,6 +206,17 @@ class CustomerController extends Controller
         return view('customer.show', compact('customer'));
     }
 
+    public function markNotificationRead($id)
+    {
+        $notification = \App\Models\ClientNotification::where('id', $id)->where('customer_id', \Auth::user()->id)->first();
+        if ($notification) {
+            $notification->is_read = true;
+            $notification->save();
+        }
+
+        return redirect()->back();
+    }
+
 
     public function edit($id)
     {
@@ -284,7 +299,7 @@ class CustomerController extends Controller
 
     function customerNumber()
     {
-        $latest = Customer::where('created_by', '=', \Auth::user()->creatorId())->latest()->first();
+        $latest = Customer::where('created_by', '=', \Auth::user()->customerFilterId())->latest()->first();
         if (!$latest) {
             return 1;
         }

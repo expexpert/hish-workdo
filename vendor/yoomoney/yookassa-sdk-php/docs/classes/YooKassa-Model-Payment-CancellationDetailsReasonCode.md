@@ -35,6 +35,7 @@
 | public | [EXPIRED_ON_CAPTURE](../classes/YooKassa-Model-Payment-CancellationDetailsReasonCode.md#constant_EXPIRED_ON_CAPTURE) |  | Истек срок списания оплаты у двухстадийного платежа. |
 | public | [DEAL_EXPIRED](../classes/YooKassa-Model-Payment-CancellationDetailsReasonCode.md#constant_DEAL_EXPIRED) |  | Для тех, кто использует Безопасную сделку: закончился срок жизни сделки. |
 | public | [UNSUPPORTED_MOBILE_OPERATOR](../classes/YooKassa-Model-Payment-CancellationDetailsReasonCode.md#constant_UNSUPPORTED_MOBILE_OPERATOR) |  | Нельзя заплатить с номера телефона этого мобильного оператора. При новой попытке оплаты пользователю следует использовать другое платежное средство. Список поддерживаемых операторов |
+| public | [REJECTED_BY_TIMEOUT](../classes/YooKassa-Model-Payment-CancellationDetailsReasonCode.md#constant_REJECTED_BY_TIMEOUT) |  | Отклонено по таймауту |
 
 ---
 ### Properties
@@ -257,6 +258,15 @@ UNSUPPORTED_MOBILE_OPERATOR = 'unsupported_mobile_operator'
 ```
 
 
+<a name="constant_REJECTED_BY_TIMEOUT" class="anchor"></a>
+###### REJECTED_BY_TIMEOUT
+Отклонено по таймауту
+
+```php
+REJECTED_BY_TIMEOUT = 'rejected_by_timeout'
+```
+
+
 
 ---
 ## Properties
@@ -339,10 +349,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

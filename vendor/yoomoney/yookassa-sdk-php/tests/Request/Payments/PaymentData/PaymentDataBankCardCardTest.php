@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ namespace Tests\YooKassa\Request\Payments\PaymentData;
 use Exception;
 use Tests\YooKassa\AbstractTestCase;
 use Datetime;
+use YooKassa\Helpers\Random;
 use YooKassa\Model\Metadata;
 use YooKassa\Request\Payments\PaymentData\PaymentDataBankCardCard;
 
@@ -77,8 +78,8 @@ class PaymentDataBankCardCardTest extends AbstractTestCase
         self::assertNotNull($instance->number);
         self::assertEquals($value, is_array($value) ? $instance->getNumber()->toArray() : $instance->getNumber());
         self::assertEquals($value, is_array($value) ? $instance->number->toArray() : $instance->number);
-        self::assertMatchesRegularExpression("/[0-9]{16,19}/", $instance->getNumber());
-        self::assertMatchesRegularExpression("/[0-9]{16,19}/", $instance->number);
+        self::assertMatchesRegularExpression("/[0-9]{14,19}/", $instance->getNumber());
+        self::assertMatchesRegularExpression("/[0-9]{14,19}/", $instance->number);
     }
 
     /**
@@ -308,8 +309,8 @@ class PaymentDataBankCardCardTest extends AbstractTestCase
         if (!empty($value)) {
             self::assertNotNull($instance->getCardholder());
             self::assertNotNull($instance->cardholder);
-            self::assertMatchesRegularExpression("/[a-zA-Z]{0,26}/", $instance->getCardholder());
-            self::assertMatchesRegularExpression("/[a-zA-Z]{0,26}/", $instance->cardholder);
+            self::assertMatchesRegularExpression("/[a-zA-Z '-]{1,26}/", $instance->getCardholder());
+            self::assertMatchesRegularExpression("/[a-zA-Z '-]{1,26}/", $instance->cardholder);
         }
     }
 
@@ -335,8 +336,11 @@ class PaymentDataBankCardCardTest extends AbstractTestCase
      */
     public function validCardholderDataProvider(): array
     {
-        $instance = $this->getTestInstance();
-        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_cardholder'));
+        return [
+            [null],
+            [Random::str(1, 26, 'abcdefghijklmnopqrstuvwxyz \'-')],
+            [Random::str(1, 26, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ \'-')],
+        ];
     }
 
     /**

@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -90,8 +90,8 @@ class PaymentDataB2bSberbankTest extends AbstractTestCase
         $instance->setPaymentPurpose($value);
         self::assertNotNull($instance->getPaymentPurpose());
         self::assertNotNull($instance->payment_purpose);
-        self::assertEquals($value, is_array($value) ? $instance->getPaymentPurpose()->toArray() : $instance->getPaymentPurpose());
-        self::assertEquals($value, is_array($value) ? $instance->payment_purpose->toArray() : $instance->payment_purpose);
+        self::assertEquals($value, $instance->getPaymentPurpose());
+        self::assertEquals($value, $instance->payment_purpose);
         self::assertMatchesRegularExpression("/.{1,210}/", $instance->getPaymentPurpose());
         self::assertMatchesRegularExpression("/.{1,210}/", $instance->payment_purpose);
     }

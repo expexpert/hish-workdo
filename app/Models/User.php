@@ -23,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasRoles;
     use Notifiable;
     use Impersonate;
+    use HasApiTokens;
 
     protected $appends = ['profile'];
 
@@ -46,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_expire_date',
         'referral_code',
         'used_referral_code',
+        'allow_super_admin_login',
     ];
 
     protected $hidden = [
@@ -84,6 +86,28 @@ class User extends Authenticatable implements MustVerifyEmail
             return $this->id;
         } else {
             return $this->created_by;
+        }
+    }
+
+    public function customerFilterId()
+    {
+        if ($this->type == 'accountant') {
+            return $this->id;
+        } else {
+            return $this->creatorId();
+        }
+    }
+
+    public function getCustomerFilterIds()
+    {
+        if ($this->type == 'accountant') {
+            return [$this->id];
+        } elseif ($this->type == 'company') {
+            // Get the company's ID and all accountants' IDs created by this company
+            $accountantIds = User::where('created_by', $this->id)->where('type', 'accountant')->pluck('id')->toArray();
+            return array_merge([$this->id], $accountantIds);
+        } else {
+            return [$this->creatorId()];
         }
     }
 
@@ -381,6 +405,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function countBills()
     {
         return Bill::where('created_by', '=', $this->creatorId())->count();
+    }
+
+    public function countFilteredCustomers()
+    {
+        // Reuse your existing logic to get the IDs
+        $filterIds = $this->getCustomerFilterIds();
+
+        // Return the count directly from the database (more efficient than ->get()->count())
+        return Customer::whereIn('created_by', $filterIds)->count();
     }
 
     public function todayIncome()

@@ -65,6 +65,7 @@
 | --- | ------- | ----------- |
 | category |  | Class |
 | author |  | cms@yoomoney.ru |
+| deprecated |  | Больше не поддерживается. Вместо него нужно использовать `receiver`. |
 
 ---
 ## Properties
@@ -515,10 +516,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

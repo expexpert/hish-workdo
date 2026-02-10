@@ -35,6 +35,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\RevenueController;
 use App\Http\Controllers\PaytmPaymentController;
@@ -120,6 +121,11 @@ Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, '
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
 
+Route::post('dashboard/send-clients-notification', [DashboardController::class, 'sendClientsNotification'])->name('dashboard.send.clients.notification')->middleware(['auth', 'XSS']);
+
+Route::delete('/notifications/{id}/delete', [DashboardController::class, 'destroy'])->name('customer.notification.destroy');
+Route::delete('/notifications/clear-all', [DashboardController::class, 'clearAll'])->name('customer.notification.clearAll');
+
 Route::get('/bill/pay/{bill}', [BillController::class, 'paybill'])->name('pay.billpay');
 Route::get('/proposal/pay/{proposal}', [ProposalController::class, 'payproposal'])->name('pay.proposalpay');
 Route::get('/retainer/pay/{retainer}', [RetainerController::class, 'payretainer'])->name('pay.retainerpay');
@@ -189,6 +195,8 @@ Route::prefix('customer')->as('customer.')->group(
 
 
         Route::get('invoice/{id}/show', [InvoiceController::class, 'customerInvoiceShow'])->name('invoice.show')->middleware(['auth:customer', 'XSS']);
+
+        Route::get('notification/read/{id}', [CustomerController::class, 'markNotificationRead'])->name('notification.read')->middleware(['auth:customer', 'XSS']);
 
         Route::post('invoice/{id}/payment', [StripePaymentController::class, 'addpayment'])->name('invoice.payment')->middleware(['auth:customer', 'XSS']);
         Route::post('retainer/{id}/payment', [StripePaymentController::class, 'addretainerpayment'])->name('retainer.payment')->middleware(['auth:customer', 'XSS']);
@@ -478,7 +486,13 @@ Route::group(['middleware' => ['verified']], function () {
     Route::get('user/{id}/plan/{pid}', [UserController::class, 'activePlan'])->name('plan.active')->middleware(['XSS', 'revalidate']);
     Route::get('profile', [UserController::class, 'profile'])->name('profile')->middleware(['XSS', 'revalidate']);
     Route::post('edit-profile', [UserController::class, 'editprofile'])->name('update.account')->middleware(['XSS', 'revalidate']);
+    Route::post('update-super-admin-login', [UserController::class, 'updateSuperAdminLogin'])->name('update.super.admin.login')->middleware(['XSS', 'revalidate']);
 
+    // Admin Activity Logs
+    Route::get('admin-activity-logs', [AdminActivityLogController::class, 'index'])->name('admin-activity-logs.index')->middleware(['XSS', 'revalidate']);
+    Route::get('admin-activity-logs/{id}', [AdminActivityLogController::class, 'show'])->name('admin-activity-logs.show')->middleware(['XSS', 'revalidate']);
+    Route::delete('admin-activity-logs/{id}', [AdminActivityLogController::class, 'destroy'])->name('admin-activity-logs.destroy')->middleware(['XSS', 'revalidate']);
+    Route::get('admin-activity-logs/export/csv', [AdminActivityLogController::class, 'export'])->name('admin-activity-logs.export')->middleware(['XSS', 'revalidate']);
 
     Route::resource('users', UserController::class)->middleware(['auth', 'XSS', 'revalidate']);
 

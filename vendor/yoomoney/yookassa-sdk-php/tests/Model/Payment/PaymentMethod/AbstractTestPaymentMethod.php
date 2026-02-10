@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,9 @@
 
 namespace Tests\YooKassa\Model\Payment\PaymentMethod;
 
+use Exception;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
+use Tests\YooKassa\AbstractTestCase;
 use YooKassa\Helpers\Random;
 use YooKassa\Model\Payment\PaymentMethod\AbstractPaymentMethod;
 
@@ -38,7 +39,7 @@ use YooKassa\Model\Payment\PaymentMethod\AbstractPaymentMethod;
  * @author      cms@yoomoney.ru
  * @link        https://yookassa.ru/developers/api
  */
-abstract class AbstractTestPaymentMethod extends TestCase
+abstract class AbstractTestPaymentMethod extends AbstractTestCase
 {
     public function testGetType(): void
     {
@@ -83,6 +84,60 @@ abstract class AbstractTestPaymentMethod extends TestCase
             self::assertFalse($instance->getSaved());
             self::assertFalse($instance->saved);
         }
+    }
+
+    /**
+     * Test property "status"
+     * @dataProvider validStatusDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testStatus(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        $instance->setStatus($value);
+        self::assertNotNull($instance->getStatus());
+        self::assertNotNull($instance->status);
+        self::assertEquals($value, $instance->getStatus());
+        self::assertEquals($value, $instance->status);
+    }
+
+    /**
+     * Test invalid property "status"
+     * @dataProvider invalidStatusDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidStatus(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setStatus($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validStatusDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_status'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidStatusDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_status'));
     }
 
     /**
@@ -139,7 +194,7 @@ abstract class AbstractTestPaymentMethod extends TestCase
         }
     }
 
-    public static function invalidTypeDataProvider()
+    public static function invalidTypeDataProvider(): array
     {
         return [
             [''],
@@ -149,7 +204,7 @@ abstract class AbstractTestPaymentMethod extends TestCase
         ];
     }
 
-    public static function validSavedDataProvider()
+    public static function validSavedDataProvider(): array
     {
         return [
             [true],
@@ -157,7 +212,7 @@ abstract class AbstractTestPaymentMethod extends TestCase
         ];
     }
 
-    public static function validIdDataProvider()
+    public static function validIdDataProvider(): array
     {
         return [
             [null],
@@ -167,7 +222,7 @@ abstract class AbstractTestPaymentMethod extends TestCase
         ];
     }
 
-    public static function validTitleDataProvider()
+    public static function validTitleDataProvider(): array
     {
         return [
             [null],

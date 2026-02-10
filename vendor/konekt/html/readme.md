@@ -8,7 +8,7 @@
 This is a fork of the original LaravelCollective HTML package.
 It aims to serve as a drop-in replacement after the original package is no longer updated.
 
-The only change this package brings is that it only support PHP 8.1+ and Laravel 10 & 11.
+The only change this package brings is that it only support PHP 8.1+ and Laravel 10, 11 & 12.
 
 The rest of the functionality is identical with the original one.
 
@@ -22,6 +22,6 @@ composer require konekt/html:^6.5
 
 This will replace your existing laravelcollective/html v6.4+ installation with this version:
 
-![Replace the package](/home/fulop/Documents/WebProjects/konekt/html/docs/replace.png)
+![Replace the package](docs/replace650.png)
 
 See the original [Documentation](https://laravelcollective.com/docs) for usage details.

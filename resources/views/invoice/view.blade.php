@@ -274,12 +274,14 @@
                                 <p class="text-muted text-sm mb-3"><i
                                         class="ti ti-clock mr-2"></i>{{ __('Created on ') }}{{ \Auth::user()->dateFormat($invoice->issue_date) }}
                                 </p>
+                                @if (\Auth::user()->type !== 'company')
                                 @can('edit invoice')
                                     <a href="{{ route('invoice.edit', \Crypt::encrypt($invoice->id)) }}"
                                         class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
                                         data-original-title="{{ __('Edit') }}"><i
                                             class="ti ti-pencil mr-2"></i>{{ __('Edit') }}</a>
                                 @endcan
+                                @endif
                             </div>
                             <div class="col-md-6 col-lg-4 col-xl-4">
                                 <div class="timeline-icons"><span class="timeline-dots"></span>
@@ -292,17 +294,21 @@
                                         {{ \Auth::user()->dateFormat($invoice->send_date) }}
                                     @else
                                         @can('send invoice')
+                                        @if (\Auth::user()->type !== 'company')
                                             <small>{{ __('Status') }} : {{ __('Not Sent') }}</small>
+                                        @endif
                                         @endcan
                                     @endif
                                 </p>
 
                                 @if ($invoice->status == 0)
+                                @if (\Auth::user()->type !== 'company')
                                     @can('send bill')
                                         <a href="{{ route('invoice.sent', $invoice->id) }}" class="btn btn-sm btn-warning"
                                             data-bs-toggle="tooltip" data-original-title="{{ __('Mark Sent') }}"><i
                                                 class="ti ti-send mr-2"></i>{{ __('Send') }}</a>
                                     @endcan
+                                @endif    
                                 @endif
                             </div>
                             <div class="col-md-6 col-lg-4 col-xl-4">
@@ -311,6 +317,7 @@
                                 </div>
                                 <h6 class="text-info my-3">{{ __('Get Paid') }}</h6>
                                 <p class="text-muted text-sm mb-3">{{ __('Status') }} : {{ __('Awaiting payment') }} </p>
+                                @if (\Auth::user()->type !== 'company')
                                 @if ($invoice->status != 0)
                                     @can('create payment invoice')
                                         <a href="#" data-url="{{ route('invoice.payment', $invoice->id) }}"
@@ -318,6 +325,7 @@
                                             data-original-title="{{ __('Add Payment') }}"><i
                                                 class="ti ti-report-money mr-2"></i>{{ __('Add Payment') }}</a> <br>
                                     @endcan
+                                @endif
                                 @endif
 
                             </div>
@@ -744,9 +752,11 @@
                             <th class="text-dark">{{ __('Description') }}</th>
                             <th class="text-dark">{{ __('Receipt') }}</th>
                             <th class="text-dark">{{ __('OrderId') }}</th>
+                            @if (\Auth::user()->type !== 'company')
                             @can('delete payment invoice')
                                 <th class="text-dark">{{ __('Action') }}</th>
                             @endcan
+                            @endif
                         </tr>
                          @foreach ($invoice->payments as $key => $payment)
                             @php
@@ -812,6 +822,7 @@
 
                                 </td>
                                 <td>{{ !empty($payment->order_id) ? $payment->order_id : '--' }}</td>
+                                @if (\Auth::user()->type !== 'company')
                                 @can('delete invoice product')
                                     <td>
                                         <div class="action-btn  ms-2">
@@ -832,6 +843,7 @@
                                         </div>
                                     </td>
                                 @endcan
+                                @endif
                             </tr>
                         @endforeach
                         @php
@@ -907,8 +919,10 @@
                             <th class="text-dark">{{ __('Date') }}</th>
                             <th class="text-dark" class="">{{ __('Amount') }}</th>
                             <th class="text-dark" class="">{{ __('Description') }}</th>
+                            @if (\Auth::user()->type !== 'company')
                             @if (Gate::check('edit credit note') || Gate::check('delete credit note'))
                                 <th class="text-dark">{{ __('Action') }}</th>
+                            @endif
                             @endif
                         </tr>
                         @forelse($invoice->creditNote as $key =>$creditNote)
@@ -917,6 +931,7 @@
                                 <td class="">{{ \Auth::user()->priceFormat($creditNote->amount) }}</td>
                                 <td class="">{{ $creditNote->description }}</td>
                                 <td>
+                                    @if (\Auth::user()->type !== 'company')
                                     @can('edit credit note')
                                         <div class="action-btn me-2">
                                             <a data-url="{{ route('invoice.edit.credit.note', [$creditNote->invoice, $creditNote->id]) }}"
@@ -945,6 +960,7 @@
                                             {!! Form::close() !!}
                                         </div>
                                     @endcan
+                                    @endif
                                 </td>
                             </tr>
                         @empty

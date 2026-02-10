@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@ use YooKassa\Model\Receipt\PaymentMode;
 use YooKassa\Model\Receipt\PaymentSubject;
 use YooKassa\Model\Receipt\ReceiptItem;
 use YooKassa\Model\Receipt\ReceiptItemAmount;
+use YooKassa\Model\Refund\RefundMethodType;
 use YooKassa\Model\Refund\Source;
 use YooKassa\Request\Payments\CreatePaymentRequestBuilder;
 use YooKassa\Request\Refunds\CreateRefundRequestBuilder;
@@ -371,7 +372,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                     [
                         'price' => [1],
                         'quantity' => -1.4,
-                        'vatCode' => 10,
+                        'vatCode' => 11,
                     ],
                 ],
             ],
@@ -399,7 +400,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                         'title' => 'test',
                         'price' => [123],
                         'quantity' => 1.4,
-                        'vatCode' => 7,
+                        'vatCode' => 15,
                     ],
                 ],
             ],
@@ -417,7 +418,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                     [
                         'title' => 'test',
                         'price' => [1],
-                        'vatCode' => 7,
+                        'vatCode' => 20,
                     ],
                 ],
             ],
@@ -532,6 +533,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                             'platform_fee_amount' => new MonetaryAmount(Random::int(1, 1000), 'RUB'),
                         ]),
                     ],
+                    'metadata' => null,
                     'deal' => [
                         'id' => Random::str(36, 50),
                         'refund_settlements' => [
@@ -544,6 +546,24 @@ class CreateRefundRequestBuilderTest extends TestCase
                             ],
                         ],
                     ],
+                    'refund_method_data' => [
+                        'type' => RefundMethodType::ELECTRONIC_CERTIFICATE,
+                        'articles' => [
+                            [
+                                'article_number' => Random::int(1, 999),
+                                'payment_article_number' => Random::int(1, 999),
+                                'tru_code' => Random::str(30, 30, '0123456789'),
+                                'quantity' => Random::int(1, 6),
+                            ],
+                        ],
+                        'electronic_certificate' => [
+                            'amount' => [
+                                'value' => Random::int(1, 999999),
+                                'currency' => Random::value(CurrencyCode::getValidValues()),
+                            ],
+                            'basket_id' => Random::str(100)
+                        ],
+                    ]
                 ],
             ],
             [
@@ -565,6 +585,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                             'platform_fee_amount' => new MonetaryAmount(Random::int(1, 1000), 'RUB'),
                         ]),
                     ],
+                    'metadata' => [],
                     'deal' => [
                         'id' => Random::str(36, 50),
                         'refund_settlements' => [
@@ -577,6 +598,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                             ]
                         ],
                     ],
+                    'refund_method_data' => null,
                 ],
             ],
         ];
@@ -590,12 +612,14 @@ class CreateRefundRequestBuilderTest extends TestCase
                 ],
                 'quantity' => Random::int(1, 9999),
                 'vatCode' => Random::int(1, 6),
+                'planned_status' => 6,
             ],
         ];
         $items[0]->setDescription('test1');
         $items[0]->setQuantity(Random::int(1, 9999));
         $items[0]->setPrice(new ReceiptItemAmount(Random::int(1, 999999)));
         $items[0]->setVatCode(Random::int(1, 6));
+        $items[0]->setPlannedStatus(Random::int(1, 6));
         for ($i = 0; $i < 10; $i++) {
             $request = [
                 'paymentId' => Random::str(36),
@@ -615,6 +639,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                         'platform_fee_amount' => new MonetaryAmount(Random::int(1, 1000), 'RUB'),
                     ]),
                 ],
+                'metadata' => ['test' => 'test'],
                 'deal' => [
                     'id' => Random::str(36, 50),
                     'refund_settlements' => [
@@ -627,6 +652,7 @@ class CreateRefundRequestBuilderTest extends TestCase
                         ],
                     ],
                 ],
+                'refund_method_data' => null,
             ];
             $result[] = [$request];
         }
@@ -672,6 +698,29 @@ class CreateRefundRequestBuilderTest extends TestCase
     }
 
     /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
+     * @throws Exception
+     */
+    public function testSetRefundMethodData(mixed $options): void
+    {
+        $builder = new CreateRefundRequestBuilder();
+        $builder->setPaymentId($options['paymentId']);
+        $builder->setAmount($options['amount']);
+        $builder->setRefundMethodData($options['refund_method_data']);
+        $instance = $builder->build();
+
+        if (empty($options['refund_method_data'])) {
+            self::assertNull($instance->getRefundMethodData());
+        } else {
+            self::assertNotNull($instance->getRefundMethodData());
+            self::assertEquals($options['refund_method_data'], $instance->getRefundMethodData()->toArray());
+        }
+    }
+
+    /**
      * @throws Exception
      */
     public static function invalidDealDataProvider(): array
@@ -709,4 +758,59 @@ class CreateRefundRequestBuilderTest extends TestCase
             'amount' => Random::int(1, 100),
         ];
     }
+
+
+    /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
+     * @throws Exception
+     */
+    public function testAddSource(mixed $options): void
+    {
+        $builder = new CreateRefundRequestBuilder();
+
+        $builder->setPaymentId($options['paymentId']);
+        $builder->setAmount($options['amount']);
+
+        if (!empty($options['sources'])) {
+            foreach ($options['sources'] as $source) {
+                $builder->addSource($source);
+            }
+        }
+        $instance = $builder->build();
+
+        if (empty($options['sources'])) {
+            self::assertEmpty($instance->getSources());
+        } else {
+            self::assertNotNull($instance->getSources());
+            self::assertCount(count($options['sources']), $instance->getSources());
+        }
+    }
+
+    /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
+     * @throws Exception
+     */
+    public function testSetMetadata(mixed $options): void
+    {
+        $builder = new CreateRefundRequestBuilder();
+
+        $instance = $builder->build($this->getRequiredData());
+        self::assertNull($instance->getMetadata());
+
+        $builder->setMetadata($options['metadata']);
+        $instance = $builder->build($this->getRequiredData());
+
+        if (empty($options['metadata'])) {
+            self::assertNull($instance->getMetadata());
+        } else {
+            self::assertEquals($options['metadata'], $instance->getMetadata()->toArray());
+        }
+    }
+
 }

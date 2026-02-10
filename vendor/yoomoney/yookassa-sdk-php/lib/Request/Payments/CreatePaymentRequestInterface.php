@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,8 @@ use YooKassa\Model\Payment\TransferInterface;
 use YooKassa\Model\Receipt\ReceiptInterface;
 use YooKassa\Request\Payments\ConfirmationAttributes\AbstractConfirmationAttributes;
 use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
+use YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder;
+use YooKassa\Request\Payments\ReceiverData\AbstractReceiver;
 
 /**
  * Interface CreatePaymentRequestInterface.
@@ -45,7 +47,7 @@ use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property RecipientInterface $recipient Получатель платежа, если задан
+ * @property Recipient $recipient Получатель платежа, если задан
  * @property AmountInterface $amount Сумма создаваемого платежа
  * @property string $description Описание транзакции
  * @property ReceiptInterface $receipt Данные фискального чека 54-ФЗ
@@ -63,19 +65,18 @@ use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
  * @property string $client_ip IPv4 или IPv6-адрес покупателя. Если не указан, используется IP-адрес TCP-подключения
  * @property Metadata $metadata Метаданные привязанные к платежу
  * @property PaymentDealInfo $deal Данные о сделке, в составе которой проходит платеж
- * @property FraudData $fraudData Информация для проверки операции на мошенничество
- * @property FraudData $fraud_data Информация для проверки операции на мошенничество
  * @property string $merchantCustomerId Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
  * @property string $merchant_customer_id Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
+ * @property AbstractReceiver|null $receiver Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона
  */
 interface CreatePaymentRequestInterface
 {
     /**
      * Возвращает объект получателя платежа.
      *
-     * @return null|RecipientInterface Объект с информацией о получателе платежа или null, если получатель не задан
+     * @return null|Recipient Объект с информацией о получателе платежа или null, если получатель не задан
      */
-    public function getRecipient(): ?RecipientInterface;
+    public function getRecipient(): ?Recipient;
 
     /**
      * Проверяет наличие получателя платежа в запросе.
@@ -87,9 +88,9 @@ interface CreatePaymentRequestInterface
     /**
      * Устанавливает объект с информацией о получателе платежа.
      *
-     * @param null|RecipientInterface $recipient Инстанс объекта информации о получателе платежа или null
+     * @param null|Recipient $recipient Инстанс объекта информации о получателе платежа или null
      */
-    public function setRecipient(?RecipientInterface $recipient);
+    public function setRecipient(?Recipient $recipient);
 
     /**
      * Возвращает сумму заказа.
@@ -365,27 +366,6 @@ interface CreatePaymentRequestInterface
     public function setDeal(mixed $deal): self;
 
     /**
-     * Возвращает информацию для проверки операции на мошенничество.
-     *
-     * @return null|FraudData Информация для проверки операции на мошенничество
-     */
-    public function getFraudData(): ?FraudData;
-
-    /**
-     * Проверяет, была ли установлена информация для проверки операции на мошенничество.
-     *
-     * @return bool True если информация была установлена, false если нет
-     */
-    public function hasFraudData(): bool;
-
-    /**
-     * Устанавливает информацию для проверки операции на мошенничество.
-     *
-     * @param null|array|FraudData $fraud_data Информация для проверки операции на мошенничество
-     */
-    public function setFraudData(mixed $fraud_data): self;
-
-    /**
      * Возвращает идентификатор покупателя в вашей системе.
      *
      * @return string|null Идентификатор покупателя в вашей системе
@@ -405,4 +385,46 @@ interface CreatePaymentRequestInterface
      * @param string|null $merchant_customer_id Идентификатор покупателя в вашей системе, например электронная почта или номер телефона. Не более 200 символов
      */
     public function setMerchantCustomerId(?string $merchant_customer_id): self;
+
+    /**
+     * Возвращает платежное поручение.
+     *
+     * @return AbstractPaymentOrder|null Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ.
+     */
+    public function getPaymentOrder(): ?AbstractPaymentOrder;
+
+    /**
+     * Проверяет, было ли установлено платежное поручение.
+     *
+     * @return bool True если платежное поручение было установлены, false если нет
+     */
+    public function hasPaymentOrder(): bool;
+
+    /**
+     * Устанавливает платежное поручение.
+     *
+     * @param AbstractPaymentOrder|array|null $payment_order Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ.
+     */
+    public function setPaymentOrder(mixed $payment_order = null): self;
+
+    /**
+     * Возвращает реквизиты получателя оплаты.
+     *
+     * @return null|AbstractReceiver Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона.
+     */
+    public function getReceiver(): ?AbstractReceiver;
+
+    /**
+     * Проверяет, были ли установлены реквизиты получателя оплаты.
+     *
+     * @return bool True если реквизиты получателя оплаты были установлены, false если нет
+     */
+    public function hasReceiver(): bool;
+
+    /**
+     * Устанавливает реквизиты получателя оплаты.
+     *
+     * @param null|array|AbstractReceiver $receiver Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона.
+     */
+    public function setReceiver(mixed $receiver): self;
 }

@@ -21,7 +21,8 @@ class RevenueController extends Controller
     public function index(Request $request)
     {
         if (\Auth::user()->can('manage revenue')) {
-            $customer = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customer = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customer->prepend('Select Customer', '');
             $account = BankAccount::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('holder_name', 'id');
             $account->prepend('Select Account', '');
@@ -65,7 +66,8 @@ class RevenueController extends Controller
     public function create()
     {
         if (\Auth::user()->can('create revenue')) {
-            $customers = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customers->prepend('--', 0);
             $categories = ProductServiceCategory::where('created_by', '=', \Auth::user()->creatorId())->where('type', '=', 'income')->get()->pluck('name', 'id');
             $accounts   = BankAccount::select('*', \DB::raw("CONCAT(bank_name,' ',holder_name) AS name"))->where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
@@ -212,7 +214,8 @@ class RevenueController extends Controller
     public function edit(Revenue $revenue)
     {
         if (\Auth::user()->can('edit revenue')) {
-            $customers = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customers->prepend('--', 0);
             $categories = ProductServiceCategory::where('created_by', '=', \Auth::user()->creatorId())->where('type', '=', 'income')->get()->pluck('name', 'id');
             $accounts   = BankAccount::select('*', \DB::raw("CONCAT(bank_name,' ',holder_name) AS name"))->where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');

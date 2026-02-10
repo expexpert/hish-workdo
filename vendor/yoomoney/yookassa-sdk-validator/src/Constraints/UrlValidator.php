@@ -3,7 +3,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2023 "YooMoney", NBСO LLC
+ * Copyright (c) 2024 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,11 +36,11 @@ class UrlValidator extends ConstraintValidator
             (((?:[\_\.\pL\pN-]|%%[0-9A-Fa-f]{2})+:)?((?:[\_\.\pL\pN-]|%%[0-9A-Fa-f]{2})+)@)?  # basic auth
             (
                 (?:
-                    (?:xn--[a-z0-9-]++\.)*+xn--[a-z0-9-]++            # a domain name using punycode
+                    (?:[a-z0-9-]{1,63}\.)*(?:xn--[a-z0-9-]++\.)*+xn--[a-z0-9-]++    # a domain name using punycode
                         |
-                    (?:[\pL\pN\pS\pM\-\_]++\.)+[\pL\pN\pM]++          # a multi-level domain name
+                    (?:[\pL\pN\pS\pM\-\_]++\.)+[\pL\pN\pM]++                        # a multi-level domain name
                         |
-                    [a-z0-9\-\_]++                                    # a single-level domain name
+                    [a-z0-9\-\_]++                                                  # a single-level domain name
                 )\.?
             )
             (:[0-9]+)?                              # a port (optional)

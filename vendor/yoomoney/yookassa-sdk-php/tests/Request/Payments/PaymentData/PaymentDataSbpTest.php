@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -75,4 +75,136 @@ class PaymentDataSbpTest extends AbstractTestCase
         self::assertContains($instance->getType(), ['sbp']);
         self::assertContains($instance->type, ['sbp']);
     }
+
+    /**
+     * Test property "qrc_id"
+     * @dataProvider validQrcIdDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testQrcId(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getQrcId());
+        self::assertEmpty($instance->qrcId);
+        self::assertEmpty($instance->qrc_id);
+        $instance->setQrcId($value);
+        self::assertEquals($value, $instance->getQrcId());
+        self::assertEquals($value, $instance->qrc_id);
+        self::assertEquals($value, $instance->qrcId);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getQrcId());
+            self::assertNotNull($instance->qrcId);
+            self::assertNotNull($instance->qrc_id);
+            self::assertMatchesRegularExpression("/[A-Za-z0-9]{32}/", $instance->getQrcId());
+            self::assertMatchesRegularExpression("/[A-Za-z0-9]{32}/", $instance->qrcId);
+            self::assertMatchesRegularExpression("/[A-Za-z0-9]{32}/", $instance->qrc_id);
+        }
+    }
+
+    /**
+     * Test invalid property "qrc_id"
+     * @dataProvider invalidQrcIdDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidQrcId(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setQrcId($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validQrcIdDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_qrc_id'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidQrcIdDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_qrc_id'));
+    }
+
+    /**
+     * Test property "expires_at"
+     * @dataProvider validExpiresAtDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testExpiresAt(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getQrcId());
+        self::assertEmpty($instance->expiresAt);
+        self::assertEmpty($instance->expires_at);
+        $instance->setExpiresAt($value);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getExpiresAt());
+            self::assertNotNull($instance->expiresAt);
+            self::assertNotNull($instance->expires_at);
+            if ($value instanceof Datetime) {
+                self::assertEquals($value, $instance->getExpiresAt());
+                self::assertEquals($value, $instance->expiresAt);
+                self::assertEquals($value, $instance->expires_at);
+            } else {
+                self::assertEquals(new Datetime($value), $instance->getExpiresAt());
+                self::assertEquals(new Datetime($value), $instance->expiresAt);
+                self::assertEquals(new Datetime($value), $instance->expires_at);
+            }
+        }
+    }
+
+    /**
+     * Test invalid property "expires_at"
+     * @dataProvider invalidExpiresAtDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidExpiresAt(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setExpiresAt($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validExpiresAtDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_expires_at'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidExpiresAtDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_expires_at'));
+    }
+
 }

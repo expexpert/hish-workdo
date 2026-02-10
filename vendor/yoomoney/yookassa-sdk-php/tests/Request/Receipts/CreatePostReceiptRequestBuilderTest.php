@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ use Exception;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use TypeError;
 use YooKassa\Helpers\Random;
 use YooKassa\Model\CurrencyCode;
 use YooKassa\Model\MonetaryAmount;
@@ -44,6 +45,7 @@ use YooKassa\Model\Receipt\ReceiptItem;
 use YooKassa\Model\Receipt\ReceiptType;
 use YooKassa\Model\Receipt\SettlementType;
 use YooKassa\Request\Receipts\CreatePostReceiptRequestBuilder;
+use YooKassa\Validator\Exceptions\InvalidPropertyValueException;
 
 /**
  * CreatePostReceiptRequestBuilderTest
@@ -209,9 +211,9 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
      */
     public function testSetInvalidSend(mixed $value): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $builder = new CreatePostReceiptRequestBuilder();
-        $builder->setType($value);
+        $builder->setSend($value);
     }
 
     /**
@@ -296,6 +298,30 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
         if (empty($options['receipt_industry_details'])) {
             self::assertEmpty($instance->getReceiptIndustryDetails());
         } else {
+            self::assertNotNull($instance->getReceiptIndustryDetails());
+            self::assertCount(count($options['receipt_industry_details']), $instance->getReceiptIndustryDetails());
+        }
+    }
+
+    /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
+     * @throws Exception
+     */
+    public function testAddReceiptIndustryDetails(mixed $options): void
+    {
+        $builder = new CreatePostReceiptRequestBuilder();
+        $instance = $builder->build($options);
+        $instance->getReceiptIndustryDetails()->clear();
+
+        if (empty($options['receipt_industry_details'])) {
+            self::assertEmpty($instance->getReceiptIndustryDetails());
+        } else {
+            foreach ($options['receipt_industry_details'] as $item) {
+                $instance->getReceiptIndustryDetails()->add($item);
+            }
             self::assertNotNull($instance->getReceiptIndustryDetails());
             self::assertCount(count($options['receipt_industry_details']), $instance->getReceiptIndustryDetails());
         }
@@ -398,6 +424,69 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
         }
     }
 
+    /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     */
+    public function testSetInternet(mixed $options): void
+    {
+        $builder = new CreatePostReceiptRequestBuilder();
+
+        $instance = $builder->build($options);
+
+        if ($options['internet'] === null) {
+            self::assertNull($instance->getInternet());
+        } else {
+            self::assertNotNull($instance->getInternet());
+            self::assertEquals($options['internet'], $instance->getInternet());
+        }
+    }
+
+    /**
+     * @dataProvider invalidBooleanDataProvider
+     *
+     * @param mixed $value
+     */
+    public function testSetInvalidInternet(mixed $value): void
+    {
+        $this->expectException(TypeError::class);
+        $builder = new CreatePostReceiptRequestBuilder();
+        $builder->setInternet($value);
+    }
+
+    /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     */
+    public function testSetTimezone(mixed $options): void
+    {
+        $builder = new CreatePostReceiptRequestBuilder();
+
+        $instance = $builder->build($options);
+
+        if (empty($options['timezone'])) {
+            self::assertNull($instance->getTimezone());
+        } else {
+            self::assertNotNull($instance->getTimezone());
+            self::assertEquals($options['timezone'], $instance->getTimezone());
+        }
+    }
+
+    /**
+     * @dataProvider invalidTimezoneDataProvider
+     *
+     * @param mixed $value
+     * @param mixed $exception
+     */
+    public function testSetInvalidTimezone(mixed $value, mixed $exception): void
+    {
+        $this->expectException($exception);
+        $builder = new CreatePostReceiptRequestBuilder();
+        $builder->setTimezone($value);
+    }
+
     public static function setAmountDataProvider(): array
     {
         return [
@@ -438,7 +527,7 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
                             'product_code' => Random::str(2, 96, '1234567890ABCDEF '),
                             'country_of_origin_code' => 'RU',
                             'customs_declaration_number' => Random::str(32),
-                            'excise' => Random::float(0.0, 99.99),
+                            'excise' => Random::float(0.1, 99.99),
                         ],
                     ],
                     'tax_system_code' => Random::int(1, 6),
@@ -447,6 +536,8 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
                     'receipt_operational_details' => null,
                     'type' => 'payment',
                     'send' => true,
+                    'internet' => null,
+                    'timezone' => null,
                     'settlements' => [
                         [
                             'type' => Random::value(SettlementType::getValidValues()),
@@ -483,7 +574,7 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
                         'product_code' => Random::str(2, 96, '0123456789ABCDEF '),
                         'country_of_origin_code' => 'RU',
                         'customs_declaration_number' => Random::str(32),
-                        'excise' => round(Random::float(0.0, 99.99), 2),
+                        'excise' => round(Random::float(0.1, 99.99), 2),
                     ],
                 ],
                 'tax_system_code' => Random::int(1, 6),
@@ -510,6 +601,8 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
                 ],
                 'type' => $type,
                 'send' => true,
+                'internet' => Random::bool(),
+                'timezone' => Random::int(1, 11),
                 'on_behalf_of' => Random::int(99999, 999999),
                 'settlements' => [
                     [
@@ -574,7 +667,7 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
     public static function invalidBooleanDataProvider(): array
     {
         return [
-            ['test'],
+            [new stdClass()],
         ];
     }
 
@@ -609,6 +702,17 @@ class CreatePostReceiptRequestBuilderTest extends TestCase
             [new stdClass()],
             [true],
             [Random::str(1, 100)],
+        ];
+    }
+
+    public static function invalidTimezoneDataProvider(): array
+    {
+        return [
+            [new stdClass(), TypeError::class],
+            ['test', TypeError::class],
+            [false, InvalidPropertyValueException::class],
+            [Random::int(12, 100), InvalidPropertyValueException::class],
+            [0, InvalidPropertyValueException::class],
         ];
     }
 }

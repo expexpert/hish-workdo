@@ -9,7 +9,12 @@ Interface PaymentInterface.
 
 ---
 ### Constants
-* No constants found
+| Visibility | Name | Flag | Summary |
+| ----------:| ---- | ---- | ------- |
+* [public MIN_LENGTH_ID](../classes/YooKassa-Model-Payment-PaymentInterface.md#constant_MIN_LENGTH_ID)
+* [public MAX_LENGTH_ID](../classes/YooKassa-Model-Payment-PaymentInterface.md#constant_MAX_LENGTH_ID)
+* [public MAX_LENGTH_DESCRIPTION](../classes/YooKassa-Model-Payment-PaymentInterface.md#constant_MAX_LENGTH_DESCRIPTION)
+* [public MAX_LENGTH_MERCHANT_CUSTOMER_ID](../classes/YooKassa-Model-Payment-PaymentInterface.md#constant_MAX_LENGTH_MERCHANT_CUSTOMER_ID)
 
 ---
 ### Methods
@@ -25,6 +30,7 @@ Interface PaymentInterface.
 | public | [getExpiresAt()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getExpiresAt) |  | Возвращает время до которого можно бесплатно отменить или подтвердить платеж, или null, если оно не задано. |
 | public | [getId()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getId) |  | Возвращает идентификатор платежа. |
 | public | [getIncomeAmount()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getIncomeAmount) |  | Возвращает сумму перечисляемая магазину за вычетом комиссий платежной системы.(только для успешных платежей). |
+| public | [getInvoiceDetails()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getInvoiceDetails) |  | Возвращает invoice_details. |
 | public | [getMetadata()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getMetadata) |  | Возвращает метаданные платежа установленные мерчантом |
 | public | [getPaid()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getPaid) |  | Проверяет, был ли уже оплачен заказ. |
 | public | [getPaymentMethod()](../classes/YooKassa-Model-Payment-PaymentInterface.md#method_getPaymentMethod) |  | Возвращает используемый способ проведения платежа. |
@@ -80,6 +86,43 @@ Interface PaymentInterface.
 | property |  | Данные о сделке, в составе которой проходит платеж |
 | property |  | Идентификатор покупателя в вашей системе, например электронная почта или номер телефона |
 | property |  | Идентификатор покупателя в вашей системе, например электронная почта или номер телефона |
+| property |  | Данные о выставленном счете, в рамках которого проведен платеж |
+| property |  | Данные о выставленном счете, в рамках которого проведен платеж |
+
+---
+## Constants
+<a name="constant_MIN_LENGTH_ID" class="anchor"></a>
+###### MIN_LENGTH_ID
+```php
+MIN_LENGTH_ID = 36 : int
+```
+
+
+<a name="constant_MAX_LENGTH_ID" class="anchor"></a>
+###### MAX_LENGTH_ID
+```php
+MAX_LENGTH_ID = 36 : int
+```
+
+
+<a name="constant_MAX_LENGTH_DESCRIPTION" class="anchor"></a>
+###### MAX_LENGTH_DESCRIPTION
+Максимальная длина строки описания платежа
+
+```php
+MAX_LENGTH_DESCRIPTION = 128
+```
+
+
+<a name="constant_MAX_LENGTH_MERCHANT_CUSTOMER_ID" class="anchor"></a>
+###### MAX_LENGTH_MERCHANT_CUSTOMER_ID
+Максимальная длина строки идентификатора покупателя в вашей системе
+
+```php
+MAX_LENGTH_MERCHANT_CUSTOMER_ID = 200
+```
+
+
 
 ---
 ## Methods
@@ -406,6 +449,23 @@ public getDeal() : \YooKassa\Model\Deal\PaymentDealInfo|null
 **Returns:** \YooKassa\Model\Deal\PaymentDealInfo|null - Сделка, в рамках которой нужно провести платеж
 
 
+<a name="method_getInvoiceDetails" class="anchor"></a>
+#### public getInvoiceDetails() : \YooKassa\Model\Payment\PaymentInvoiceDetails|null
+
+```php
+public getInvoiceDetails() : \YooKassa\Model\Payment\PaymentInvoiceDetails|null
+```
+
+**Summary**
+
+Возвращает invoice_details.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Payment\PaymentInterface](../classes/YooKassa-Model-Payment-PaymentInterface.md)
+
+**Returns:** \YooKassa\Model\Payment\PaymentInvoiceDetails|null - 
+
+
 
 
 ---
@@ -419,10 +479,10 @@ public getDeal() : \YooKassa\Model\Deal\PaymentDealInfo|null
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

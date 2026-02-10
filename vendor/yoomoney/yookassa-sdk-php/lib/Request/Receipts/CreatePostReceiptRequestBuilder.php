@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -252,6 +252,34 @@ class CreatePostReceiptRequestBuilder extends AbstractRequestBuilder
     }
 
     /**
+     * Устанавливает признак проведения платежа в интернете.
+     *
+     * @param bool|null $value Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет.
+     *
+     * @return self Инстанс билдера запросов
+     */
+    public function setInternet(?bool $value = null): self
+    {
+        $this->currentObject->setInternet($value);
+
+        return $this;
+    }
+
+    /**
+     * Устанавливает номер часовой зоны.
+     *
+     * @param int|null $value Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011).
+     *
+     * @return self Инстанс билдера запросов
+     */
+    public function setTimezone(?int $value): self
+    {
+        $this->currentObject->setTimezone($value);
+
+        return $this;
+    }
+
+    /**
      * Устанавливает Id объекта чека.
      *
      * @param string $value Id объекта чека
@@ -292,7 +320,7 @@ class CreatePostReceiptRequestBuilder extends AbstractRequestBuilder
      *
      * @throws InvalidRequestException Выбрасывается если собрать объект запроса не удалось
      */
-    public function build(array $options = null): AbstractRequestInterface
+    public function build(?array $options = null): AbstractRequestInterface
     {
         if (!empty($options)) {
             $this->setOptions($options);

@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ use YooKassa\Common\AbstractEnum;
 /**
  * Класс, представляющий модель PaymentMethodType.
  *
- * Тип источника средств для проведения платежа.
+ * Код способа оплаты — тип платежного средства, которое используется для оплаты. [Подробнее о способах оплаты](https://yookassa.ru/developers/payment-acceptance/getting-started/payment-methods)
  *
  * Возможные значения:
  * - `yoo_money` - Платеж из кошелька ЮMoney
@@ -45,7 +45,7 @@ use YooKassa\Common\AbstractEnum;
  * - `webmoney` - Платеж из кошелька Webmoney
  * - `alfabank` - Платеж через Альфа-Клик
  * - `b2b_sberbank` - Сбербанк Бизнес Онлайн
- * - `tinkoff_bank` - Интернет-банк Тинькофф
+ * - `tinkoff_bank` - T-Pay
  * - `psb` - ПромсвязьБанк
  * - `installments` - Заплатить по частям
  * - `wechat` - Платеж через WeChat
@@ -103,7 +103,7 @@ class PaymentMethodType extends AbstractEnum
     /** Сбербанк Бизнес Онлайн */
     public const B2B_SBERBANK = 'b2b_sberbank';
 
-    /** Интернет-банк Тинькофф */
+    /** Платеж через T-Pay */
     public const TINKOFF_BANK = 'tinkoff_bank';
 
     /**
@@ -133,6 +133,12 @@ class PaymentMethodType extends AbstractEnum
     /** Прием оплаты с использованием Кредита от СберБанка */
     public const SBER_LOAN = 'sber_loan';
 
+    /** Прием платежей по электронному сертификату, привязанному к карте «Мир» */
+    public const ELECTRONIC_CERTIFICATE = 'electronic_certificate';
+
+    /** Оплата через сервис «Плати частями» */
+    public const SBER_BNPL = 'sber_bnpl';
+
     /**
      * Для неизвестных методов оплаты
      *
@@ -158,6 +164,8 @@ class PaymentMethodType extends AbstractEnum
         self::WECHAT => false,
         self::SBP => true,
         self::SBER_LOAN => true,
+        self::ELECTRONIC_CERTIFICATE => true,
+        self::SBER_BNPL => true,
         self::UNKNOWN => false,
     ];
 }

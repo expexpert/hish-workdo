@@ -9,14 +9,11 @@
 
 **Description:**
 
-Данные о платеже.
+Объект платежа (Payment) — актуальная информация о платеже.
 
 ---
 ### Constants
-| Visibility | Name | Flag | Summary |
-| ----------:| ---- | ---- | ------- |
-| public | [MAX_LENGTH_DESCRIPTION](../classes/YooKassa-Model-Payment-Payment.md#constant_MAX_LENGTH_DESCRIPTION) |  | Максимальная длина строки описания платежа |
-| public | [MAX_LENGTH_MERCHANT_CUSTOMER_ID](../classes/YooKassa-Model-Payment-Payment.md#constant_MAX_LENGTH_MERCHANT_CUSTOMER_ID) |  | Максимальная длина строки идентификатора покупателя в вашей системе |
+* No constants found
 
 ---
 ### Properties
@@ -39,6 +36,8 @@
 | public | [$id](../classes/YooKassa-Model-Payment-Payment.md#property_id) |  | Идентификатор платежа |
 | public | [$income_amount](../classes/YooKassa-Model-Payment-Payment.md#property_income_amount) |  | Сумма платежа, которую получит магазин |
 | public | [$incomeAmount](../classes/YooKassa-Model-Payment-Payment.md#property_incomeAmount) |  | Сумма платежа, которую получит магазин |
+| public | [$invoice_details](../classes/YooKassa-Model-Payment-Payment.md#property_invoice_details) |  | Данные о выставленном счете, в рамках которого проведен платеж |
+| public | [$invoiceDetails](../classes/YooKassa-Model-Payment-Payment.md#property_invoiceDetails) |  | Данные о выставленном счете, в рамках которого проведен платеж |
 | public | [$merchant_customer_id](../classes/YooKassa-Model-Payment-Payment.md#property_merchant_customer_id) |  | Идентификатор покупателя в вашей системе, например электронная почта или номер телефона |
 | public | [$merchantCustomerId](../classes/YooKassa-Model-Payment-Payment.md#property_merchantCustomerId) |  | Идентификатор покупателя в вашей системе, например электронная почта или номер телефона |
 | public | [$metadata](../classes/YooKassa-Model-Payment-Payment.md#property_metadata) |  | Метаданные платежа указанные мерчантом |
@@ -65,6 +64,7 @@
 | protected | [$_expires_at](../classes/YooKassa-Model-Payment-Payment.md#property__expires_at) |  | Время, до которого можно бесплатно отменить или подтвердить платеж. В указанное время платеж в статусе `waiting_for_capture` будет автоматически отменен. |
 | protected | [$_id](../classes/YooKassa-Model-Payment-Payment.md#property__id) |  |  |
 | protected | [$_income_amount](../classes/YooKassa-Model-Payment-Payment.md#property__income_amount) |  |  |
+| protected | [$_invoice_details](../classes/YooKassa-Model-Payment-Payment.md#property__invoice_details) |  |  |
 | protected | [$_merchant_customer_id](../classes/YooKassa-Model-Payment-Payment.md#property__merchant_customer_id) |  |  |
 | protected | [$_metadata](../classes/YooKassa-Model-Payment-Payment.md#property__metadata) |  |  |
 | protected | [$_paid](../classes/YooKassa-Model-Payment-Payment.md#property__paid) |  |  |
@@ -98,6 +98,7 @@
 | public | [getExpiresAt()](../classes/YooKassa-Model-Payment-Payment.md#method_getExpiresAt) |  | Возвращает время до которого можно бесплатно отменить или подтвердить платеж, или null, если оно не задано. |
 | public | [getId()](../classes/YooKassa-Model-Payment-Payment.md#method_getId) |  | Возвращает идентификатор платежа. |
 | public | [getIncomeAmount()](../classes/YooKassa-Model-Payment-Payment.md#method_getIncomeAmount) |  | Возвращает сумму платежа, которую получит магазин, значение `amount` за вычетом комиссии ЮKassa. |
+| public | [getInvoiceDetails()](../classes/YooKassa-Model-Payment-Payment.md#method_getInvoiceDetails) |  | Возвращает invoice_details. |
 | public | [getMerchantCustomerId()](../classes/YooKassa-Model-Payment-Payment.md#method_getMerchantCustomerId) |  | Возвращает идентификатор покупателя в вашей системе. |
 | public | [getMetadata()](../classes/YooKassa-Model-Payment-Payment.md#method_getMetadata) |  | Возвращает метаданные платежа установленные мерчантом |
 | public | [getPaid()](../classes/YooKassa-Model-Payment-Payment.md#method_getPaid) |  | Проверяет, был ли уже оплачен заказ. |
@@ -126,6 +127,7 @@
 | public | [setExpiresAt()](../classes/YooKassa-Model-Payment-Payment.md#method_setExpiresAt) |  | Устанавливает время до которого можно бесплатно отменить или подтвердить платеж. |
 | public | [setId()](../classes/YooKassa-Model-Payment-Payment.md#method_setId) |  | Устанавливает идентификатор платежа. |
 | public | [setIncomeAmount()](../classes/YooKassa-Model-Payment-Payment.md#method_setIncomeAmount) |  | Устанавливает сумму платежа, которую получит магазин, значение `amount` за вычетом комиссии ЮKassa |
+| public | [setInvoiceDetails()](../classes/YooKassa-Model-Payment-Payment.md#method_setInvoiceDetails) |  | Устанавливает invoice_details. |
 | public | [setMerchantCustomerId()](../classes/YooKassa-Model-Payment-Payment.md#method_setMerchantCustomerId) |  | Устанавливает идентификатор покупателя в вашей системе. |
 | public | [setMetadata()](../classes/YooKassa-Model-Payment-Payment.md#method_setMetadata) |  | Устанавливает метаданные платежа. |
 | public | [setPaid()](../classes/YooKassa-Model-Payment-Payment.md#method_setPaid) |  | Устанавливает флаг оплаты заказа. |
@@ -160,27 +162,6 @@
 | --- | ------- | ----------- |
 | category |  | Class |
 | author |  | cms@yoomoney.ru |
-
----
-## Constants
-<a name="constant_MAX_LENGTH_DESCRIPTION" class="anchor"></a>
-###### MAX_LENGTH_DESCRIPTION
-Максимальная длина строки описания платежа
-
-```php
-MAX_LENGTH_DESCRIPTION = 128
-```
-
-
-<a name="constant_MAX_LENGTH_MERCHANT_CUSTOMER_ID" class="anchor"></a>
-###### MAX_LENGTH_MERCHANT_CUSTOMER_ID
-Максимальная длина строки идентификатора покупателя в вашей системе
-
-```php
-MAX_LENGTH_MERCHANT_CUSTOMER_ID = 200
-```
-
-
 
 ---
 ## Properties
@@ -384,6 +365,30 @@ MAX_LENGTH_MERCHANT_CUSTOMER_ID = 200
 Сумма платежа, которую получит магазин
 
 **Type:** <a href="../classes/YooKassa-Model-AmountInterface.html"><abbr title="\YooKassa\Model\AmountInterface">AmountInterface</abbr></a>
+
+**Details:**
+
+
+<a name="property_invoice_details"></a>
+#### public $invoice_details : \YooKassa\Model\Payment\PaymentInvoiceDetails
+---
+***Description***
+
+Данные о выставленном счете, в рамках которого проведен платеж
+
+**Type:** <a href="../classes/YooKassa-Model-Payment-PaymentInvoiceDetails.html"><abbr title="\YooKassa\Model\Payment\PaymentInvoiceDetails">PaymentInvoiceDetails</abbr></a>
+
+**Details:**
+
+
+<a name="property_invoiceDetails"></a>
+#### public $invoiceDetails : \YooKassa\Model\Payment\PaymentInvoiceDetails
+---
+***Description***
+
+Данные о выставленном счете, в рамках которого проведен платеж
+
+**Type:** <a href="../classes/YooKassa-Model-Payment-PaymentInvoiceDetails.html"><abbr title="\YooKassa\Model\Payment\PaymentInvoiceDetails">PaymentInvoiceDetails</abbr></a>
 
 **Details:**
 
@@ -665,6 +670,14 @@ MAX_LENGTH_MERCHANT_CUSTOMER_ID = 200
 #### protected $_income_amount : ?\YooKassa\Model\AmountInterface
 ---
 **Type:** <a href="../?\YooKassa\Model\AmountInterface"><abbr title="?\YooKassa\Model\AmountInterface">AmountInterface</abbr></a>
+
+**Details:**
+
+
+<a name="property__invoice_details"></a>
+#### protected $_invoice_details : ?\YooKassa\Model\Payment\PaymentInvoiceDetails
+---
+**Type:** <a href="../?\YooKassa\Model\Payment\PaymentInvoiceDetails"><abbr title="?\YooKassa\Model\Payment\PaymentInvoiceDetails">PaymentInvoiceDetails</abbr></a>
 
 **Details:**
 
@@ -1083,6 +1096,23 @@ public getIncomeAmount() : \YooKassa\Model\AmountInterface|null
 * Inherited From: [\YooKassa\Model\Payment\Payment](../classes/YooKassa-Model-Payment-Payment.md)
 
 **Returns:** \YooKassa\Model\AmountInterface|null - Сумма платежа, которую получит магазин
+
+
+<a name="method_getInvoiceDetails" class="anchor"></a>
+#### public getInvoiceDetails() : \YooKassa\Model\Payment\PaymentInvoiceDetails|null
+
+```php
+public getInvoiceDetails() : \YooKassa\Model\Payment\PaymentInvoiceDetails|null
+```
+
+**Summary**
+
+Возвращает invoice_details.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Payment\Payment](../classes/YooKassa-Model-Payment-Payment.md)
+
+**Returns:** \YooKassa\Model\Payment\PaymentInvoiceDetails|null - 
 
 
 <a name="method_getMerchantCustomerId" class="anchor"></a>
@@ -1633,6 +1663,28 @@ public setIncomeAmount(\YooKassa\Model\AmountInterface|array|null $income_amount
 **Returns:** self - 
 
 
+<a name="method_setInvoiceDetails" class="anchor"></a>
+#### public setInvoiceDetails() : self
+
+```php
+public setInvoiceDetails(\YooKassa\Model\Payment\PaymentInvoiceDetails|array|null $invoice_details = null) : self
+```
+
+**Summary**
+
+Устанавливает invoice_details.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Payment\Payment](../classes/YooKassa-Model-Payment-Payment.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Model\Payment\PaymentInvoiceDetails OR array OR null</code> | invoice_details  |  |
+
+**Returns:** self - 
+
+
 <a name="method_setMerchantCustomerId" class="anchor"></a>
 #### public setMerchantCustomerId() : self
 
@@ -1941,10 +1993,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

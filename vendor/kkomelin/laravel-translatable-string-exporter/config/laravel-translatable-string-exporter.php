@@ -4,8 +4,6 @@ return [
     'directories'=> [
         'app',
         'resources',
-        'Modules/LandingPage/Http',
-        'Modules/LandingPage/Resources',
     ],
 
     // Directories to exclude from search.
@@ -31,6 +29,7 @@ return [
     // If your function name contains $ escape it using \$ .
     'functions'=> [
         '__',
+        'trans_choice',
         '_t',
         '@lang',
     ],

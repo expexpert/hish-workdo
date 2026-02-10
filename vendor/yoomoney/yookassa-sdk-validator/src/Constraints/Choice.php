@@ -3,7 +3,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2023 "YooMoney", NBСO LLC
+ * Copyright (c) 2024 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,12 +43,12 @@ class Choice extends AbstractConstraint
     private bool $match = true;
 
     public function __construct(
-        array $choices = null,
-        callable|string $callback = null,
-        bool $multiple = null,
-        string $message = null,
-        string $multipleMessage = null,
-        bool $match = null,
+        ?array $choices = null,
+        callable|string|null $callback = null,
+        ?bool $multiple = null,
+        ?string $message = null,
+        ?string $multipleMessage = null,
+        ?bool $match = null,
     ) {
         $this->choices = $choices;
         $this->callback = $callback ?? $this->callback;

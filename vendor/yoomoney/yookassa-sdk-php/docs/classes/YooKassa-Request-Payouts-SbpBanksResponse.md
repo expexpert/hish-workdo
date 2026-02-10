@@ -9,7 +9,8 @@
 
 **Description:**
 
-Список участников СБП, отсортированный по идентификатору участника в порядке убывания (desc).
+Список участников СБП.
+Участники СБП отсортированы по идентификатору участника в порядке убывания.
 
 ---
 ### Constants
@@ -532,10 +533,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

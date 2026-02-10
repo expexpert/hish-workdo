@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,9 +75,23 @@ use YooKassa\Model\Payment\PaymentMethod\AbstractPaymentMethod;
  * @property PaymentDealInfo $deal Данные о сделке, в составе которой проходит платеж
  * @property string $merchantCustomerId Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
  * @property string $merchant_customer_id Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
+ * @property PaymentInvoiceDetails $invoice_details Данные о выставленном счете, в рамках которого проведен платеж
+ * @property PaymentInvoiceDetails $invoiceDetails Данные о выставленном счете, в рамках которого проведен платеж
  */
 interface PaymentInterface
 {
+    /** @var int Минимальная длина идентификатора */
+    public const MIN_LENGTH_ID = 36;
+
+    /** @var int Максимальная длина идентификатора */
+    public const MAX_LENGTH_ID = 36;
+
+    /** Максимальная длина строки описания платежа */
+    public const MAX_LENGTH_DESCRIPTION = 128;
+
+    /** Максимальная длина строки идентификатора покупателя в вашей системе */
+    public const MAX_LENGTH_MERCHANT_CUSTOMER_ID = 200;
+
     /**
      * Возвращает идентификатор платежа.
      *
@@ -208,4 +222,11 @@ interface PaymentInterface
      * @return PaymentDealInfo|null Сделка, в рамках которой нужно провести платеж
      */
     public function getDeal(): ?PaymentDealInfo;
+
+    /**
+     * Возвращает invoice_details.
+     *
+     * @return PaymentInvoiceDetails|null
+     */
+    public function getInvoiceDetails(): ?PaymentInvoiceDetails;
 }

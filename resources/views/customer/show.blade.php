@@ -12,6 +12,7 @@
 
 @section('action-btn')
     <div class="d-flex">
+        @if (\Auth::user()->type !== 'company')
         @can('create invoice')
             <a href="{{ route('invoice.create', $customer->id) }}" class="btn btn-sm btn-primary me-2"
             title="{{ __('Create Invoice') }}" data-bs-toggle="tooltip">
@@ -24,11 +25,13 @@
                 {{ __('Create Proposal') }}
             </a>
         @endcan
+        @endif
         <a href="{{ route('customer.statement', $customer['id']) }}" class="btn btn-sm btn-primary me-2"
         title="{{ __('Statement') }}" data-bs-toggle="tooltip">
             {{ __('Statement') }}
         </a>
 
+        @if (\Auth::user()->type !== 'company')
         @can('edit customer')
             <a href="#" data-size="xl" data-url="{{ route('customer.edit', $customer['id']) }}" data-ajax-popup="true"
                 title="{{ __('Edit Customer') }}" data-bs-toggle="tooltip" data-original-title="{{ __('Edit') }}"
@@ -52,6 +55,7 @@
             </a>
             {!! Form::close() !!}
         @endcan
+        @endif
     </div>
 @endsection
 
@@ -330,6 +334,9 @@
                                                             </div>
                                                         @endif
                                                     @endcan
+
+                                                    @if (\Auth::user()->type !== 'company')
+
                                                     @can('edit proposal')
                                                         <div class="action-btn me-2">
                                                             <a href="{{ route('proposal.edit', \Crypt::encrypt($proposal->id)) }}"
@@ -360,6 +367,8 @@
                                                             {!! Form::close() !!}
                                                         </div>
                                                     @endcan
+
+                                                    @endif
                                                 </span>
                                             </td>
                                         @endif
@@ -480,6 +489,9 @@
                                                             </div>
                                                         @endif
                                                     @endcan
+
+                                                    @if (\Auth::user()->type !== 'company')
+
                                                     @can('edit invoice')
                                                         <div class="action-btn me-2">
                                                             <a href="{{ route('invoice.edit', \Crypt::encrypt($invoice->id)) }}"
@@ -509,6 +521,8 @@
                                                             {!! Form::close() !!}
                                                         </div>
                                                     @endcan
+
+                                                    @endif
                                                 </span>
                                             </td>
                                         @endif

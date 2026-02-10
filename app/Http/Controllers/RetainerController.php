@@ -38,7 +38,8 @@ class RetainerController extends Controller
 
         if (\Auth::user()->can('manage retainer')) {
 
-            $customer = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customer = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customer->prepend('Select Customer', '');
 
             $status = Retainer::$statues;
@@ -77,7 +78,8 @@ class RetainerController extends Controller
         if (\Auth::user()->can('create retainer')) {
             $customFields    = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'retainer')->get();
             $retainer_number = \Auth::user()->retainerNumberFormat($this->retainerNumber());
-            $customers       = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers       = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customers->prepend('Select Customer', '');
             $category = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())->where('type', 'income')->get()->pluck('name', 'id');
             $category->prepend('Select Category', '');
@@ -180,7 +182,8 @@ class RetainerController extends Controller
             $id              = Crypt::decrypt($ids);
             $retainer        = Retainer::find($id);
             $retainer_number = \Auth::user()->retainerNumberFormat($retainer->retainer_id);
-            $customers       = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers       = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $category = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())->where('type', 'income')->get()->pluck('name', 'id');
             $category->prepend('Select Category', '');
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
@@ -788,7 +791,8 @@ class RetainerController extends Controller
         if (\Auth::user()->can('create payment invoice')) {
             $retainer = Retainer::where('id', $retainer_id)->first();
 
-            $customers  = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers  = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $categories = ProductServiceCategory::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $accounts   = BankAccount::select('*', \DB::raw("CONCAT(bank_name,' ',holder_name) AS name"))->where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
 

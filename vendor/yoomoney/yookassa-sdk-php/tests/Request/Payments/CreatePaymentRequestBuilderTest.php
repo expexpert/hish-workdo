@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2024 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Request\Payments;
 
@@ -30,6 +30,7 @@ use Exception;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use Tests\YooKassa\AbstractTestCase;
 use YooKassa\Helpers\Random;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\CurrencyCode;
@@ -38,7 +39,6 @@ use YooKassa\Model\MonetaryAmount;
 use YooKassa\Model\Payment\ConfirmationType;
 use YooKassa\Model\Payment\Payment;
 use YooKassa\Model\Payment\PaymentMethodType;
-use YooKassa\Model\Payment\Recipient;
 use YooKassa\Model\Receipt\IndustryDetails;
 use YooKassa\Model\Receipt\OperationalDetails;
 use YooKassa\Model\Receipt\PaymentMode;
@@ -47,8 +47,15 @@ use YooKassa\Model\Receipt\ReceiptItem;
 use YooKassa\Model\Receipt\ReceiptItemAmount;
 use YooKassa\Request\Payments\ConfirmationAttributes\ConfirmationAttributesExternal;
 use YooKassa\Request\Payments\CreatePaymentRequestBuilder;
-use YooKassa\Request\Payments\FraudData;
 use YooKassa\Request\Payments\PaymentData\PaymentDataQiwi;
+use YooKassa\Request\Payments\PaymentOrderData\PaymentOrderType;
+use YooKassa\Request\Payments\PaymentOrderData\PaymentOrderUtilities;
+use YooKassa\Request\Payments\ReceiverData\ReceiverDigitalWallet;
+use YooKassa\Request\Payments\ReceiverData\ReceiverType;
+use YooKassa\Request\Payments\Recipient;
+use YooKassa\Request\Payments\StatementData\AbstractStatement;
+use YooKassa\Request\Payments\StatementData\StatementFactory;
+use YooKassa\Request\Payments\StatementData\StatementType;
 use YooKassa\Validator\Exceptions\ValidatorParameterException;
 
 /**
@@ -58,33 +65,8 @@ use YooKassa\Validator\Exceptions\ValidatorParameterException;
  * @author      cms@yoomoney.ru
  * @link        https://yookassa.ru/developers/api
  */
-class CreatePaymentRequestBuilderTest extends TestCase
+class CreatePaymentRequestBuilderTest extends AbstractTestCase
 {
-    /**
-     * @dataProvider validDataProvider
-     *
-     * @param mixed $options
-     *
-     * @throws Exception
-     */
-    public function testSetAccountId(mixed $options): void
-    {
-        $builder = new CreatePaymentRequestBuilder();
-
-        $instance = $builder->build($this->getRequiredData());
-        self::assertNull($instance->getRecipient());
-
-        $builder->setAccountId($options['accountId']);
-        $instance = $builder->build($this->getRequiredData('accountId'));
-
-        if (empty($options['accountId'])) {
-            self::assertNull($instance->getRecipient());
-        } else {
-            self::assertNotNull($instance->getRecipient());
-            self::assertEquals($options['accountId'], $instance->getRecipient()->getAccountId());
-        }
-    }
-
     /**
      * @dataProvider validDataProvider
      *
@@ -104,32 +86,6 @@ class CreatePaymentRequestBuilderTest extends TestCase
         } else {
             self::assertNotNull($instance->getDeal());
             self::assertEquals($options['deal'], $instance->getDeal()->toArray());
-        }
-    }
-
-    /**
-     * @dataProvider validDataProvider
-     *
-     * @param mixed $options
-     *
-     * @throws Exception
-     */
-    public function testSetFraudData(mixed $options): void
-    {
-        $builder = new CreatePaymentRequestBuilder();
-        $builder->setAmount($options['amount']);
-        $builder->setFraudData($options['fraud_data']);
-        $instance = $builder->build();
-
-        if (empty($options['fraud_data'])) {
-            self::assertNull($instance->getFraudData());
-        } else {
-            self::assertNotNull($instance->getFraudData());
-            if (is_array($options['fraud_data'])) {
-                self::assertEquals($options['fraud_data'], $instance->getFraudData()->toArray());
-            } else {
-                self::assertEquals($options['fraud_data'], $instance->getFraudData());
-            }
         }
     }
 
@@ -404,7 +360,7 @@ class CreatePaymentRequestBuilderTest extends TestCase
                     [
                         'price' => [1],
                         'quantity' => -1.4,
-                        'vatCode' => 10,
+                        'vatCode' => 11,
                     ],
                 ],
             ],
@@ -432,7 +388,7 @@ class CreatePaymentRequestBuilderTest extends TestCase
                         'title' => 'test',
                         'price' => [123],
                         'quantity' => 1.4,
-                        'vatCode' => 7,
+                        'vatCode' => 15,
                     ],
                 ],
             ],
@@ -450,7 +406,7 @@ class CreatePaymentRequestBuilderTest extends TestCase
                     [
                         'title' => 'test',
                         'price' => [1],
-                        'vatCode' => 7,
+                        'vatCode' => 20,
                     ],
                 ],
             ],
@@ -855,7 +811,6 @@ class CreatePaymentRequestBuilderTest extends TestCase
     public function testSetRecipient(mixed $options): void
     {
         $recipient = new Recipient();
-        $recipient->setAccountId($options['accountId']);
         $recipient->setGatewayId($options['gatewayId']);
 
         $builder = new CreatePaymentRequestBuilder();
@@ -866,7 +821,6 @@ class CreatePaymentRequestBuilderTest extends TestCase
 
         $builder = new CreatePaymentRequestBuilder();
         $builder->setRecipient([
-            'account_id' => $options['accountId'],
             'gateway_id' => $options['gatewayId'],
         ]);
         $instance = $builder->build($this->getRequiredData());
@@ -972,15 +926,48 @@ class CreatePaymentRequestBuilderTest extends TestCase
     }
 
     /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
      * @throws Exception
      */
-    public static function validDataProvider(): array
+    public function testAddRStatement(mixed $options): void
+    {
+        $builder = new CreatePaymentRequestBuilder();
+
+        if (!empty($options['statements'])) {
+            $statementFabric = new StatementFactory();
+            foreach ($options['statements'] as $item) {
+                $builder->addStatement(is_array($item) ? $statementFabric->factoryFromArray($item) : $item);
+            }
+        }
+        $instance = $builder->build($this->getRequiredData());
+
+        if (empty($options['statements'])) {
+            self::assertTrue($instance->getStatements()->isEmpty());
+        } else {
+            self::assertNotNull($instance->getStatements());
+            self::assertSameSize($options['statements'], $instance->getStatements());
+            foreach ($instance->getStatements() as $item) {
+                self::assertInstanceOf(AbstractStatement::class, $item);
+            }
+        }
+    }
+
+
+    /**
+     * @throws Exception
+     */
+    public function validDataProvider(): array
     {
         $receiptItem = new ReceiptItem();
         $receiptItem->setPrice(new ReceiptItemAmount(1));
         $receiptItem->setQuantity(1);
         $receiptItem->setDescription('test');
         $receiptItem->setVatCode(3);
+        $receiptItem->setPlannedStatus(6);
+
         $result = [
             [
                 [
@@ -1013,10 +1000,12 @@ class CreatePaymentRequestBuilderTest extends TestCase
                             ],
                         ],
                     ],
-                    'fraud_data' => null,
                     'merchant_customer_id' => null,
                     'receiptIndustryDetails' => [],
                     'receiptOperationalDetails' => null,
+                    'receiver' => null,
+                    'paymentOrder' => null,
+                    'statements' => null,
                 ],
             ],
             [
@@ -1034,6 +1023,7 @@ class CreatePaymentRequestBuilderTest extends TestCase
                             'vatCode' => Random::int(1, 6),
                             'paymentMode' => PaymentMode::CREDIT_PAYMENT,
                             'paymentSubject' => PaymentSubject::ANOTHER,
+                            'planned_status' => 6,
                         ],
                         $receiptItem,
                     ],
@@ -1061,12 +1051,12 @@ class CreatePaymentRequestBuilderTest extends TestCase
                             ]
                         ],
                     ],
-                    'fraud_data' => new FraudData([
-                        'id' => Random::str(11, 15, '0123456789'),
-                    ]),
                     'merchant_customer_id' => null,
                     'receiptIndustryDetails' => [],
                     'receiptOperationalDetails' => null,
+                    'receiver' => null,
+                    'paymentOrder' => null,
+                    'statements' => null,
                 ],
             ],
         ];
@@ -1092,6 +1082,57 @@ class CreatePaymentRequestBuilderTest extends TestCase
                 'locale' => 'ru_RU',
             ],
         ];
+        $receivers = [
+            [
+                'type' => ReceiverType::BANK_ACCOUNT,
+                'account_number' => Random::str(20, 20, '0123456789'),
+                'bic' => Random::str(9, 9, '0123456789'),
+            ],
+            new ReceiverDigitalWallet(['account_number' => Random::str(20, 20, '0123456789')]),
+            [
+                'type' => ReceiverType::MOBILE_BALANCE,
+                'phone' => Random::str(4, 15, '0123456789'),
+            ],
+        ];
+        $paymentOrderArr = [
+            'type' => PaymentOrderType::UTILITIES,
+            'amount' => [
+                'value' => Random::int(1, 100000),
+                'currency' => Random::value(CurrencyCode::getValidValues()),
+            ],
+            'payment_purpose' => Random::str(1, 210),
+            'recipient' => [
+                'name' => Random::str(1, 100),
+                'inn' => Random::str(10, 10, '0123456789'),
+                'kpp' => Random::str(9, 9, '0123456789'),
+                'bank' => [
+                    'name' => Random::str(1, 100),
+                    'bic' => Random::str(9, 9, '0123456789'),
+                    'account' => Random::str(20, 20, '0123456789'),
+                    'correspondent_account' => Random::str(20, 20, '0123456789'),
+                ]
+            ],
+            'kbk' => Random::str(20, 20, '0123456789'),
+            'oktmo' => Random::str(8, 8, '0123456789'),
+            'payment_period' => [
+                'month' => Random::int(1, 12),
+                'year' => Random::int(1900, 3000),
+            ],
+            'payment_document_id' => Random::str(18),
+            'payment_document_number' => '34СТ185329012352',
+            'account_number' => '34СТ185329012352',
+            'unified_account_number' => Random::str(10),
+            'service_id' => Random::str(13),
+        ];
+        $paymentOrders = [$paymentOrderArr, new PaymentOrderUtilities($paymentOrderArr)];
+        $statementsArray = [];
+        $statementFactory = new StatementFactory();
+        for ($i = 0; $i < 3; $i++) {
+            foreach (StatementType::getValidValues() as $statemenType) {
+                $statementObject = $statementFactory->factory($statemenType);
+                $statementsArray[] = $this->getValidDataProviderByClass($statementObject, (bool)$i % 2);
+            }
+        }
         for ($i = 0; $i < 10; $i++) {
             $request = [
                 'accountId' => uniqid('', true),
@@ -1144,10 +1185,10 @@ class CreatePaymentRequestBuilderTest extends TestCase
                         ],
                     ],
                 ],
-                'fraud_data' => [
-                    'id' => Random::str(11, 15, '0123456789'),
-                ],
                 'merchant_customer_id' => Random::str(3, 100),
+                'receiver' => Random::value($receivers),
+                'paymentOrder' => Random::value($paymentOrders),
+                'statements' => Random::value($statementsArray),
             ];
             $result[] = [$request];
         }
@@ -1271,9 +1312,45 @@ class CreatePaymentRequestBuilderTest extends TestCase
     }
 
     /**
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
      * @throws Exception
      */
-    public static function invalidFraudDataProvider(): array
+    public function testSetReceiver(mixed $options): void
+    {
+        $builder = new CreatePaymentRequestBuilder();
+
+        $builder->setReceiptItems($options['receiptItems']);
+        $builder->setReceiptEmail($options['receiptEmail']);
+        $builder->setReceiver($options['receiver']);
+        $instance = $builder->build($this->getRequiredData());
+
+        if (empty($options['receiver'])) {
+            self::assertNull($instance->getReceiver());
+        } else {
+            self::assertNotNull($instance->getReceiver());
+            self::assertEquals($options['receiver'], is_array($options['receiver']) ? $instance->getReceiver()->toArray() : $instance->getReceiver());
+        }
+    }
+
+    /**
+     * @dataProvider invalidReceiverDataProvider
+     *
+     * @param mixed $value
+     */
+    public function testSetInvalidReceiver(mixed $value): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $builder = new CreatePaymentRequestBuilder();
+        $builder->setReceiver($value);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function invalidReceiverDataProvider(): array
     {
         return [
             [true],
@@ -1287,15 +1364,52 @@ class CreatePaymentRequestBuilderTest extends TestCase
     }
 
     /**
-     * @dataProvider invalidFraudDataProvider
+     * @dataProvider validDataProvider
+     *
+     * @param mixed $options
+     *
+     * @throws Exception
+     */
+    public function testSetPaymentOrder(mixed $options): void
+    {
+        $builder = new CreatePaymentRequestBuilder();
+        $builder->setPaymentOrder($options['paymentOrder']);
+        $instance = $builder->build($this->getRequiredData());
+
+        if (empty($options['paymentOrder'])) {
+            self::assertNull($instance->getPaymentOrder());
+        } else {
+            self::assertNotNull($instance->getPaymentOrder());
+            self::assertEquals($options['paymentOrder'], is_array($options['paymentOrder']) ? $instance->getPaymentOrder()->toArray() : $instance->getPaymentOrder());
+        }
+    }
+
+    /**
+     * @dataProvider invalidPaymentOrderDataProvider
      *
      * @param mixed $value
      */
-    public function testSetInvalidFraudData(mixed $value): void
+    public function testSetInvalidPaymentOrder(mixed $value): void
     {
         $this->expectException(InvalidArgumentException::class);
         $builder = new CreatePaymentRequestBuilder();
-        $builder->setFraudData($value);
+        $builder->setPaymentOrder($value);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function invalidPaymentOrderDataProvider(): array
+    {
+        return [
+            [true],
+            [false],
+            [new stdClass()],
+            [0],
+            [7],
+            [Random::int(-100, -1)],
+            [Random::int(7, 100)],
+        ];
     }
 
     /**

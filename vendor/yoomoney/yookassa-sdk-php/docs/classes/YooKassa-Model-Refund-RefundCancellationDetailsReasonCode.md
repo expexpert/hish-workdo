@@ -14,6 +14,12 @@
 - `insufficient_funds` - Не хватает денег, чтобы сделать возврат
 - `rejected_by_payee` - Эмитент платежного средства отклонил возврат по неизвестным причинам
 - `yoo_money_account_closed` - Пользователь закрыл кошелек ЮMoney, на который вы пытаетесь вернуть платеж
+- `payment_basket_id_not_found` - НСПК не нашла для этого возврата одобренную корзину покупки
+- `payment_article_number_not_found` - Указаны товары, для оплаты которых не использовался электронный сертификат: значение `payment_article_number` отсутствует
+- `payment_tru_code_not_found` - Указаны товары, для оплаты которых не использовался электронный сертификат: значение `tru_code` отсутствует
+- `too_many_refunding_articles` - Для одного или нескольких товаров количество возвращаемых единиц (`quantity`) больше, чем указано в одобренной корзине покупки
+- `some_articles_already_refunded` - Некоторые товары уже возвращены
+- `rejected_by_timeout` - Технические неполадки на стороне инициатора отмены возврата.
 
 ---
 ### Constants
@@ -23,6 +29,12 @@
 | public | [INSUFFICIENT_FUNDS](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_INSUFFICIENT_FUNDS) |  | Не хватает денег, чтобы сделать возврат: сумма платежей, которые вы получили в день возврата, меньше, чем сам возврат, или есть задолженность. [Что делать в этом случае](https://yookassa.ru/docs/support/payments/refunding#refunding__block) |
 | public | [REJECTED_BY_PAYEE](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_REJECTED_BY_PAYEE) |  | Эмитент платежного средства отклонил возврат по неизвестным причинам. Предложите пользователю обратиться к эмитенту для уточнения подробностей или договоритесь с пользователем о том, чтобы вернуть ему деньги напрямую, не через ЮKassa. |
 | public | [YOO_MONEY_ACCOUNT_CLOSED](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_YOO_MONEY_ACCOUNT_CLOSED) |  | Пользователь закрыл кошелек ЮMoney, на который вы пытаетесь вернуть платеж. Сделать возврат через ЮKassa нельзя. Договоритесь с пользователем напрямую, каким способом вы вернете ему деньги. |
+| public | [PAYMENT_BASKET_ID_NOT_FOUND](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_PAYMENT_BASKET_ID_NOT_FOUND) |  | НСПК не нашла для этого возврата одобренную корзину покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. |
+| public | [PAYMENT_ARTICLE_NUMBER_NOT_FOUND](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_PAYMENT_ARTICLE_NUMBER_NOT_FOUND) |  | Указаны товары, для оплаты которых не использовался электронный сертификат: значение `payment_article_number` отсутствует в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. |
+| public | [PAYMENT_TRU_CODE_NOT_FOUND](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_PAYMENT_TRU_CODE_NOT_FOUND) |  | Указаны товары, для оплаты которых не использовался электронный сертификат: значение tru_code отсутствует в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. |
+| public | [TOO_MANY_REFUNDING_ARTICLES](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_TOO_MANY_REFUNDING_ARTICLES) |  | Для одного или нескольких товаров количество возвращаемых единиц (`quantity`) больше, чем указано в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. |
+| public | [SOME_ARTICLES_ALREADY_REFUNDED](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_SOME_ARTICLES_ALREADY_REFUNDED) |  | Некоторые товары уже возвращены. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности. |
+| public | [REJECTED_BY_TIMEOUT](../classes/YooKassa-Model-Refund-RefundCancellationDetailsReasonCode.md#constant_REJECTED_BY_TIMEOUT) |  | Технические неполадки на стороне инициатора отмены возврата. Повторите запрос с новым ключом идемпотентности. |
 
 ---
 ### Properties
@@ -81,6 +93,60 @@ REJECTED_BY_PAYEE = 'rejected_by_payee'
 
 ```php
 YOO_MONEY_ACCOUNT_CLOSED = 'yoo_money_account_closed'
+```
+
+
+<a name="constant_PAYMENT_BASKET_ID_NOT_FOUND" class="anchor"></a>
+###### PAYMENT_BASKET_ID_NOT_FOUND
+НСПК не нашла для этого возврата одобренную корзину покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности.
+
+```php
+PAYMENT_BASKET_ID_NOT_FOUND = 'payment_basket_id_not_found'
+```
+
+
+<a name="constant_PAYMENT_ARTICLE_NUMBER_NOT_FOUND" class="anchor"></a>
+###### PAYMENT_ARTICLE_NUMBER_NOT_FOUND
+Указаны товары, для оплаты которых не использовался электронный сертификат: значение `payment_article_number` отсутствует в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности.
+
+```php
+PAYMENT_ARTICLE_NUMBER_NOT_FOUND = 'payment_article_number_not_found'
+```
+
+
+<a name="constant_PAYMENT_TRU_CODE_NOT_FOUND" class="anchor"></a>
+###### PAYMENT_TRU_CODE_NOT_FOUND
+Указаны товары, для оплаты которых не использовался электронный сертификат: значение tru_code отсутствует в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности.
+
+```php
+PAYMENT_TRU_CODE_NOT_FOUND = 'payment_tru_code_not_found'
+```
+
+
+<a name="constant_TOO_MANY_REFUNDING_ARTICLES" class="anchor"></a>
+###### TOO_MANY_REFUNDING_ARTICLES
+Для одного или нескольких товаров количество возвращаемых единиц (`quantity`) больше, чем указано в одобренной корзине покупки. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности.
+
+```php
+TOO_MANY_REFUNDING_ARTICLES = 'too_many_refunding_articles'
+```
+
+
+<a name="constant_SOME_ARTICLES_ALREADY_REFUNDED" class="anchor"></a>
+###### SOME_ARTICLES_ALREADY_REFUNDED
+Некоторые товары уже возвращены. Откорректируйте данные и отправьте запрос еще раз с новым ключом идемпотентности.
+
+```php
+SOME_ARTICLES_ALREADY_REFUNDED = 'some_articles_already_refunded'
+```
+
+
+<a name="constant_REJECTED_BY_TIMEOUT" class="anchor"></a>
+###### REJECTED_BY_TIMEOUT
+Технические неполадки на стороне инициатора отмены возврата. Повторите запрос с новым ключом идемпотентности.
+
+```php
+REJECTED_BY_TIMEOUT = 'rejected_by_timeout'
 ```
 
 
@@ -166,10 +232,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

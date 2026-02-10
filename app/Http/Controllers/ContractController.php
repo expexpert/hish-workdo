@@ -74,7 +74,8 @@ class ContractController extends Controller
     {
         $contractTypes = ContractType::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
         $contractTypes->prepend('Select Contract Types', '');
-        $customers       = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+        $filterIds = \Auth::user()->getCustomerFilterIds();
+        $customers       = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
         $customers->prepend('Select Customer', '');
 
         return view('contract.create', compact('contractTypes', 'customers'));
@@ -147,7 +148,8 @@ class ContractController extends Controller
     public function edit(Contract $contract)
     {
         $contractTypes = ContractType::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
-        $customers       = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+        $filterIds = \Auth::user()->getCustomerFilterIds();
+        $customers       = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
 
         return view('contract.edit', compact('contractTypes', 'customers', 'contract'));
     }
@@ -249,7 +251,8 @@ class ContractController extends Controller
     {
         $contract = Contract::find($id);
         $contractTypes = ContractType::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
-        $customers       = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+        $filterIds = \Auth::user()->getCustomerFilterIds();
+        $customers       = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
 
         return view('contract.duplicate', compact('contractTypes', 'customers', 'contract'));
     }

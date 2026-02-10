@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -121,6 +121,9 @@ class CancellationDetailsReasonCode extends AbstractEnum
     /** Нельзя заплатить с номера телефона этого мобильного оператора. При новой попытке оплаты пользователю следует использовать другое платежное средство. Список поддерживаемых операторов */
     public const UNSUPPORTED_MOBILE_OPERATOR = 'unsupported_mobile_operator';
 
+    /** Отклонено по таймауту */
+    public const REJECTED_BY_TIMEOUT = 'rejected_by_timeout';
+
     protected static array $validValues = [
         self::THREE_D_SECURE_FAILED => true,
         self::CALL_ISSUER => true,
@@ -142,5 +145,6 @@ class CancellationDetailsReasonCode extends AbstractEnum
         self::EXPIRED_ON_CAPTURE => true,
         self::DEAL_EXPIRED => true,
         self::UNSUPPORTED_MOBILE_OPERATOR => true,
+        self::REJECTED_BY_TIMEOUT => true,
     ];
 }

@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +27,15 @@
 namespace Tests\YooKassa\Request\Refunds;
 
 use DateTime;
+use Exception;
 use PHPUnit\Framework\TestCase;
+use Tests\YooKassa\AbstractTestCase;
 use YooKassa\Helpers\Random;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\CurrencyCode;
 use YooKassa\Model\Deal\RefundDealInfo;
 use YooKassa\Model\Deal\SettlementPayoutPaymentType;
+use YooKassa\Model\Metadata;
 use YooKassa\Model\MonetaryAmount;
 use YooKassa\Model\Payment\ReceiptRegistrationStatus;
 use YooKassa\Model\Refund\RefundStatus;
@@ -46,7 +49,7 @@ use YooKassa\Request\Refunds\AbstractRefundResponse;
  * @author      cms@yoomoney.ru
  * @link        https://yookassa.ru/developers/api
  */
-abstract class AbstractTestRefundResponse extends TestCase
+abstract class AbstractTestRefundResponse extends AbstractTestCase
 {
     /**
      * @dataProvider validDataProvider
@@ -152,9 +155,46 @@ abstract class AbstractTestRefundResponse extends TestCase
         }
     }
 
+    /**
+     * Test property "metadata"
+     * @dataProvider validDataProvider
+     * @param array $options
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testMetadata(array $options): void
+    {
+        $instance = $this->getTestInstance($options);
+        $instance->setMetadata($options['metadata']);
+        if (!empty($options['metadata'])) {
+            self::assertNotNull($instance->getMetadata());
+            self::assertNotNull($instance->metadata);
+            foreach ($options['metadata'] as $key => $element) {
+                if (!empty($element)) {
+                    self::assertEquals($element, $instance->getMetadata()[$key]);
+                    self::assertEquals($element, $instance->metadata[$key]);
+                    self::assertIsObject($instance->getMetadata());
+                    self::assertIsObject($instance->metadata);
+                }
+            }
+            self::assertCount(count($options['metadata']), $instance->getMetadata());
+            self::assertCount(count($options['metadata']), $instance->metadata);
+            if ($instance->getMetadata() instanceof Metadata) {
+                self::assertEquals($options['metadata'], is_array($options['metadata']) ? $instance->getMetadata()->toArray() : $instance->getMetadata());
+                self::assertEquals($options['metadata'], is_array($options['metadata']) ? $instance->metadata->toArray() : $instance->getMetadata());
+                self::assertCount(count($options['metadata']), $instance->getMetadata());
+                self::assertCount(count($options['metadata']), $instance->metadata);
+            }
+        }
+    }
+
     public static function validDataProvider(): array
     {
         $result = [];
+        $metadata = new Metadata();
+        $metadata->test = 'test';
+        $metadata->key = 'val';
         for ($i = 0; $i < 10; $i++) {
             $payment = [
                 'id' => Random::str(36),
@@ -187,6 +227,7 @@ abstract class AbstractTestRefundResponse extends TestCase
                         ],
                     ],
                 ],
+                'metadata' => Random::bool() ? ['key' => 'val'] : $metadata,
             ];
             $result[] = [$payment];
         }

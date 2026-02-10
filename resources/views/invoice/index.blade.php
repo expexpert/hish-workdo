@@ -20,12 +20,16 @@
             <i class="ti ti-file-export"></i>
         </a>
 
+        @if (\Auth::user()->type !== 'company')
+
         @can('create invoice')
             <a href="{{ route('invoice.create', 0) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
                 title="{{ __('Create') }}">
                 <i class="ti ti-plus"></i>
             </a>
         @endcan
+
+        @endif
     </div>
 @endsection
 
@@ -197,6 +201,9 @@
                                                             </div>
                                                         @endif
                                                     @endcan
+
+                                                    @if (\Auth::user()->type !== 'company')
+
                                                     @can('edit invoice')
                                                         <div class="action-btn me-2">
                                                             <a href="{{ route('invoice.edit', \Crypt::encrypt($invoice->id)) }}"
@@ -219,6 +226,8 @@
                                                             {!! Form::close() !!}
                                                         </div>
                                                     @endcan
+
+                                                    @endif
                                                 </span>
                                             </td>
                                         @endif

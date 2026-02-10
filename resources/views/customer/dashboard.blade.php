@@ -93,6 +93,61 @@
 @section('content')
     <div class="row">
         <div class="col-md-12">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        {{ __('Notifications') }}
+                        @if(!empty($notifications) && $notifications->where('is_read', false)->count() > 0)
+                        <span class="badge bg-danger ms-2">{{ $notifications->where('is_read', false)->count() }}</span>
+                        @endif
+                    </h5>
+                    @if(!empty($notifications) && $notifications->count() > 0)
+                    <form action="{{ route('customer.notification.clearAll') }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to clear all notifications?') }}');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Clear All') }}</button>
+                    </form>
+                    @endif
+                </div>
+                <div class="card-body">
+                    @if(!empty($notifications) && $notifications->count())
+                    <ul class="list-group">
+                        @foreach($notifications as $note)
+                        <li class="list-group-item d-flex justify-content-between align-items-start @if(!$note->is_read) bg-light @endif">
+                            <div style="flex: 1;">
+                                <strong>{{ $note->title }}</strong>
+                                <div class="small text-muted">{{ $note->created_at->diffForHumans() }}</div>
+                                <div class="mt-2">{{ $note->message }}</div>
+                            </div>
+                            <div class="ms-3 d-flex flex-column align-items-end">
+                                <div class="btn-group mb-2">
+                                    @if(!$note->is_read)
+                                    <a href="{{ route('customer.notification.read', $note->id) }}" class="btn btn-sm btn-primary">{{ __('Mark read') }}</a>
+                                    @else
+                                    <span class="badge bg-success me-2 mt-1">{{ __('Read') }}</span>
+                                    @endif
+
+                                    
+                                    @if(!empty($note->document))
+                                    <a href="{{ asset('storage/' . $note->document) }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-2">{{ __('View Doc') }}</a>
+                                    @endif
+
+                                    <form action="{{ route('customer.notification.destroy', $note->id) }}" method="POST" onsubmit="return confirm('{{ __('Delete this notification?') }}');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-1 ms-2" title="Delete"><i class="fas fa-trash"></i> {{ __('Clear') }}</button>
+                                    </form>
+                                </div>
+    
+                            </div>
+                        </li>
+                        @endforeach
+                    </ul>
+                    @else
+                    <div class="text-center text-muted">{{ __('No notifications') }}</div>
+                    @endif
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header">
                     <div class="row">

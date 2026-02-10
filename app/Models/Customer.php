@@ -6,12 +6,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Lab404\Impersonate\Models\Impersonate;
+use Laravel\Sanctum\HasApiTokens;
 
 class Customer extends Authenticatable
 {
     use HasRoles;
     use Notifiable;
     use Impersonate;
+    use HasApiTokens;
 
     protected $guard_name = 'web';
 

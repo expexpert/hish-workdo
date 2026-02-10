@@ -62,6 +62,8 @@ class ComplianceTollfreeInquiriesList extends ListResource
                 $tollfreePhoneNumber,
             'NotificationEmail' =>
                 $notificationEmail,
+            'CustomerProfileSid' =>
+                $options['customerProfileSid'],
             'BusinessName' =>
                 $options['businessName'],
             'BusinessWebsite' =>
@@ -104,9 +106,33 @@ class ComplianceTollfreeInquiriesList extends ListResource
                 $options['themeSetId'],
             'SkipMessagingUseCase' =>
                 Serialize::booleanToString($options['skipMessagingUseCase']),
+            'BusinessRegistrationNumber' =>
+                $options['businessRegistrationNumber'],
+            'BusinessRegistrationAuthority' =>
+                $options['businessRegistrationAuthority'],
+            'BusinessRegistrationCountry' =>
+                $options['businessRegistrationCountry'],
+            'BusinessType' =>
+                $options['businessType'],
+            'DoingBusinessAs' =>
+                $options['doingBusinessAs'],
+            'OptInConfirmationMessage' =>
+                $options['optInConfirmationMessage'],
+            'HelpMessageSample' =>
+                $options['helpMessageSample'],
+            'PrivacyPolicyUrl' =>
+                $options['privacyPolicyUrl'],
+            'TermsAndConditionsUrl' =>
+                $options['termsAndConditionsUrl'],
+            'AgeGatedContent' =>
+                Serialize::booleanToString($options['ageGatedContent']),
+            'ExternalReferenceId' =>
+                $options['externalReferenceId'],
+            'OptInKeywords' =>
+                Serialize::map($options['optInKeywords'], function ($e) { return $e; }),
         ]);
 
-        $headers = Values::of(['Content-Type' => 'application/x-www-form-urlencoded' ]);
+        $headers = Values::of(['Content-Type' => 'application/x-www-form-urlencoded', 'Accept' => 'application/json' ]);
         $payload = $this->version->create('POST', $this->uri, [], $data, $headers);
 
         return new ComplianceTollfreeInquiriesInstance(

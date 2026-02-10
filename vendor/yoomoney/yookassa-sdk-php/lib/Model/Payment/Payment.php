@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ use YooKassa\Validator\Constraints as Assert;
 /**
  * Класс, представляющий модель Payment.
  *
- * Данные о платеже.
+ * Объект платежа (Payment) — актуальная информация о платеже.
  *
  * @category Class
  * @package  YooKassa\Model
@@ -84,22 +84,18 @@ use YooKassa\Validator\Constraints as Assert;
  * @property PaymentDealInfo $deal Данные о сделке, в составе которой проходит платеж
  * @property string $merchantCustomerId Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
  * @property string $merchant_customer_id Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
+ * @property PaymentInvoiceDetails $invoice_details Данные о выставленном счете, в рамках которого проведен платеж
+ * @property PaymentInvoiceDetails $invoiceDetails Данные о выставленном счете, в рамках которого проведен платеж
  */
 class Payment extends AbstractObject implements PaymentInterface
 {
-    /** Максимальная длина строки описания платежа */
-    public const MAX_LENGTH_DESCRIPTION = 128;
-
-    /** Максимальная длина строки идентификатора покупателя в вашей системе */
-    public const MAX_LENGTH_MERCHANT_CUSTOMER_ID = 200;
-
     /**
      * @var string|null Идентификатор платежа
      */
     #[Assert\NotBlank]
     #[Assert\Type('string')]
-    #[Assert\Length(max: 36)]
-    #[Assert\Length(min: 36)]
+    #[Assert\Length(max: self::MAX_LENGTH_ID)]
+    #[Assert\Length(min: self::MIN_LENGTH_ID)]
     protected ?string $_id = null;
 
     /**
@@ -260,6 +256,12 @@ class Payment extends AbstractObject implements PaymentInterface
     #[Assert\Type('string')]
     #[Assert\Length(max: self::MAX_LENGTH_MERCHANT_CUSTOMER_ID)]
     protected ?string $_merchant_customer_id = null;
+
+    /**
+     * @var PaymentInvoiceDetails|null
+     */
+    #[Assert\Type(PaymentInvoiceDetails::class)]
+    protected ?PaymentInvoiceDetails $_invoice_details = null;
 
     /**
      * Возвращает идентификатор платежа.
@@ -772,4 +774,28 @@ class Payment extends AbstractObject implements PaymentInterface
         $this->_merchant_customer_id = $this->validatePropertyValue('_merchant_customer_id', $merchant_customer_id);
         return $this;
     }
+
+    /**
+     * Возвращает invoice_details.
+     *
+     * @return PaymentInvoiceDetails|null
+     */
+    public function getInvoiceDetails(): ?PaymentInvoiceDetails
+    {
+        return $this->_invoice_details;
+    }
+
+    /**
+     * Устанавливает invoice_details.
+     *
+     * @param PaymentInvoiceDetails|array|null $invoice_details
+     *
+     * @return self
+     */
+    public function setInvoiceDetails(mixed $invoice_details = null): self
+    {
+        $this->_invoice_details = $this->validatePropertyValue('_invoice_details', $invoice_details);
+        return $this;
+    }
+
 }

@@ -38,12 +38,23 @@ class InvoiceController extends Controller
     {
         if (\Auth::user()->can('manage invoice')) {
 
-            $customer = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customer = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customer->prepend('Select Customer', '');
 
             $status = Invoice::$statues;
 
-            $query = Invoice::where('created_by', '=', \Auth::user()->creatorId());
+            $auth = \Auth::user();
+            if (isset($auth->type) && $auth->type === 'company') {
+                $accountantIds = User::where('created_by', $auth->id)->where('type', 'accountant')->pluck('id')->toArray();
+                $creatorIds = array_merge([$auth->id], $accountantIds);
+            } elseif (isset($auth->type) && $auth->type === 'accountant') {
+                $creatorIds = [$auth->id];
+            } else {
+                $creatorIds = [$auth->creatorId()];
+            }
+
+            $query = Invoice::whereIn('created_by', $creatorIds);
 
             if (!empty($request->customer)) {
                 $query->where('customer_id', '=', $request->customer);
@@ -75,7 +86,8 @@ class InvoiceController extends Controller
         if (\Auth::user()->can('create invoice')) {
             $customFields   = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'invoice')->get();
             $invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
-            $customers      = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers      = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customers->prepend('Select Customer', '');
             $category = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())->where('type', 'income')->get()->pluck('name', 'id');
             $category->prepend('Select Category', '');
@@ -154,7 +166,7 @@ class InvoiceController extends Controller
             $invoice->category_id    = $request->category_id;
             $invoice->ref_number     = $request->ref_number;
             $invoice->discount_apply = isset($request->discount_apply) ? 1 : 0;
-            $invoice->created_by     = \Auth::user()->creatorId();
+            $invoice->created_by     = \Auth::user()->id;
 
             $invoice->save();
             Utility::starting_number($invoice->invoice_id + 1, 'invoice');
@@ -226,7 +238,8 @@ class InvoiceController extends Controller
             $invoice = Invoice::find($id);
 
             $invoice_number = \Auth::user()->invoiceNumberFormat($invoice->invoice_id);
-            $customers      = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers      = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $category       = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())->where('type', 'income')->get()->pluck('name', 'id');
             $category->prepend('Select Category', '');
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
@@ -244,7 +257,7 @@ class InvoiceController extends Controller
     {
 
         if (\Auth::user()->can('edit bill')) {
-            if ($invoice->created_by == \Auth::user()->creatorId()) {
+            if ($invoice->created_by == \Auth::user()->id) {
                 $validator = \Validator::make(
                     $request->all(),
                     [
@@ -380,8 +393,28 @@ class InvoiceController extends Controller
                 }
 
                 $users = User::where('id', $invoice->created_by)->first();
+                $authUser = \Auth::user();
 
-                if ($invoice->created_by == \Auth::user()->creatorId()) {
+                $canView = false;
+
+                if ($invoice->created_by == $authUser->id) {
+                    $canView = true; // the creator themselves (accountant or company)
+                }
+
+                // If logged-in user is a company, allow if the invoice was created by one of its accountants
+                if (!$canView && isset($authUser->type) && $authUser->type === 'company') {
+                    $creatorUser = User::find($invoice->created_by);
+                    if ($creatorUser && $creatorUser->created_by == $authUser->id) {
+                        $canView = true;
+                    }
+                }
+
+                // Also allow if the invoice's creator matches the authenticated user's creator (useful for some hierarchies)
+                if (!$canView && isset($authUser->created_by) && $invoice->created_by == $authUser->created_by) {
+                    $canView = true;
+                }
+
+                if ($canView) {
                     $invoicePayment = InvoicePayment::where('invoice_id', $invoice->id)->first();
                     $customer = $invoice->customer;
                     $iteams   = $invoice->items;
@@ -404,7 +437,7 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice, Request $request)
     {
         if (\Auth::user()->can('delete invoice')) {
-            if ($invoice->created_by == \Auth::user()->creatorId()) {
+            if ($invoice->created_by == \Auth::user()->id) {
                 foreach ($invoice->payments as $invoices) {
                     Utility::bankAccountBalance($invoices->account_id, $invoices->amount, 'debit');
 
@@ -459,7 +492,8 @@ class InvoiceController extends Controller
 
             $status = Invoice::$statues;
 
-            $query = Invoice::where('customer_id', '=', \Auth::user()->id)->where('status', '!=', '0')->where('created_by', \Auth::user()->creatorId());
+            $customer = \Auth::user();
+            $query = Invoice::where('customer_id', '=', $customer->id)->where('status', '!=', '0')->where('created_by', $customer->created_by);
 
             if (str_contains($request->issue_date, ' to ')) {
                 $date_range = explode(' to ', $request->issue_date);
@@ -634,7 +668,7 @@ class InvoiceController extends Controller
                 return redirect()->back()->with('error', $messages->first());
             }
 
-            $invoicePayment                 = new InvoicePayment();
+            $invoicePayment = new InvoicePayment();
             $invoicePayment->invoice_id     = $invoice_id;
             $invoicePayment->date           = $request->date;
             $invoicePayment->amount         = $request->amount;

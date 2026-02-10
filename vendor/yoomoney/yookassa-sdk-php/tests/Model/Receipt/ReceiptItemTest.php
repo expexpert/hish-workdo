@@ -3,7 +3,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 2024 "YooMoney", NBСO LLC
+* Copyright (c) 2025 "YooMoney", NBСO LLC
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -248,10 +248,10 @@ class ReceiptItemTest extends AbstractTestCase
         $instance->setVatCode($value);
         self::assertNotNull($instance->getVatCode());
         self::assertNotNull($instance->vat_code);
-        self::assertEquals($value, is_array($value) ? $instance->getVatCode()->toArray() : $instance->getVatCode());
-        self::assertEquals($value, is_array($value) ? $instance->vat_code->toArray() : $instance->vat_code);
-        self::assertLessThanOrEqual(6, is_string($instance->getVatCode()) ? mb_strlen($instance->getVatCode()) : $instance->getVatCode());
-        self::assertLessThanOrEqual(6, is_string($instance->vat_code) ? mb_strlen($instance->vat_code) : $instance->vat_code);
+        self::assertEquals($value, $instance->getVatCode());
+        self::assertEquals($value, $instance->vat_code);
+        self::assertLessThanOrEqual(12, is_string($instance->getVatCode()) ? mb_strlen($instance->getVatCode()) : $instance->getVatCode());
+        self::assertLessThanOrEqual(12, is_string($instance->vat_code) ? mb_strlen($instance->vat_code) : $instance->vat_code);
         self::assertGreaterThanOrEqual(1, is_string($instance->getVatCode()) ? mb_strlen($instance->getVatCode()) : $instance->getVatCode());
         self::assertGreaterThanOrEqual(1, is_string($instance->vat_code) ? mb_strlen($instance->vat_code) : $instance->vat_code);
         self::assertIsNumeric($instance->getVatCode());
@@ -1019,6 +1019,70 @@ class ReceiptItemTest extends AbstractTestCase
     {
         $instance = $this->getTestInstance();
         return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_product_code'));
+    }
+
+    /**
+     * Test property "planned_status"
+     * @dataProvider validPlannedStatusDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testPlannedStatus(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getPlannedStatus());
+        self::assertEmpty($instance->planned_status);
+        $instance->setPlannedStatus($value);
+        self::assertEquals($value, $instance->getPlannedStatus());
+        self::assertEquals($value, $instance->planned_status);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getPlannedStatus());
+            self::assertNotNull($instance->planned_status);
+            self::assertLessThanOrEqual(6, $instance->getPlannedStatus());
+            self::assertLessThanOrEqual(6, $instance->planned_status);
+            self::assertGreaterThanOrEqual(1, $instance->getPlannedStatus());
+            self::assertGreaterThanOrEqual(1, $instance->planned_status);
+            self::assertIsNumeric($instance->getPlannedStatus());
+            self::assertIsNumeric($instance->planned_status);
+        }
+    }
+
+    /**
+     * Test invalid property "planned_status"
+     * @dataProvider invalidPlannedStatusDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidPlannedStatus(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setPlannedStatus($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validPlannedStatusDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_planned_status'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidPlannedStatusDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_planned_status'));
     }
 
     /**

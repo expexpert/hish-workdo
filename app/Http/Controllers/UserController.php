@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\Plan;
 use App\Models\User;
 use App\Models\Utility;
+use App\Models\AdminActivityLog;
+use App\Services\AdminActivityLogger;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -523,14 +525,55 @@ class UserController extends Controller
         // dd($request,  $request->user(), $id);
         $user = User::find($id);
         if ($user && auth()->check()) {
-            Impersonate::take($request->user(), $user);
-            return redirect('/');
+            // Check if the company allows super admin login
+            if ($user->allow_super_admin_login == 1 || \Auth::user()->type != 'super admin') {
+                $admin = $request->user();
+                Impersonate::take($admin, $user);
+                
+                // Store admin ID in session for activity logging
+                session(['admin_impersonating_company_id' => $admin->id]);
+                
+                // Log the login activity
+                AdminActivityLog::logActivity(
+                    $user->id,
+                    $admin->id,
+                    'login',
+                    'Company',
+                    $user->id,
+                    json_encode(['company_name' => $user->name, 'company_email' => $user->email]),
+                    $admin->creatorId()
+                );
+                
+                return redirect('/');
+            } else {
+                return redirect()->back()->with('error', __('This company does not allow super admin login.'));
+            }
         }
     }
 
     public function ExitCompany(Request $request)
     {
+        $company = \Auth::user();
+        $adminId = session('admin_impersonating_company_id');
+        
+        if ($adminId && $company) {
+            // Log the logout activity
+            AdminActivityLog::logActivity(
+                $company->id,
+                $adminId,
+                'logout',
+                'Company',
+                $company->id,
+                json_encode(['company_name' => $company->name]),
+                $adminId
+            );
+        }
+        
         \Auth::user()->leaveImpersonation($request->user());
+        
+        // Clear the admin impersonating session
+        session()->forget('admin_impersonating_company_id');
+        
         return redirect('/');
     }
 
@@ -610,6 +653,18 @@ class UserController extends Controller
             $user->is_enable_login = 1;
             $user->save();
             return redirect()->back()->with('success', __('User login enable successfully.'));
+        }
+    }
+
+    public function updateSuperAdminLogin(Request $request)
+    {
+        $user = \Auth::user();
+        if ($user->type == 'company') {
+            $user->allow_super_admin_login = !empty($request->allow_super_admin_login) ? 1 : 0;
+            $user->save();
+            return redirect()->back()->with('success', __('Super admin login settings updated successfully.'));
+        } else {
+            return redirect()->back()->with('error', __('Permission denied.'));
         }
     }
 }

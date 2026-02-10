@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,15 +31,17 @@ use YooKassa\Common\AbstractRequestInterface;
 use YooKassa\Common\Exceptions\EmptyPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueTypeException;
+use YooKassa\Common\ListObject;
 use YooKassa\Model\Deal\PaymentDealInfo;
 use YooKassa\Model\Metadata;
-use YooKassa\Model\Payment\Recipient;
-use YooKassa\Model\Payment\RecipientInterface;
 use YooKassa\Model\Receipt\IndustryDetails;
 use YooKassa\Request\Payments\ConfirmationAttributes\AbstractConfirmationAttributes;
 use YooKassa\Request\Payments\ConfirmationAttributes\ConfirmationAttributesFactory;
 use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
 use YooKassa\Request\Payments\PaymentData\PaymentDataFactory;
+use YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder;
+use YooKassa\Request\Payments\ReceiverData\AbstractReceiver;
+use YooKassa\Request\Payments\StatementData\AbstractStatement;
 
 /**
  * Класс, представляющий модель CreatePaymentRequestBuilder.
@@ -80,6 +82,8 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
     /**
      * Устанавливает идентификатор магазина получателя платежа.
      *
+     * @deprecated Больше не используется
+     *
      * @param string $value Идентификатор магазина
      *
      * @return CreatePaymentRequestBuilder Инстанс текущего билдера
@@ -90,8 +94,6 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
      */
     public function setAccountId(string $value): CreatePaymentRequestBuilder
     {
-        $this->recipient->setAccountId($value);
-
         return $this;
     }
 
@@ -115,7 +117,7 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
     /**
      * Устанавливает получателя платежа из объекта или ассоциативного массива.
      *
-     * @param array|RecipientInterface|null $value Получатель платежа
+     * @param array|Recipient|null $value Получатель платежа
      *
      * @throws InvalidPropertyValueTypeException Выбрасывается если передан аргумент не валидного типа
      */
@@ -123,8 +125,7 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
     {
         if (is_array($value)) {
             $this->recipient->fromArray($value);
-        } elseif ($value instanceof RecipientInterface) {
-            $this->recipient->setAccountId($value->getAccountId());
+        } elseif ($value instanceof Recipient) {
             $this->recipient->setGatewayId($value->getGatewayId());
         } else {
             throw new InvalidPropertyValueTypeException('Invalid recipient value', 0, 'recipient', $value);
@@ -187,7 +188,7 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
      *
      * @throws InvalidPropertyValueTypeException Выбрасывается если был передан объект невалидного типа
      */
-    public function setPaymentMethodData(mixed $value, array $options = null): CreatePaymentRequestBuilder
+    public function setPaymentMethodData(mixed $value, ?array $options = null): CreatePaymentRequestBuilder
     {
         if (is_string($value) && '' !== $value) {
             if (empty($options)) {
@@ -319,18 +320,17 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
     }
 
     /**
-     * Устанавливает сделку.
+     * Устанавливает информацию для проверки операции на мошенничество.
+     * @deprecated Больше не поддерживается. Вместо него нужно использовать `setReceiver()`
      *
-     * @param null|array|FraudData $value Данные о сделке, в составе которой проходит платеж
+     * @param null|array|FraudData $value Информация для проверки операции на мошенничество
      *
-     * @return CreatePaymentRequestBuilder Информация для проверки операции на мошенничество
+     * @return CreatePaymentRequestBuilder Инстанс билдера запросов
      *
      * @throws InvalidPropertyValueTypeException
      */
     public function setFraudData(mixed $value): CreatePaymentRequestBuilder
     {
-        $this->currentObject->setFraudData($value);
-
         return $this;
     }
 
@@ -377,6 +377,54 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
     }
 
     /**
+     * Устанавливает реквизиты получателя оплаты.
+     *
+     * @param null|array|AbstractReceiver $value Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона
+     *
+     * @return CreatePaymentRequestBuilder Инстанс билдера запросов
+     *
+     * @throws InvalidPropertyValueTypeException
+     */
+    public function setReceiver(mixed $value): CreatePaymentRequestBuilder
+    {
+        $this->currentObject->setReceiver($value);
+
+        return $this;
+    }
+
+    /**
+     * Устанавливает платежное поручение.
+     *
+     * @param null|array|AbstractPaymentOrder $value Платежное поручение
+     *
+     * @return CreatePaymentRequestBuilder Инстанс билдера запросов
+     *
+     * @throws InvalidPropertyValueTypeException
+     */
+    public function setPaymentOrder(mixed $value): CreatePaymentRequestBuilder
+    {
+        $this->currentObject->setPaymentOrder($value);
+
+        return $this;
+    }
+
+    /**
+     * Добавляет данные для получения справки.
+     *
+     * @param null|array|AbstractStatement $value Данные для получения справки
+     *
+     * @return CreatePaymentRequestBuilder Инстанс билдера запросов
+     *
+     * @throws InvalidPropertyValueTypeException
+     */
+    public function addStatement(mixed $value): CreatePaymentRequestBuilder
+    {
+        $this->currentObject->getStatements()->add($value);
+
+        return $this;
+    }
+
+    /**
      * Строит и возвращает объект запроса для отправки в API ЮKassa.
      *
      * @param null|array $options Массив параметров для установки в объект запроса
@@ -384,7 +432,7 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
      * @return CreatePaymentRequestInterface|AbstractRequestInterface Инстанс объекта запроса
      *
      */
-    public function build(array $options = null): AbstractRequestInterface
+    public function build(?array $options = null): AbstractRequestInterface
     {
         if (!empty($options)) {
             $this->setOptions($options);

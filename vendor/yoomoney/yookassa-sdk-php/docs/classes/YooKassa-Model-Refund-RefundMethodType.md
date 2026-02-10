@@ -13,12 +13,14 @@
 
 Возможные значения:
 - `sbp` - Возврат через сервис быстрых платежей
+- `electronic_certificate` - Возврат платежа по электронному сертификату
 
 ---
 ### Constants
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
 | public | [SBP](../classes/YooKassa-Model-Refund-RefundMethodType.md#constant_SBP) |  | Возврат через сервис быстрых платежей |
+| public | [ELECTRONIC_CERTIFICATE](../classes/YooKassa-Model-Refund-RefundMethodType.md#constant_ELECTRONIC_CERTIFICATE) |  | Прием платежей по электронному сертификату, привязанному к карте «Мир» |
 | public | [UNKNOWN](../classes/YooKassa-Model-Refund-RefundMethodType.md#constant_UNKNOWN) | *deprecated* | Для неизвестных методов возврата |
 
 ---
@@ -61,6 +63,15 @@
 
 ```php
 SBP = 'sbp'
+```
+
+
+<a name="constant_ELECTRONIC_CERTIFICATE" class="anchor"></a>
+###### ELECTRONIC_CERTIFICATE
+Прием платежей по электронному сертификату, привязанному к карте «Мир»
+
+```php
+ELECTRONIC_CERTIFICATE = 'electronic_certificate'
 ```
 
 
@@ -157,10 +168,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

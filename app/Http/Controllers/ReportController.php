@@ -39,7 +39,8 @@ class ReportController extends Controller
         if (\Auth::user()->can('income report')) {
             $account = BankAccount::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('holder_name', 'id');
             $account->prepend('All', '');
-            $customer = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customer = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customer->prepend('Select Customer', '');
             $category = ProductServiceCategory::where('created_by', '=', \Auth::user()->creatorId())->where('type', '=', 'income')->get()->pluck('name', 'id');
             $category->prepend('Select Category', '');
@@ -446,7 +447,8 @@ class ReportController extends Controller
             $account->prepend('Select Account', '');
             $vender = Vender::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $vender->prepend('Select Vendor', '');
-            $customer = Customer::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customer = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
             $customer->prepend('Select Customer', '');
 
             $category = ProductServiceCategory::where('created_by', '=', \Auth::user()->creatorId())->whereIn(

@@ -3,7 +3,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2023 "YooMoney", NBСO LLC
+ * Copyright (c) 2024 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +77,7 @@ class Ip extends AbstractConstraint
     private string $version = self::V4;
     private string $message = 'This is not a valid IP address.';
 
-    public function __construct(string $version = null, string $message = null)
+    public function __construct(?string $version = null, ?string $message = null)
     {
         $this->version = $version ?? $this->version;
         $this->message = $message ?? $this->message;

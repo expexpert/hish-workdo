@@ -9,13 +9,15 @@
  */
 namespace SebastianBergmann\Type;
 
-use function array_is_list;
 use function assert;
 use function count;
 use function implode;
 use function in_array;
 use function sort;
 
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
 final class IntersectionType extends Type
 {
     /**
@@ -32,7 +34,7 @@ final class IntersectionType extends Type
         $this->ensureOnlyValidTypes(...$types);
         $this->ensureNoDuplicateTypes(...$types);
 
-        assert(array_is_list($types) && !empty($types));
+        assert(!empty($types));
 
         $this->types = $types;
     }

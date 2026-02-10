@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,30 +26,31 @@
 
 namespace YooKassa\Model\Payment;
 
-use Exception;
 use YooKassa\Common\AbstractObject;
 use YooKassa\Validator\Constraints as Assert;
 
 /**
  * Класс, представляющий модель AuthorizationDetails.
  *
- * Данные об авторизации платежа.
+ * Данные об авторизации платежа при оплате банковской картой.
+ *
+ * Присутствуют только для этих способов оплаты: банковская карта, Mir Pay, SberPay, T-Pay.
  *
  * @category Class
  * @package  YooKassa\Model
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property string $rrn Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента
- * @property string $authCode Код авторизации банковской карты
- * @property string $auth_code Код авторизации банковской карты
- * @property ThreeDSecure $threeDSecure Данные о прохождении пользователем аутентификации по 3‑D Secure
- * @property ThreeDSecure $three_d_secure Данные о прохождении пользователем аутентификации по 3‑D Secure
+ * @property string $rrn Retrieval Reference Number — идентификатор банковской транзакции.
+ * @property string $authСode Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
+ * @property string $auth_code Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
+ * @property ThreeDSecure $threeDSecure Данные о прохождении пользователем аутентификации по 3‑D Secure.
+ * @property ThreeDSecure $three_d_secure Данные о прохождении пользователем аутентификации по 3‑D Secure.
  */
 class AuthorizationDetails extends AbstractObject implements AuthorizationDetailsInterface
 {
     /**
-     * Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента. Используется при оплате банковской картой.
+     * Retrieval Reference Number — идентификатор банковской транзакции.
      *
      * @var string|null
      */
@@ -57,7 +58,7 @@ class AuthorizationDetails extends AbstractObject implements AuthorizationDetail
     private ?string $_rrn = null;
 
     /**
-     * Код авторизации банковской карты. Выдается эмитентом и подтверждает проведение авторизации.
+     * Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
      *
      * @var string|null
      */
@@ -65,7 +66,7 @@ class AuthorizationDetails extends AbstractObject implements AuthorizationDetail
     private ?string $_auth_code = null;
 
     /**
-     * @var ThreeDSecure|null
+     * @var ThreeDSecure|null Данные о прохождении пользователем аутентификации по 3‑D Secure.
      */
     #[Assert\NotNull]
     #[Assert\Valid]
@@ -85,7 +86,7 @@ class AuthorizationDetails extends AbstractObject implements AuthorizationDetail
     /**
      * Устанавливает rrn.
      *
-     * @param string|null $rrn Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента. Используется при оплате банковской картой.
+     * @param string|null $rrn Retrieval Reference Number — идентификатор банковской транзакции.
      *
      * @return self
      */
@@ -98,7 +99,7 @@ class AuthorizationDetails extends AbstractObject implements AuthorizationDetail
     /**
      * Возвращает auth_code.
      *
-     * @return string|null
+     * @return string|null Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
      */
     public function getAuthCode(): ?string
     {
@@ -108,7 +109,7 @@ class AuthorizationDetails extends AbstractObject implements AuthorizationDetail
     /**
      * Устанавливает auth_code.
      *
-     * @param string|null $auth_code Код авторизации банковской карты. Выдается эмитентом и подтверждает проведение авторизации.
+     * @param string|null $auth_code Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
      *
      * @return self
      */

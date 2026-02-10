@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,20 +26,28 @@
 
 namespace YooKassa\Request\Payments;
 
+use InvalidArgumentException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueTypeException;
+use YooKassa\Common\ListObject;
+use YooKassa\Common\ListObjectInterface;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\Deal\PaymentDealInfo;
 use YooKassa\Model\Metadata;
 use YooKassa\Model\Payment\Payment;
-use YooKassa\Model\Payment\Recipient;
-use YooKassa\Model\Payment\RecipientInterface;
 use YooKassa\Model\Receipt\ReceiptInterface;
 use YooKassa\Request\Payments\ConfirmationAttributes\AbstractConfirmationAttributes;
 use YooKassa\Request\Payments\ConfirmationAttributes\ConfirmationAttributesFactory;
 use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
 use YooKassa\Request\Payments\PaymentData\PaymentDataFactory;
+use YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder;
+use YooKassa\Request\Payments\PaymentOrderData\PaymentOrderFactory;
+use YooKassa\Request\Payments\ReceiverData\AbstractReceiver;
+use YooKassa\Request\Payments\ReceiverData\ReceiverFactory;
+use YooKassa\Request\Payments\StatementData\AbstractStatement;
+use YooKassa\Request\Payments\StatementData\StatementFactory;
 use YooKassa\Validator\Constraints as Assert;
+use YooKassa\Validator\Exceptions\ValidatorParameterException;
 
 /**
  * Класс, представляющий модель CreateCaptureRequest.
@@ -53,7 +61,7 @@ use YooKassa\Validator\Constraints as Assert;
  *
  * @example 02-builder.php 11 75 Пример использования билдера
  *
- * @property RecipientInterface $recipient Получатель платежа, если задан
+ * @property Recipient $recipient Получатель платежа, если задан
  * @property AmountInterface $amount Сумма создаваемого платежа
  * @property string $description Описание транзакции
  * @property ReceiptInterface $receipt Данные фискального чека 54-ФЗ
@@ -71,21 +79,22 @@ use YooKassa\Validator\Constraints as Assert;
  * @property string $client_ip IPv4 или IPv6-адрес покупателя. Если не указан, используется IP-адрес TCP-подключения
  * @property Metadata $metadata Метаданные привязанные к платежу
  * @property PaymentDealInfo $deal Данные о сделке, в составе которой проходит платеж
- * @property FraudData $fraudData Информация для проверки операции на мошенничество
- * @property FraudData $fraud_data Информация для проверки операции на мошенничество
  * @property string $merchantCustomerId Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
  * @property string $merchant_customer_id Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
+ * @property AbstractPaymentOrder $payment_order Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ. Необходимо передавать при [оплате ЖКУ](/developers/payment-acceptance/scenario-extensions/utility-payments).
+ * @property AbstractReceiver|null $receiver Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона
+ * @property AbstractStatement[]|ListObjectInterface $statements Данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.  Сейчас доступен один тип справок — квитанция по платежу. Это информация об успешном платеже, которую ЮKassa отправляет на электронную почту пользователя.  Квитанцию можно отправить, если оплата прошла с банковской карты, через SberPay или СБП. Отправка квитанции доступна во всех сценариях интеграции.
  */
 class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePaymentRequestInterface
 {
     public const MAX_LENGTH_PAYMENT_TOKEN = 10240;
 
     /**
-     * @var RecipientInterface|null Получатель платежа
+     * @var Recipient|null Получатель платежа
      */
     #[Assert\Valid]
     #[Assert\Type(Recipient::class)]
-    private ?RecipientInterface $_recipient = null;
+    private ?Recipient $_recipient = null;
 
     /**
      * @var string|null Описание транзакции
@@ -156,6 +165,7 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
 
     /**
      * @var FraudData|null Информация для проверки операции на мошенничество
+     * @deprecated Больше не поддерживается. Вместо него нужно использовать `receiver`
      */
     #[Assert\Valid]
     #[Assert\Type(FraudData::class)]
@@ -170,6 +180,36 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     #[Assert\Type('string')]
     #[Assert\Length(max: Payment::MAX_LENGTH_MERCHANT_CUSTOMER_ID)]
     private ?string $_merchant_customer_id = null;
+
+    /**
+     * Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ.
+     *
+     * Необходимо передавать при [оплате ЖКУ](/developers/payment-acceptance/scenario-extensions/utility-payments).
+     *
+     * @var AbstractPaymentOrder|null
+     */
+    #[Assert\Valid]
+    #[Assert\Type(AbstractPaymentOrder::class)]
+    private ?AbstractPaymentOrder $_payment_order = null;
+
+    /**
+     * Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона
+     *
+     * @var AbstractReceiver|null
+     */
+    #[Assert\Valid]
+    #[Assert\Type(AbstractReceiver::class)]
+    private ?AbstractReceiver $_receiver = null;
+
+    /**
+     * Данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.  Сейчас доступен один тип справок — квитанция по платежу. Это информация об успешном платеже, которую ЮKassa отправляет на электронную почту пользователя.  Квитанцию можно отправить, если оплата прошла с банковской карты, через SberPay или СБП. Отправка квитанции доступна во всех [сценариях интеграции](/developers/payment-acceptance/getting-started/selecting-integration-scenario).
+     *
+     * @var AbstractStatement[]|ListObjectInterface|null
+     */
+    #[Assert\Valid]
+    #[Assert\AllType(AbstractStatement::class)]
+    #[Assert\Type(ListObject::class)]
+    private ?ListObject $_statements = null;
 
     /**
      * Возвращает описание транзакции
@@ -199,15 +239,15 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
      */
     public function hasDescription(): bool
     {
-        return null !== $this->_description;
+        return !empty($this->_description);
     }
 
     /**
      * Возвращает объект получателя платежа.
      *
-     * @return null|RecipientInterface Объект с информацией о получателе платежа или null, если получатель не задан
+     * @return null|Recipient Объект с информацией о получателе платежа или null, если получатель не задан
      */
-    public function getRecipient(): ?RecipientInterface
+    public function getRecipient(): ?Recipient
     {
         return $this->_recipient;
     }
@@ -225,7 +265,7 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     /**
      * Устанавливает объект с информацией о получателе платежа.
      *
-     * @param null|array|RecipientInterface $recipient Инстанс объекта информации о получателе платежа или null
+     * @param null|array|Recipient $recipient Инстанс объекта информации о получателе платежа или null
      */
     public function setRecipient(mixed $recipient): self
     {
@@ -541,32 +581,34 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     /**
      * Возвращает информацию для проверки операции на мошенничество.
      *
+     * @deprecated Больше не поддерживается. Вместо него нужно использовать `getReceiver()`
      * @return null|FraudData Информация для проверки операции на мошенничество
      */
     public function getFraudData(): ?FraudData
     {
-        return $this->_fraud_data;
+        return null;
     }
 
     /**
      * Устанавливает информацию для проверки операции на мошенничество.
      *
      * @param null|array|FraudData $fraud_data Информация для проверки операции на мошенничество
+     * @deprecated Больше не поддерживается. Вместо него нужно использовать `setReceiver()`
      */
     public function setFraudData(mixed $fraud_data = null): self
     {
-        $this->_fraud_data = $this->validatePropertyValue('_fraud_data', $fraud_data);
         return $this;
     }
 
     /**
      * Проверяет, была ли установлена информация для проверки операции на мошенничество.
      *
+     * @deprecated Больше не поддерживается. Вместо него нужно использовать `hasReceiver()`
      * @return bool True если информация была установлена, false если нет
      */
     public function hasFraudData(): bool
     {
-        return !empty($this->_fraud_data);
+        return false;
     }
 
     /**
@@ -597,6 +639,136 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     public function setMerchantCustomerId(?string $merchant_customer_id): self
     {
         $this->_merchant_customer_id = $this->validatePropertyValue('_merchant_customer_id', $merchant_customer_id);
+        return $this;
+    }
+
+    /**
+     * Возвращает платежное поручение.
+     *
+     * @return AbstractPaymentOrder|null
+     */
+    public function getPaymentOrder(): ?AbstractPaymentOrder
+    {
+        return $this->_payment_order;
+    }
+
+    /**
+     * Проверяет, было ли установлено платежное поручение.
+     *
+     * @return bool True если платежное поручение было установлены, false если нет
+     */
+    public function hasPaymentOrder(): bool
+    {
+        return null !== $this->_payment_order;
+    }
+
+    /**
+     * Устанавливает платежное поручение.
+     *
+     * @param AbstractPaymentOrder|array|null $payment_order Платежное поручение
+     *
+     * @return self
+     */
+    public function setPaymentOrder(mixed $payment_order = null): self
+    {
+        if (is_array($payment_order)) {
+            $payment_order = (new PaymentOrderFactory())->factoryFromArray($payment_order);
+        }
+        $this->_payment_order = $this->validatePropertyValue('_payment_order', $payment_order);
+        return $this;
+    }
+
+    /**
+     * Возвращает реквизиты получателя оплаты.
+     *
+     * @return AbstractReceiver|null Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона.
+     */
+    public function getReceiver(): ?AbstractReceiver
+    {
+        return $this->_receiver;
+    }
+
+    /**
+     * Проверяет, были ли установлены реквизиты получателя оплаты.
+     *
+     * @return bool True если реквизиты получателя оплаты были установлены, false если нет
+     */
+    public function hasReceiver(): bool
+    {
+        return null !== $this->_receiver;
+    }
+
+    /**
+     * Устанавливает реквизиты получателя оплаты.
+     *
+     * @param AbstractReceiver|array|null $receiver Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона.
+     *
+     * @return self
+     */
+    public function setReceiver(mixed $receiver = null): self
+    {
+        if (is_array($receiver)) {
+            $factory = new ReceiverFactory();
+            $receiver = $factory->factoryFromArray($receiver);
+        }
+        $this->_receiver = $this->validatePropertyValue('_receiver', $receiver);
+        return $this;
+    }
+
+    /**
+     * Возвращает данные для отправки справки.
+     *
+     * @return AbstractStatement[]|ListObjectInterface Данные для отправки справки
+     */
+    public function getStatements(): ListObjectInterface
+    {
+        if ($this->_statements === null) {
+            $this->_statements = new ListObject(AbstractStatement::class);
+        }
+        return $this->_statements;
+    }
+
+    /**
+     * Проверяет, были ли установлены данные для отправки справки.
+     *
+     * @return bool True если данные для отправки справки были установлены, false если нет
+     */
+    public function hasStatements(): bool
+    {
+        return !empty($this->_statements) && $this->_statements->count() > 0;
+    }
+
+    /**
+     * Устанавливает данные для отправки справки.
+     *
+     * @param ListObjectInterface|array|null $statements Данные для отправки справки
+     *
+     * @return self
+     */
+    public function setStatements(mixed $statements = null): self
+    {
+        $_statements = null;
+        if (!empty($statements)) {
+            if ($statements instanceof ListObjectInterface) {
+                $_statements = $statements;
+            } else if (is_array($statements)) {
+                $factory = new StatementFactory();
+                $_statements = new ListObject(AbstractStatement::class);
+
+                foreach ($statements as $item) {
+                    if (is_array($item)) {
+                        $_statements->add($factory->factoryFromArray($item));
+                    } else if ($item instanceof AbstractStatement) {
+                        $_statements->add($item);
+                    } else {
+                        throw new InvalidArgumentException('Statements item must be an array or an object of AbstractStatement');
+                    }
+                }
+            } else {
+                throw new ValidatorParameterException('Statements must be an array or an object of ListObjectInterface');
+            }
+        }
+        $this->_statements = $this->validatePropertyValue('_statements', $_statements);
         return $this;
     }
 

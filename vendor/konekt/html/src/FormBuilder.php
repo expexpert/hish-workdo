@@ -76,6 +76,13 @@ class FormBuilder
      */
     protected $labels = [];
 
+    /**
+     * An array of payloads we've created.
+     *
+     * @var array
+     */
+    protected $payload = [];
+
     protected $request;
 
     /**
@@ -116,7 +123,7 @@ class FormBuilder
      * @param  string                                     $csrfToken
      * @param  Request                                    $request
      */
-    public function __construct(HtmlBuilder $html, UrlGenerator $url, Factory $view, $csrfToken, Request $request = null)
+    public function __construct(HtmlBuilder $html, UrlGenerator $url, Factory $view, $csrfToken, ?Request $request = null)
     {
         $this->url = $url;
         $this->html = $html;
@@ -1420,7 +1427,7 @@ class FormBuilder
      */
     protected function transformKey($key)
     {
-        return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
+        return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key ?? '');
     }
 
     /**

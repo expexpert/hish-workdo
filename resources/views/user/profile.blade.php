@@ -36,6 +36,15 @@ $profile = asset(Storage::url('uploads/avatar/'));
                 <a href="#change_password" class="list-group-item list-group-item-action">{{ __('Change Password') }}
                     <div class="float-end"><i class="ti ti-chevron-right"></i></div>
                 </a>
+
+                @if(\Auth::user()->type == 'company')
+                    <a href="#security_settings" class="list-group-item list-group-item-action">{{ __('Security Settings') }}
+                        <div class="float-end"><i class="ti ti-chevron-right"></i></div>
+                    </a>
+                    <a href="{{ route('admin-activity-logs.index') }}" class="list-group-item list-group-item-action">{{ __('Admin Activity Logs') }}
+                        <div class="float-end"><i class="ti ti-chevron-right"></i></div>
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -155,6 +164,35 @@ $profile = asset(Storage::url('uploads/avatar/'));
                 </form>
             </div>
         </div>
+        @if(\Auth::user()->type == 'company')
+        <div id="security_settings" class="card">
+            <div class="card-header">
+                <h5>{{ __('Security Settings') }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ route('update.super.admin.login')}}" class="needs-validation" novalidate>
+                    @csrf
+                    <div class="row">
+                        <div class="col-lg-12 form-group">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ __('Allow Super Admin Login') }}</h6>
+                                    <p class="text-xs text-muted mb-0">{{ __('Allow administrators to login to your account for support and management purposes.') }}</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="allow_super_admin_login" id="allow_super_admin_login" {{ \Auth::user()->allow_super_admin_login == 1 ? 'checked' : '' }}>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 text-end mt-3">
+                            <input type="submit" value="{{ __('Save Changes') }}"
+                                class="btn btn-print-invoice  btn-primary m-r-10">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
     </div>
     @endsection
     <style>

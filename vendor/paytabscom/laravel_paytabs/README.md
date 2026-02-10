@@ -29,8 +29,11 @@ INSTALLATION
 CONFIGURATION
 -------------
 * composer dump-autoload
+* For Laravel 11 go to _bootstrap/providers.php_ and add
+  
+        Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
 
-* Go to _config/app.php_ and in the providers array add
+* For Laravel 10 and below go to _config/app.php_ and in the providers array add
 
         Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
 
@@ -86,7 +89,8 @@ Usage
 
 * if you want to pass the payment methods you can use
 
-        ::sendPaymentCode("['creditcard','fawry']")
+        ::sendPaymentCode("creditcard, valu, forsa")
+        - separate by space between payment methods.
 
 * if you want to pass the Tokenization option you can use
 

@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2024 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Request\Payments;
 
@@ -935,64 +935,6 @@ class CreatePaymentRequestTest extends AbstractTestCase
         return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_deal'));
     }
 
-    /**
-     * Test property "fraud_data"
-     * @dataProvider validFraudDataDataProvider
-     * @param mixed $value
-     *
-     * @return void
-     * @throws Exception
-     */
-    public function testFraudData(mixed $value): void
-    {
-        $instance = $this->getTestInstance();
-        self::assertEmpty($instance->getFraudData());
-        self::assertEmpty($instance->fraud_data);
-        $instance->setFraudData($value);
-        self::assertEquals($value, is_array($value) ? $instance->getFraudData()->toArray() : $instance->getFraudData());
-        self::assertEquals($value, is_array($value) ? $instance->fraud_data->toArray() : $instance->fraud_data);
-        if (!empty($value)) {
-            self::assertTrue($instance->hasFraudData());
-            self::assertNotNull($instance->getFraudData());
-            self::assertNotNull($instance->fraud_data);
-        }
-    }
-
-    /**
-     * Test invalid property "fraud_data"
-     * @dataProvider invalidFraudDataDataProvider
-     * @param mixed $value
-     * @param string $exceptionClass
-     *
-     * @return void
-     */
-    public function testInvalidFraudData(mixed $value, string $exceptionClass): void
-    {
-        $instance = $this->getTestInstance();
-
-        $this->expectException($exceptionClass);
-        $instance->setFraudData($value);
-    }
-
-    /**
-     * @return array[]
-     * @throws Exception
-     */
-    public function validFraudDataDataProvider(): array
-    {
-        $instance = $this->getTestInstance();
-        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_fraud_data'));
-    }
-
-    /**
-     * @return array[]
-     * @throws Exception
-     */
-    public function invalidFraudDataDataProvider(): array
-    {
-        $instance = $this->getTestInstance();
-        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_fraud_data'));
-    }
 
     /**
      * Test property "merchant_customer_id"
@@ -1051,6 +993,124 @@ class CreatePaymentRequestTest extends AbstractTestCase
     {
         $instance = $this->getTestInstance();
         return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_merchant_customer_id'));
+    }
+
+    /**
+     * Test property "payment_order"
+     * @dataProvider validPaymentOrderDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testPaymentOrder(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getPaymentOrder());
+        self::assertEmpty($instance->payment_order);
+        $instance->setPaymentOrder($value);
+        self::assertEquals($value, is_array($value) ? $instance->getPaymentOrder()->toArray() : $instance->getPaymentOrder());
+        self::assertEquals($value, is_array($value) ? $instance->payment_order->toArray() : $instance->payment_order);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getPaymentOrder());
+            self::assertNotNull($instance->hasPaymentOrder());
+            self::assertNotNull($instance->payment_order);
+        }
+    }
+
+    /**
+     * Test invalid property "payment_order"
+     * @dataProvider invalidPaymentOrderDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidPaymentOrder(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setPaymentOrder($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validPaymentOrderDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_payment_order'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidPaymentOrderDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_payment_order'));
+    }
+
+    /**
+     * Test property "receiver"
+     * @dataProvider validReceiverDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testReceiver(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getReceiver());
+        self::assertEmpty($instance->receiver);
+        $instance->setReceiver($value);
+        self::assertEquals($value, is_array($value) ? $instance->getReceiver()->toArray() : $instance->getReceiver());
+        self::assertEquals($value, is_array($value) ? $instance->receiver->toArray() : $instance->receiver);
+        if (!empty($value)) {
+            self::assertTrue($instance->hasReceiver());
+            self::assertNotNull($instance->getReceiver());
+            self::assertNotNull($instance->receiver);
+        }
+    }
+
+    /**
+     * Test invalid property "receiver"
+     * @dataProvider invalidReceiverDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidReceiver(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setReceiver($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validReceiverDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_receiver'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidReceiverDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_receiver'));
     }
 
     public function testValidate(): void
@@ -1140,6 +1200,84 @@ class CreatePaymentRequestTest extends AbstractTestCase
     {
         $instance = $this->getTestInstance();
         return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_transfers'));
+    }
+
+    /**
+     * Test property "statements"
+     * @dataProvider validStatementsDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testStatements(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getStatements());
+        self::assertEmpty($instance->statements);
+        self::assertIsObject($instance->getStatements());
+        self::assertIsObject($instance->statements);
+        self::assertCount(0, $instance->getStatements());
+        self::assertCount(0, $instance->statements);
+        $instance->setStatements($value);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getStatements());
+            self::assertNotNull($instance->statements);
+            self::assertTrue($instance->hasStatements());
+            foreach ($value as $key => $element) {
+                if (is_array($element) && !empty($element)) {
+                    self::assertEquals($element, $instance->getStatements()[$key]->toArray());
+                    self::assertEquals($element, $instance->statements[$key]->toArray());
+                    self::assertIsArray($instance->getStatements()[$key]->toArray());
+                    self::assertIsArray($instance->statements[$key]->toArray());
+                }
+                if (is_object($element) && !empty($element)) {
+                    self::assertEquals($element, $instance->getStatements()->get($key));
+                    self::assertIsObject($instance->getStatements()->get($key));
+                    self::assertIsObject($instance->statements->get($key));
+                    self::assertIsObject($instance->getStatements());
+                    self::assertIsObject($instance->statements);
+                }
+            }
+            self::assertCount(count($value), $instance->getStatements());
+            self::assertCount(count($value), $instance->statements);
+        }
+    }
+
+    /**
+     * Test invalid property "statements"
+     * @dataProvider invalidStatementsDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidStatements(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setStatements($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validStatementsDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_statements'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidStatementsDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_statements'));
     }
 
     /**

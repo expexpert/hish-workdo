@@ -9,7 +9,9 @@
 
 **Description:**
 
-Данные об авторизации платежа.
+Данные об авторизации платежа при оплате банковской картой.
+
+Присутствуют только для этих способов оплаты: банковская карта, Mir Pay, SberPay, T-Pay.
 
 ---
 ### Constants
@@ -19,11 +21,11 @@
 ### Properties
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
-| public | [$auth_code](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_auth_code) |  | Код авторизации банковской карты |
-| public | [$authCode](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_authCode) |  | Код авторизации банковской карты |
-| public | [$rrn](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_rrn) |  | Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента |
-| public | [$three_d_secure](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_three_d_secure) |  | Данные о прохождении пользователем аутентификации по 3‑D Secure |
-| public | [$threeDSecure](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_threeDSecure) |  | Данные о прохождении пользователем аутентификации по 3‑D Secure |
+| public | [$auth_code](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_auth_code) |  | Код авторизации. Выдается эмитентом и подтверждает проведение авторизации. |
+| public | [$authСode](../classes/YooKassa-Model-Payment-AuthorizationDetails.html#property_auth%D0%A1ode) |  | Код авторизации. Выдается эмитентом и подтверждает проведение авторизации. |
+| public | [$rrn](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_rrn) |  | Retrieval Reference Number — идентификатор банковской транзакции. |
+| public | [$three_d_secure](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_three_d_secure) |  | Данные о прохождении пользователем аутентификации по 3‑D Secure. |
+| public | [$threeDSecure](../classes/YooKassa-Model-Payment-AuthorizationDetails.md#property_threeDSecure) |  | Данные о прохождении пользователем аутентификации по 3‑D Secure. |
 
 ---
 ### Methods
@@ -78,19 +80,19 @@
 ---
 ***Description***
 
-Код авторизации банковской карты
+Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
 
 **Type:** <a href="../string"><abbr title="string">string</abbr></a>
 
 **Details:**
 
 
-<a name="property_authCode"></a>
-#### public $authCode : string
+<a name="property_authСode"></a>
+#### public $authСode : string
 ---
 ***Description***
 
-Код авторизации банковской карты
+Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
 
 **Type:** <a href="../string"><abbr title="string">string</abbr></a>
 
@@ -102,7 +104,7 @@
 ---
 ***Description***
 
-Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента
+Retrieval Reference Number — идентификатор банковской транзакции.
 
 **Type:** <a href="../string"><abbr title="string">string</abbr></a>
 
@@ -114,7 +116,7 @@ Retrieval Reference Number — уникальный идентификатор �
 ---
 ***Description***
 
-Данные о прохождении пользователем аутентификации по 3‑D Secure
+Данные о прохождении пользователем аутентификации по 3‑D Secure.
 
 **Type:** <a href="../classes/YooKassa-Model-Payment-ThreeDSecure.html"><abbr title="\YooKassa\Model\Payment\ThreeDSecure">ThreeDSecure</abbr></a>
 
@@ -126,7 +128,7 @@ Retrieval Reference Number — уникальный идентификатор �
 ---
 ***Description***
 
-Данные о прохождении пользователем аутентификации по 3‑D Secure
+Данные о прохождении пользователем аутентификации по 3‑D Secure.
 
 **Type:** <a href="../classes/YooKassa-Model-Payment-ThreeDSecure.html"><abbr title="\YooKassa\Model\Payment\ThreeDSecure">ThreeDSecure</abbr></a>
 
@@ -283,7 +285,7 @@ public getAuthCode() : string|null
 **Details:**
 * Inherited From: [\YooKassa\Model\Payment\AuthorizationDetails](../classes/YooKassa-Model-Payment-AuthorizationDetails.md)
 
-**Returns:** string|null - 
+**Returns:** string|null - Код авторизации. Выдается эмитентом и подтверждает проведение авторизации.
 
 
 <a name="method_getRrn" class="anchor"></a>
@@ -456,7 +458,7 @@ public setAuthCode(string|null $auth_code = null) : self
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">string OR null</code> | auth_code  | Код авторизации банковской карты. Выдается эмитентом и подтверждает проведение авторизации. |
+| <code lang="php">string OR null</code> | auth_code  | Код авторизации. Выдается эмитентом и подтверждает проведение авторизации. |
 
 **Returns:** self - 
 
@@ -478,7 +480,7 @@ public setRrn(string|null $rrn = null) : self
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">string OR null</code> | rrn  | Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента. Используется при оплате банковской картой. |
+| <code lang="php">string OR null</code> | rrn  | Retrieval Reference Number — идентификатор банковской транзакции. |
 
 **Returns:** self - 
 
@@ -571,10 +573,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 25](../reports/deprecated.md)
+* [Deprecated - 40](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2024-07-02 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2025-12-17 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2024 YooMoney
+&copy; 2025 YooMoney

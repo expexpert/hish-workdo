@@ -17,6 +17,11 @@ use App\Models\Tax;
 use App\Models\Utility;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Customer;
+use App\Models\ClientNotification;
 
 class DashboardController extends Controller
 {
@@ -108,15 +113,14 @@ class DashboardController extends Controller
 
                 $users = User::find(\Auth::user()->creatorId());
                 $plan = Plan::find($users->plan);
-                if(!empty($plan)){
+                if (!empty($plan)) {
                     if ($plan->storage_limit > 0) {
                         $storage_limit = ($users->storage_limit / $plan->storage_limit) * 100;
                     } else {
                         $storage_limit = 0;
                     }
-                }
-                else{
-                    return view('dashboard.index', $data, compact('users','plan'));
+                } else {
+                    return view('dashboard.index', $data, compact('users', 'plan'));
                 }
 
                 return view('dashboard.index', $data, compact('users', 'plan', 'storage_limit'));
@@ -160,5 +164,100 @@ class DashboardController extends Controller
         }
 
         return $arrTask;
+    }
+
+    /**
+     * Send notification/email to one or many clients from accountant dashboard.
+     */
+    public function sendClientsNotification(Request $request)
+    {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'recipients' => 'required',
+            'document' => 'nullable|file|max:10240',
+        ]);
+
+        $auth = Auth::user();
+
+        // Determine accessible customer owners: company and accountant (if accountant)
+        $creatorId = $auth->creatorId();
+        $ownerIds = [$creatorId];
+        if ($auth->type === 'accountant') {
+            $ownerIds[] = $auth->id;
+        }
+
+        // recipients can be 'all' or array of customer ids
+        $customers = collect();
+        if ($request->recipients === 'all') {
+            $customers = Customer::whereIn('created_by', $ownerIds)->where('is_active', 1)->get();
+        } else {
+            $ids = is_array($request->recipients) ? $request->recipients : explode(',', $request->recipients);
+            $customers = Customer::whereIn('id', $ids)->whereIn('created_by', $ownerIds)->get();
+        }
+
+        if ($customers->isEmpty()) {
+            return back()->with('error', __('No recipients found.'));
+        }
+
+        $documentPath = null;
+        if ($request->hasFile('document')) {
+            $file = $request->file('document');
+            // Change 'local' to 'public' here
+            $documentPath = $file->store('client_notifications', 'public');
+        }
+
+        // Create client notifications
+        foreach ($customers as $cust) {
+            ClientNotification::create([
+                'customer_id' => $cust->id,
+                'sender_id' => $auth->id,
+                'title' => $request->subject,
+                'message' => $request->message,
+                'is_read' => false,
+                'data' => null,
+                'document' => $documentPath,
+            ]);
+        }
+
+        return back()->with('success', __('Notification sent successfully.'));
+    }
+
+
+    public function destroy($id)
+    {
+        $notification = ClientNotification::where('id', $id)
+            ->where('customer_id', Auth::guard('customer')->user()->id)
+            ->firstOrFail();
+
+        // Check if document exists and delete it from storage
+        if (!empty($notification->document)) {
+            // Change 'local' to 'public'
+            if (Storage::disk('public')->exists($notification->document)) {
+                Storage::disk('public')->delete($notification->document);
+            }
+        }
+    
+        $notification->delete();
+
+        return back()->with('success', __('Notification and associated document deleted.'));
+    }
+
+    // Clear all notifications and all associated files
+    public function clearAll()
+    {
+        $notifications = ClientNotification::where('customer_id', Auth::guard('customer')->user()->id)->get();
+
+        foreach ($notifications as $note) {
+            if (!empty($note->document)) {
+                // Change 'local' to 'public'
+                if (Storage::disk('public')->exists($note->document)) {
+                    Storage::disk('public')->delete($note->document);
+                }
+            }
+            $note->delete();
+        }
+
+        return back()->with('success', __('All notifications and documents cleared.'));
     }
 }

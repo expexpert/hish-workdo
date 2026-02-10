@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2025 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,7 @@ class PaymentDataBankCardCard extends AbstractObject
      */
     #[Assert\NotBlank]
     #[Assert\Type('string')]
-    #[Assert\Regex('/^[0-9]{16,19}$/')]
+    #[Assert\Regex('/^[0-9]{14,19}$/')]
     private ?string $_number = null;
 
     /**
@@ -86,7 +86,7 @@ class PaymentDataBankCardCard extends AbstractObject
      * @var string|null Имя держателя карты
      */
     #[Assert\Type('string')]
-    #[Assert\Regex('/^[a-zA-Z ]{0,26}$/')]
+    #[Assert\Regex('/^[a-zA-Z \'-]{1,26}$/')]
     private ?string $_cardholder = null;
 
     /**

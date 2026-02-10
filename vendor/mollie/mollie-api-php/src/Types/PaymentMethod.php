@@ -15,6 +15,11 @@ class PaymentMethod
     public const APPLEPAY = "applepay";
 
     /**
+     * @link https://www.mollie.com/en/payments/bacs
+     */
+    public const BACS = "bacs";
+
+    /**
      * @link https://www.mollie.com/en/payments/bancomatpay
      */
     public const BANCOMATPAY = "bancomatpay";
@@ -118,6 +123,16 @@ class PaymentMethod
     public const KLARNA_SLICE_IT = "klarnasliceit";
 
     /**
+     * @link https://www.mollie.com/en/payments/mb-way
+     */
+    public const MBWAY = "mbway";
+
+    /**
+     * @link https://www.mollie.com/en/payments/multibanco
+     */
+    public const MULTIBANCO = "multibanco";
+
+    /**
      * @link https://www.mollie.com/en/payments/mybank
      */
     public const MYBANK = "mybank";
@@ -138,6 +153,11 @@ class PaymentMethod
     public const PAYSAFECARD = "paysafecard";
 
     /**
+     * @link https://www.mollie.com/en/payments/pay-by-bank
+     */
+    public const PAYBYBANK = "paybybank";
+
+    /**
      * @deprecated
      * @link https://www.mollie.com/en/payments/gift-cards
      */
@@ -153,6 +173,11 @@ class PaymentMethod
      */
     public const PRZELEWY24 = 'przelewy24';
 
+    /**
+     * @link https://www.mollie.com/en/payments/satispay
+     */
+    public const SATISPAY = "satispay";
+    
     /**
      * @link https://www.mollie.com/en/payments/sofort
      */

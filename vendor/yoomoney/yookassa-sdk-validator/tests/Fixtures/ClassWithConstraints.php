@@ -9,7 +9,7 @@ class ClassWithConstraints
     #[Assert\NotNull]
     private ?string $prop = null;
 
-    public function __construct(string $propVal = null)
+    public function __construct(?string $propVal = null)
     {
         $this->prop = $propVal;
     }
