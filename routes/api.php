@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/customer/profile', function (Request $r
 
 
 Route::post('/customer/login', [CustomerController::class, 'login']);
+Route::post('/customer/forgot-password', [CustomerController::class, 'ForgotPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customer/logout', [CustomerController::class, 'logout']);
