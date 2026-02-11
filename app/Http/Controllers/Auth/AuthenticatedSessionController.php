@@ -609,6 +609,7 @@ class AuthenticatedSessionController extends Controller
             ]
         );
 
+        Utility::getSMTPDetails(1);
         // dd(settings);
 
         Mail::send(
