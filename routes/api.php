@@ -2,7 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CustomerController; // Add this
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LookupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,14 +24,21 @@ Route::middleware('auth:sanctum')->get('/customer/profile', function (Request $r
 
 
 
-Route::post('/customer/login', [CustomerController::class, 'login']);
-Route::post('/customer/forgot-password', [CustomerController::class, 'ForgotPassword']);
+Route::post('/customer/login', [AuthController::class, 'login']);
+Route::post('/customer/forgot-password', [AuthController::class, 'ForgotPassword']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/customer/logout', [CustomerController::class, 'logout']);
-    Route::get('/customer/notification', [CustomerController::class, 'getCustomerNotifications']);
-    Route::get('/customer/view-single-notification/{id}', [CustomerController::class, 'viewSingleNotification']);
-    Route::post('/customer/clear-notifications', [CustomerController::class, 'clearNotifications']);
+Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+
+    Route::get('/notification', [CustomerController::class, 'getCustomerNotifications']);
+    Route::get('/view-single-notification/{id}', [CustomerController::class, 'viewSingleNotification']);
+    Route::post('/clear-notifications', [CustomerController::class, 'clearNotifications']);
+
+    Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
+    Route::post('/transaction', [CustomerController::class, 'storeTransaction']);
+    Route::get('/transactions', [CustomerController::class, 'getTransactions']);
+    Route::get('/transaction/{id}', [CustomerController::class, 'viewSingleTransaction']);
 });
 
 
