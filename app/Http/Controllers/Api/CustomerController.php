@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\ClientNotification;
 use Illuminate\Http\JsonResponse;
 use App\Models\ClientTransaction;
+use App\Models\ClientBankStatement;
 
 
 
@@ -141,5 +142,43 @@ class CustomerController extends Controller
             'status' => 'success',
             'data' => $transaction
         ], 200);
+    }
+
+
+    public function storeStatement(Request $request)
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'statement' => 'required|mimes:pdf,csv,xls,xlsx|max:10240',
+            'month_year' => 'required|string',
+        ]);
+
+        $path = $request->file('statement')->store('bank_statements', 'private');
+
+        $statement = ClientBankStatement::create([
+            'customer_id' => $request->customer_id,
+            'file_path' => $path,
+            'month_year' => $request->month_year,
+        ]);
+
+        return response()->json(['message' => 'Statement uploaded successfully', 'data' => $statement], 201);
+    }
+
+    public function getBankStatements(Request $request)
+    {
+        $user = $request->user();
+        $statements = ClientBankStatement::where('customer_id', $user->id)->orderBy('created_at', 'desc')->get();
+        return response()->json(['data' => $statements], 200);
+    }
+
+    
+    public function viewSingleBankStatement(Request $request, $id)
+    {
+        $user = $request->user();
+        $statement = ClientBankStatement::where('id', $id)->where('customer_id', $user->id)->first();
+        if (! $statement) {
+            return response()->json(['message' => 'Statement not found or does not belong to the customer.'], 404);
+        }
+        return response()->json(['data' => $statement], 200);
     }
 }
