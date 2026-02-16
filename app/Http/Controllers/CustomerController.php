@@ -839,32 +839,60 @@ class CustomerController extends Controller
 
     public function getClientTransactions(Request $request)
     {
-        $accountantId = $request->user()->id;
+        $user = Auth::user();
+        $query = ClientTransaction::with(['account:id,holder_name', 'category:id,name'])
+                    ->orderBy('transaction_date', 'desc');
 
-        $transactions = ClientTransaction::whereIn('customer_id', function ($query) use ($accountantId) {
-            $query->select('id')
-                  ->from('customers')
-                  ->where('created_by', $accountantId);
-        })
-        ->with(['account:id,holder_name', 'category:id,name'])
-        ->orderBy('transaction_date', 'desc')
-        ->get();
+        if ($user->type == 'accountant') {
+            // Transactions for customers created by this specific accountant
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->where('created_by', $user->id);
+            });
+
+        } else if ($user->type == 'company') {
+            // Transactions for customers created by ANY accountant belonging to this company
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->whereIn('created_by', function ($subQ) use ($user) {
+                    // Fetch IDs of accountants created by this company
+                    $subQ->select('id')->from('users')->where('created_by', $user->id);
+                });
+            });
+        }
+
+        $transactions = $query->get();
 
         return view('ClientReport.transaction', compact('transactions'));
     }
 
     public function getClientBankStatements(Request $request)
     {
-        $accountantId = $request->user()->id;
-
-        $bankStatements = ClientBankStatement::whereIn('customer_id', function ($query) use ($accountantId) {
-            $query->select('id')
+        $user = Auth::user();
+        $query = ClientBankStatement::orderBy('month_year', 'desc');
+    
+        if ($user->type == 'accountant') {
+            // Filter statements for customers created by this specific accountant
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')
                   ->from('customers')
-                  ->where('created_by', $accountantId);
-        })
-        ->orderBy('month_year', 'desc')
-        ->get();
-
+                  ->where('created_by', $user->id);
+            });
+    
+        } else if ($user->type == 'company') {
+            // Filter statements for customers created by ANY accountant belonging to this company
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')
+                  ->from('customers')
+                  ->whereIn('created_by', function ($subQ) use ($user) {
+                      // Get all accountant IDs where the company is the creator
+                      $subQ->select('id')
+                           ->from('users')
+                           ->where('created_by', $user->id);
+                  });
+            });
+        }
+    
+        $bankStatements = $query->get();
+    
         return view('ClientReport.statement', compact('bankStatements'));
     }
 
