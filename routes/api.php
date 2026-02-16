@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->get('/customer/profile', function (Request $r
 
 Route::post('/customer/login', [AuthController::class, 'login']);
 Route::post('/customer/forgot-password', [AuthController::class, 'ForgotPassword']);
-Route::post('/customer/reset-password-otp', [AuthController::class, 'resetPasswordWithOtp']);
+Route::post('/customer/forgot-password-otp', [AuthController::class, 'resetPasswordWithOtp']);
 
 
 
