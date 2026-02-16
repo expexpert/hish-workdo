@@ -27,8 +27,14 @@ Route::middleware('auth:sanctum')->get('/customer/profile', function (Request $r
 Route::post('/customer/login', [AuthController::class, 'login']);
 Route::post('/customer/forgot-password', [AuthController::class, 'ForgotPassword']);
 
+
+
 Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+    Route::get('/profile', [CustomerController::class, 'getProfile']);
+    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
 
 
     Route::get('/notification', [CustomerController::class, 'getCustomerNotifications']);

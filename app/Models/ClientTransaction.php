@@ -26,6 +26,11 @@ class ClientTransaction extends Model
 
     public function category()
     {
-        return $this->belongsTo(ProductServiceCategory::class, 'category_id');
+        return $this->belongsTo(ProductServiceCategory::class);
+    }
+
+    public function bankAccount()
+    {
+        return $this->hasOne('App\Models\BankAccount', 'id', 'account_id')->first();
     }
 }

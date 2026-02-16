@@ -8,11 +8,86 @@ use App\Models\ClientNotification;
 use Illuminate\Http\JsonResponse;
 use App\Models\ClientTransaction;
 use App\Models\ClientBankStatement;
+use Carbon\Carbon;
 
 
 
 class CustomerController extends Controller
 {
+
+    public function getProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer profile retrieved successfully.',
+            'data'    => $user
+        ], 200);
+    }
+
+
+    public function getDashboardData(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Set 'this_week' as the default filter if none is provided
+        $filter = $request->query('filter', 'this_week');
+
+        $startDate = Carbon::now()->startOfWeek();
+        $endDate = Carbon::now();
+
+        // Change dates based on selection
+        switch ($filter) {
+            case 'this_month':
+                $startDate = Carbon::now()->startOfMonth();
+                break;
+            case 'this_year':
+                $startDate = Carbon::now()->startOfYear();
+                break;
+            case 'last_year':
+                $startDate = Carbon::now()->subYear()->startOfYear();
+                $endDate = Carbon::now()->subYear()->endOfYear();
+                break;
+            case 'all':
+                $startDate = null; // No date restriction
+                break;
+            case 'this_week':
+            default:
+                $startDate = Carbon::now()->startOfWeek();
+                break;
+        }
+
+        // 1. Base Query for Transactions
+        $transactionQuery = ClientTransaction::where('customer_id', $user->id);
+
+        // 2. Apply Date Filter
+        if ($startDate) {
+            $transactionQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // 3. Calculate Totals (using clone to reuse the date filters)
+        $totalExpenses = (clone $transactionQuery)->where('type', 'expense')->sum('amount');
+        $totalRevenue = (clone $transactionQuery)->where('type', 'revenue')->sum('amount');
+
+        // 4. Other data
+        $totalProgressData = $user->invoiceChartData()['progressData'];
+        $isNotification = ClientNotification::where('customer_id', $user->id)
+            ->where('is_read', false)
+            ->exists();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dashboard data retrieved successfully.',
+            'applied_filter' => $filter,
+            'data' => [
+                'total_expenses' => (float) $totalExpenses,
+                'total_revenue' => (float) $totalRevenue,
+                'has_unread_notifications' => $isNotification,
+                'progress_data' => $totalProgressData
+            ]
+        ], 200);
+    }
 
     public function getCustomerNotifications(Request $request): JsonResponse
     {
@@ -171,7 +246,7 @@ class CustomerController extends Controller
         return response()->json(['data' => $statements], 200);
     }
 
-    
+
     public function viewSingleBankStatement(Request $request, $id)
     {
         $user = $request->user();
