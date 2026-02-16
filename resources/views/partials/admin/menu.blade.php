@@ -207,7 +207,7 @@
                     @endif
                 @endif
 
-                {{-- -------  Product & Service ---------- --}}
+                <!-- {{-- -------  Product & Service ---------- --}}
                 @if (Gate::check('manage product & service'))
                     <li class="dash-item {{ Request::segment(1) == 'productservice' ? 'active' : '' }} ">
                         <a href="{{ route('productservice.index') }}" class="dash-link ">
@@ -225,7 +225,7 @@
                             <span class="dash-mtext">{{ __('Product Stock') }}</span>
                         </a>
                     </li>
-                @endif
+                @endif -->
 
                 {{-- -------  Customer ---------- --}}
                 @if (Gate::check('manage customer'))
@@ -287,7 +287,7 @@
                 @endif -->
 
 
-                {{-- -------  Banking ---------- --}}
+                <!-- {{-- -------  Banking ---------- --}}
                 @if (Gate::check('manage bank account') || Gate::check('manage transfer'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'bank-account' || Request::segment(1) == 'transfer' ? ' active dash-trigger' : '' }}">
@@ -345,7 +345,7 @@
                             @endcan
                         </ul>
                     </li>
-                @endif
+                @endif -->
 
                 {{-- -------  Expense ---------- --}}
                 <!-- @if (Gate::check('manage bill') || Gate::check('manage payment') || Gate::check('manage debit note'))
@@ -525,7 +525,7 @@
                 @endif -->
 
 
-                {{-- -------  Email Notification ---------- --}}
+                <!-- {{-- -------  Email Notification ---------- --}}
 
                 @if (\Auth::user()->type == 'super admin')
                     <li class="dash-item {{ Request::segment(1) == 'email_template_lang' ? 'active' : '' }}">
@@ -637,9 +637,9 @@
 
                         </ul>
                     </li>
-                @endif
+                @endif -->
 
-                @if (\Auth::user()->type == 'accountant')
+                @if (\Auth::user()->type == 'accountant' || \Auth::user()->type == 'company')
                 <li class="dash-item dash-hasmenu">
                         <a href="#!" class="dash-link "><span class="dash-micon"><i
                                     class="ti ti-chart-line"></i></span><span
@@ -660,7 +660,7 @@
                 @endif
 
 
-                {{-- -------  Constant ---------- --}}
+                <!-- {{-- -------  Constant ---------- --}}
                 @if (Gate::check('manage constant tax') ||
                         Gate::check('manage constant category') ||
                         Gate::check('manage constant unit') ||
@@ -713,7 +713,7 @@
                             @endcan
                         </ul>
                     </li>
-                @endif
+                @endif -->
                 {{-- @if (\Auth::user()->type == 'super admin')
                     @include('landingpage::menu.landingpage')
                 @endif --}}
