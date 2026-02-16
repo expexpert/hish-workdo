@@ -23,16 +23,28 @@
         <div class="login-inner-contain">
             <div class="login-form">
                 <div class="page-title">
-                    <h6>{{__('Verify Your Email Address')}}</h6>
+                    <h6>{{ __('Reset Your Password') }}</h6>
                 </div>
-                <p>{{__('You are receiving this email because we received a password reset request for your account')}}</p><br><br>
+                <p>{{ __('You are receiving this email because we received a password reset request for your account.') }}</p>
+                
+                <p>{{ __('Please use the following One-Time Password (OTP) to reset your password:') }}</p>
 
-                <a href="{{ route('customer.reset.password',$token) }}" class="btn-login">{{__('Reset Password')}}</a><br><br>
+                <div style="text-align: center; margin: 30px 0;">
+                    <div style="display: inline-block; padding: 15px 30px; background-color: #f4f4f4; border: 2px dashed #333; font-size: 32px; font-weight: bold; letter-spacing: 10px; color: #000;">
+                        {{ $token }}
+                    </div>
+                </div>
 
-                <p class="text-muted">
-                    {{ __('If you did not request a password reset, no further action is required..') }}
-                </p><br><br>
-                <p> {{__('If you’re having trouble clicking the "Reset Password" button, copy and paste the URL below into your web browser:')}} {{ route('customer.reset.password',$token) }}</p>
+                <p class="text-muted" style="font-size: 0.9em;">
+                    {{ __('This code is valid for 60 minutes. If you did not request a password reset, no further action is required.') }}
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                
+                <p style="font-size: 0.8em; color: #777;">
+                    {{ __('Regards,') }}<br>
+                    {{ config('app.name') }}
+                </p>
             </div>
         </div>
     </div>
