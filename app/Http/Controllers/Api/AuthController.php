@@ -56,7 +56,6 @@ class AuthController extends Controller
 
     public function ForgotPassword(Request $request): JsonResponse
     {
-        // 1. Validation
         $validator = \Validator::make($request->all(), [
             'email' => 'required|email|exists:customers,email',
         ]);
@@ -64,7 +63,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation Error',
+                'message' => 'User with this email not found.',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -72,40 +71,77 @@ class AuthController extends Controller
         Utility::getSMTPDetails(1);
 
         try {
-            $token = Str::random(60);
+            // 1. Generate a 6-digit OTP
+            $otp = rand(100000, 999999);
 
-            // 2. Insert into password_resets (ensure table name is correct for your Laravel version)
+            // 2. Store OTP in password_resets table
             DB::table('password_resets')->updateOrInsert(
                 ['email' => $request->email],
                 [
-                    'token' => $token,
+                    'token' => $otp, // We store OTP in the token column
                     'created_at' => Carbon::now()
                 ]
             );
 
-            // 3. Send Mail
+            // 3. Send Mail with OTP
             $settings = Utility::settings();
             Mail::send(
-                'auth.customerVerify', // Ensure this view exists
-                ['token' => $token, 'email' => $request->email],
+                'auth.customerVerify', // In this view, change "Link" to "Code: {{ $token }}"
+                ['token' => $otp, 'email' => $request->email],
                 function ($message) use ($request, $settings) {
                     $message->from($settings['mail_username'], $settings['mail_from_name']);
                     $message->to($request->email);
-                    $message->subject('Reset Password Notification');
+                    $message->subject('Your Password Reset OTP');
                 }
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'We have e-mailed your password reset link!'
+                'message' => 'A 6-digit OTP has been sent to your email.'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send email. Please try again later.'
-                // 'error' => $e->getMessage() // Remove this in production for security
+                'message' => 'Failed to send OTP.'
             ], 500);
         }
+    }
+
+
+    public function resetPasswordWithOtp(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|exists:customers,email',
+            'otp' => 'required|numeric',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // 1. Check if OTP is valid and not older than 60 minutes
+        $resetRecord = DB::table('password_resets')
+            ->where('email', $request->email)
+            ->where('token', $request->otp)
+            ->first();
+
+        if (!$resetRecord || Carbon::parse($resetRecord->created_at)->addMinutes(60)->isPast()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired OTP.'
+            ], 422);
+        }
+
+        // 2. Update Customer Password
+        $customer = Customer::where('email', $request->email)->first();
+        $customer->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        // 3. Delete the OTP record so it can't be used again
+        DB::table('password_resets')->where('email', $request->email)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password has been reset successfully.'
+        ], 200);
     }
 
     public function resetPassword(Request $request): JsonResponse

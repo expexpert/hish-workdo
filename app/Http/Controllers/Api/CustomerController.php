@@ -70,8 +70,7 @@ class CustomerController extends Controller
         $totalExpenses = (clone $transactionQuery)->where('type', 'expense')->sum('amount');
         $totalRevenue = (clone $transactionQuery)->where('type', 'revenue')->sum('amount');
 
-        // 4. Other data
-        $totalProgressData = $user->invoiceChartData()['progressData'];
+        // 4. Other data points (e.g., unread notifications)
         $isNotification = ClientNotification::where('customer_id', $user->id)
             ->where('is_read', false)
             ->exists();
@@ -83,8 +82,7 @@ class CustomerController extends Controller
             'data' => [
                 'total_expenses' => (float) $totalExpenses,
                 'total_revenue' => (float) $totalRevenue,
-                'has_unread_notifications' => $isNotification,
-                'progress_data' => $totalProgressData
+                'has_unread_notifications' => $isNotification
             ]
         ], 200);
     }
