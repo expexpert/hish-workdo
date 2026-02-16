@@ -22,6 +22,10 @@ use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\CustomerExport;
 use App\Imports\CustomerImport;
+use App\Models\ClientTransaction;
+use App\Models\ClientBankStatement;
+
+
 
 class CustomerController extends Controller
 {
@@ -830,5 +834,48 @@ class CustomerController extends Controller
             'success',
             'Customer Password successfully updated.'
         );
+    }
+
+
+    public function getClientTransactions(Request $request)
+    {
+        $accountantId = $request->user()->id;
+
+        $transactions = ClientTransaction::whereIn('customer_id', function ($query) use ($accountantId) {
+            $query->select('id')
+                  ->from('customers')
+                  ->where('created_by', $accountantId);
+        })
+        ->with(['account:id,holder_name', 'category:id,name'])
+        ->orderBy('transaction_date', 'desc')
+        ->get();
+
+        return view('ClientReport.transaction', compact('transactions'));
+    }
+
+    public function getClientBankStatements(Request $request)
+    {
+        $accountantId = $request->user()->id;
+
+        $bankStatements = ClientBankStatement::whereIn('customer_id', function ($query) use ($accountantId) {
+            $query->select('id')
+                  ->from('customers')
+                  ->where('created_by', $accountantId);
+        })
+        ->orderBy('month_year', 'desc')
+        ->get();
+
+        return view('ClientReport.statement', compact('bankStatements'));
+    }
+
+
+    public function showFile(ClientBankStatement $bankStatement)
+    {
+        
+        if (!Storage::disk('private')->exists($bankStatement->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response($bankStatement->file_path);
     }
 }

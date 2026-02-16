@@ -639,6 +639,27 @@
                     </li>
                 @endif
 
+                @if (\Auth::user()->type == 'accountant')
+                <li class="dash-item dash-hasmenu">
+                        <a href="#!" class="dash-link "><span class="dash-micon"><i
+                                    class="ti ti-chart-line"></i></span><span
+                                class="dash-mtext">{{ __('Client Report') }}</span>
+                            <span class="dash-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="dash-submenu">                            
+                                <li class="dash-item">
+                                    <a class="dash-link"
+                                        href="{{ route('customer.transactions') }}">{{ __('Transaction') }}</a>
+                                </li>
+                                <li class="dash-item ">
+                                    <a class="dash-link"
+                                        href="{{ route('customer.bank.statements') }}">{{ __('Account Statement') }}</a>
+                                </li>                  
+                         </ul>
+                </li>
+                @endif
+
+
                 {{-- -------  Constant ---------- --}}
                 @if (Gate::check('manage constant tax') ||
                         Gate::check('manage constant category') ||

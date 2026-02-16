@@ -595,6 +595,15 @@ Route::group(['middleware' => ['verified']], function () {
 
 
             Route::resource('customer', CustomerController::class)->except('show');
+
+
+            
+        Route::get('/transactions', [CustomerController::class, 'getClientTransactions'])->name('customer.transactions');
+
+        Route::get('/bank-statements', [CustomerController::class, 'getClientBankStatements'])->name('customer.bank.statements');
+
+        Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])
+    ->name('customer.bank-statements.view-file');
         }
     );
     Route::group(

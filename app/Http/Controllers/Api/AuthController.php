@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\Utility;
 use App\Models\ClientNotification;
+use Illuminate\Validation\Rules\Password;
 
 
 
@@ -105,5 +106,37 @@ class AuthController extends Controller
                 // 'error' => $e->getMessage() // Remove this in production for security
             ], 500);
         }
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        // 1. Validation
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(6)
+            ],
+        ]);
+
+        $user = $request->user();
+
+        // 2. Check if Current Password matches
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'The provided current password does not match our records.'
+            ], 422);
+        }
+
+        // 3. Update Password
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return response()->json([
+            'message' => 'Password updated successfully.'
+        ], 200);
     }
 }
