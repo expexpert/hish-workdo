@@ -215,12 +215,12 @@ class DashboardController extends Controller
                 'title' => $request->subject,
                 'message' => $request->message,
                 'is_read' => false,
-                'data' => null,
+                'data' => $request->notification_type ?? null,
                 'document' => $documentPath,
             ]);
         }
 
-        return back()->with('success', __('Notification sent successfully.'));
+        return back()->with('success', __('Sent successfully.'));
     }
 
 

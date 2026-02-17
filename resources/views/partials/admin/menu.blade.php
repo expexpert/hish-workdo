@@ -659,6 +659,23 @@
                 </li>
                 @endif
 
+                @if (!\Auth::guard('customer')->check() && \Auth::user()->type != 'super admin')
+                <li class="dash-item {{ Request::route()->getName() == 'workflow.index' ? 'active' : '' }}">
+                        <a href="{{ route('workflow.index') }}" class="dash-link ">
+                            <span class="dash-micon"><i class="ti ti-calendar"></i></span>
+                            <span class="dash-mtext">{{ __('Client Status') }}</span>
+                        </a>
+                    </li>
+                @endif
+                @if (\Auth::guard('customer')->check())
+                <li class="dash-item {{ Request::route()->getName() == 'customer.workflow.index' ? 'active' : '' }}">
+                        <a href="{{ route('customer.workflow.index') }}" class="dash-link ">
+                            <span class="dash-micon"><i class="ti ti-calendar"></i></span>
+                            <span class="dash-mtext">{{ __('Client Status') }}</span>
+                        </a>
+                    </li>
+                @endif
+
 
                 <!-- {{-- -------  Constant ---------- --}}
                 @if (Gate::check('manage constant tax') ||

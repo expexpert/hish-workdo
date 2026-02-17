@@ -242,8 +242,9 @@
     <div class="row">
         @if (Auth::user()->type == 'accountant')
             <!-- Accountant: Send notification to clients modal trigger -->
-            <div class="col-12 mb-3">
+            <div class="d-flex gap-2 mb-3">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendClientsNotificationModal">{{ __('Send Notification to Clients') }}</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendClientsDocumentModal">{{ __('Send Document to Clients') }}</button>
             </div>
 
             <!-- Modal -->
@@ -276,11 +277,56 @@
                                 <div class="mb-3">
                                     <label class="form-label">{{ __('Message') }}</label>
                                     <textarea name="message" class="form-control" rows="6" required></textarea>
+                                    <input type="hidden" name="notification_type" value="notification">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                <button type="submit" class="btn btn-primary">{{ __('Send') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal fade" id="sendClientsDocumentModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ route('dashboard.send.clients.notification') }}" enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ __('Send Document to Clients') }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Recipients') }}</label>
+                                    <select name="recipients" class="form-select">
+                                        <option value="all">{{ __('All Clients') }}</option>
+                                        @foreach(\App\Models\Customer::whereIn('created_by', [Auth::user()->creatorId(), Auth::user()->id])->get() as $cust)
+                                            <option value="{{ $cust->id }}">{{ $cust->name }} — {{ $cust->email }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">{{ __('Select specific client or choose All Clients') }}</small>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">{{ __('Attach Document (optional)') }}</label>
-                                    <input type="file" name="document" class="form-control">
+                                    <label class="form-label">{{ __('Document Type') }}</label>
+                                    <select name="subject" class="form-select" required>                                      
+                                        <option value="juridiques">{{ __('Juridiques') }}</option>
+                                        <option value="comptables">{{ __('Comptables') }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Message') }}</label>
+                                    <textarea name="message" class="form-control" rows="6" required></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ __('Attach Document') }}</label>
+                                    <input type="file" name="document" class="form-control" required>
+                                    <input type="hidden" name="notification_type" value="document_notification">
                                     <small class="text-muted">{{ __('Optional: attach a document to send as doc notification') }}</small>
                                 </div>
                             </div>
