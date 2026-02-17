@@ -8,6 +8,7 @@ use App\Models\ClientNotification;
 use Illuminate\Http\JsonResponse;
 use App\Models\ClientTransaction;
 use App\Models\ClientBankStatement;
+use App\Models\Customer;
 use Carbon\Carbon;
 
 
@@ -253,5 +254,26 @@ class CustomerController extends Controller
             return response()->json(['message' => 'Statement not found or does not belong to the customer.'], 404);
         }
         return response()->json(['data' => $statement], 200);
+    }
+
+
+    public function getWorkflowStatus(Request $request)
+    {
+        $user = $request->user();
+        $year = $request->get('year', date('Y'));
+
+        $customers = Customer::where('id', $user->id)
+            ->with(['monthStatuses' => function ($q) use ($year) {
+                $q->where('year', $year);
+            }])->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Workflow status retrieved successfully.',
+            'data'    => [
+                'customers' => $customers,
+                'year' => $year
+            ]
+        ], 200);
     }
 }

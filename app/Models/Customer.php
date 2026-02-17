@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Customer extends Authenticatable
 {
@@ -312,6 +313,11 @@ class Customer extends Authenticatable
     {
         $settings = Utility::settings();
         return $settings["contract_prefix"] . sprintf("%05d", $number);
+    }
+
+    public function monthStatuses(): HasMany
+    {
+        return $this->hasMany(CustomerMonthStatus::class, 'customer_id');
     }
 
 }

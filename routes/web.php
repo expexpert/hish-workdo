@@ -87,6 +87,7 @@ use App\Http\Controllers\ReferralProgramController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransferController;
+use App\Http\Controllers\WorkflowController;
 
 /*
 |--------------------------------------------------------------------------
@@ -159,6 +160,12 @@ Route::get('notification-templates/{id?}/{lang?}', [NotificationTemplatesControl
 Route::get('notification_template_lang/{id}/{lang?}', [NotificationTemplatesController::class, 'manageNotificationLang'])->name('manage.notification.language')->middleware(['auth', 'XSS']);
 
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/workflow', [WorkflowController::class, 'index'])->name('workflow.index');
+    Route::post('/workflow/update-status', [WorkflowController::class, 'updateStatus'])->name('workflow.update');
+});
+
+
 
 Route::prefix('customer')->as('customer.')->group(
     function () {
@@ -188,6 +195,8 @@ Route::prefix('customer')->as('customer.')->group(
 
         Route::get('/retainer/pay/{retainer}', [RetainerController::class, 'payretainer'])->name('pay.retainerpay')->middleware(['XSS']);
         Route::get('proposal', [ProposalController::class, 'customerProposal'])->name('proposal')->middleware(['auth:customer', 'XSS']);
+        
+        Route::get('workflow', [WorkflowController::class, 'index'])->name('workflow.index')->middleware(['auth:customer', 'XSS']);
 
         Route::get('proposal/{id}/show', [ProposalController::class, 'customerProposalShow'])->name('proposal.show')->middleware(['auth:customer', 'XSS']);
         Route::get('invoicesend//{id}', [InvoiceController::class, 'customerInvoiceSend'])->name('invoice.send')->middleware(['auth:customer', 'XSS']);
