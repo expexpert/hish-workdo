@@ -10,7 +10,10 @@
 @endsection
 
 @section('action-btn')
-    <form action="{{ route('workflow.index') }}" method="GET" class="d-inline-block">
+    @php
+        $route = (isset($canUpdate) && $canUpdate) ? 'workflow.index' : 'customer.workflow.index';
+    @endphp
+    <form action="{{ route($route) }}" method="GET" class="d-inline-block">
         <div class="input-group input-group-sm">
             <span class="input-group-text fw-bold">{{ __('Year') }}</span>
             <select name="year" onchange="this.form.submit()" class="form-select form-select-sm">
