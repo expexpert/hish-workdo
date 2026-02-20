@@ -8,6 +8,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Customer extends Authenticatable
 {
@@ -318,6 +319,11 @@ class Customer extends Authenticatable
     public function monthStatuses(): HasMany
     {
         return $this->hasMany(CustomerMonthStatus::class, 'customer_id');
+    }
+
+    public function accountant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
 }

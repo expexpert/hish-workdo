@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('page-title')
-    {{ __('Client Monthly Progress') }}
+    {{ __('Customer Monthly Progress') }}
 @endsection
 
 @section('breadcrumb')

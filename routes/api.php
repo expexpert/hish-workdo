@@ -33,14 +33,17 @@ Route::post('/customer/forgot-password-otp', [AuthController::class, 'resetPassw
 Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
+    
     Route::get('/profile', [CustomerController::class, 'getProfile']);
     Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
-
+    
+    Route::get('accoutant-info', [CustomerController::class, 'getAccountantInfo']);
 
     Route::get('/notification', [CustomerController::class, 'getCustomerNotifications']);
     Route::get('/view-single-notification/{id}', [CustomerController::class, 'viewSingleNotification']);
     Route::post('/clear-notifications', [CustomerController::class, 'clearNotifications']);
+
+    Route::get('/documents', [CustomerController::class, 'getDocuments']);
 
     Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
     Route::post('/transaction', [CustomerController::class, 'storeTransaction']);
@@ -52,6 +55,11 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::get('/bank-statement/{id}', [CustomerController::class, 'viewSingleBankStatement']);
 
     Route::get('/workflow-status', [CustomerController::class, 'getWorkflowStatus']);
+
+    Route::post('/customer-client', [CustomerController::class, 'storeCustomerClient']);
+    Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
+    Route::get('/customer-client/{id}', [CustomerController::class, 'viewSingleCustomerClient']);
+
 });
 
 

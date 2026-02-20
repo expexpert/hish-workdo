@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use App\Models\ClientTransaction;
 use App\Models\ClientBankStatement;
 use App\Models\Customer;
+use App\Models\CustomerClient;
 use Carbon\Carbon;
 
 
@@ -88,6 +89,28 @@ class CustomerController extends Controller
         ], 200);
     }
 
+
+    public function getAccountantInfo(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $accountant = $user->accountant;
+
+        if (! $accountant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No accountant information found for this customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Accountant information retrieved successfully.',
+            'data'    => $accountant
+        ], 200);
+    }
+    
+
     public function getCustomerNotifications(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -96,6 +119,7 @@ class CustomerController extends Controller
         $data = [
             'notifications' => ClientNotification::where('customer_id', $user->id)
                 ->orderBy('created_at', 'desc')
+                ->where('data', 'notification')
                 ->limit(20)
                 ->get(),
         ];
@@ -141,11 +165,33 @@ class CustomerController extends Controller
         $user = $request->user();
 
         // Delete all notifications for the authenticated customer
-        ClientNotification::where('customer_id', $user->id)->delete();
+        ClientNotification::where('customer_id', $user->id)->where('data', 'notification')->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'All notifications cleared successfully.'
+        ], 200);
+    }
+
+    public function getDocuments(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $documentType = $request->get('documentType', 'juridiques');
+
+        // Prepare the data payload
+        $data = [
+            'documents' => ClientNotification::where('customer_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->where('data', 'document_notification')
+                ->where('title', $documentType)
+                ->limit(20)
+                ->get(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer documents retrieved successfully.',
+            'data'    => $data
         ], 200);
     }
 
@@ -274,6 +320,67 @@ class CustomerController extends Controller
                 'customers' => $customers,
                 'year' => $year
             ]
+        ], 200);
+    }
+
+
+    public function storeCustomerClient(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'client_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:customer_clients,email',
+            'telephone' => 'nullable|string|max:20',
+            'postal_code' => 'required|string|max:20',
+            'city' => 'required|string|max:100',
+            'commercial_register' => 'nullable|string|max:255',
+            'ice' => 'nullable|string|max:255',
+        ]);
+
+        $validated['customer_id'] = $request->user()->id;
+
+        $client = CustomerClient::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer client created successfully.',
+            'data'    => $client
+        ], 201);
+    }
+
+    public function getCustomerClients(Request $request)
+    {
+        $user = $request->user();
+        $like = $request->query('like');
+        $clients = CustomerClient::where('customer_id', $user->id);
+        if ($like) {
+            $clients = $clients->where('company_name', 'like', "%$like%")->OrWhere('client_name', 'like', "%$like%");
+        }
+        $clients = $clients->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer clients retrieved successfully.',
+            'data'    => $clients
+        ], 200);
+    }
+
+    public function viewSingleCustomerClient(Request $request, $id)
+    {
+        $user = $request->user();
+        $client = CustomerClient::where('id', $id)->where('customer_id', $user->id)->first();
+
+        if (! $client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer client not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer client retrieved successfully.',
+            'data'    => $client
         ], 200);
     }
 }
