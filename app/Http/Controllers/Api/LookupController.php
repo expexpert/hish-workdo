@@ -14,7 +14,8 @@ class LookupController extends Controller
             'status' => 'success',
             'data' => [
                 'accounts' => BankAccount::select('id', 'holder_name as name')->get(),
-                'categories' => ProductServiceCategory::select('id', 'name')->where('type', '=', 'income')->get(),
+                // 'categories' => ProductServiceCategory::select('id', 'name')->where('type', '=', 'income')->get(),
+                'categories' => ProductServiceCategory::select('id', 'name')->get(),
             ]
         ]);
     }

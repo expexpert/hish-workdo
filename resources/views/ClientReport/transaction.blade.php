@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 @section('page-title')
-{{__('Client Transaction Summary')}}
+{{__('Customer Transaction Summary')}}
 @endsection
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
-<li class="breadcrumb-item">{{__('Client Report')}}</li>
+<li class="breadcrumb-item">{{__('Customer Report')}}</li>
 <li class="breadcrumb-item">{{__('Transaction')}}</li>
 @endsection
 @push('css-page')

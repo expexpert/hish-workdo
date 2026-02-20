@@ -287,7 +287,7 @@
                 @endif -->
 
 
-                <!-- {{-- -------  Banking ---------- --}}
+                {{-- -------  Banking ---------- --}}
                 @if (Gate::check('manage bank account') || Gate::check('manage transfer'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'bank-account' || Request::segment(1) == 'transfer' ? ' active dash-trigger' : '' }}">
@@ -315,7 +315,7 @@
                     </li>
                 @endif
 
-                {{-- -------  Income ---------- --}}
+                <!-- {{-- -------  Income ---------- --}}
                 @if (Gate::check('manage invoice') || Gate::check('manage revenue') || Gate::check('manage credit note'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'invoice' || Request::segment(1) == 'revenue' || Request::segment(1) == 'credit-note' ? ' active dash-trigger' : '' }}">
@@ -643,7 +643,7 @@
                 <li class="dash-item dash-hasmenu">
                         <a href="#!" class="dash-link "><span class="dash-micon"><i
                                     class="ti ti-chart-line"></i></span><span
-                                class="dash-mtext">{{ __('Client Report') }}</span>
+                                class="dash-mtext">{{ __('Customer Report') }}</span>
                             <span class="dash-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="dash-submenu">                            
@@ -663,7 +663,7 @@
                 <li class="dash-item {{ Request::route()->getName() == 'workflow.index' ? 'active' : '' }}">
                         <a href="{{ route('workflow.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-calendar"></i></span>
-                            <span class="dash-mtext">{{ __('Client Status') }}</span>
+                            <span class="dash-mtext">{{ __('Customer Status') }}</span>
                         </a>
                     </li>
                 @endif
@@ -671,13 +671,13 @@
                 <li class="dash-item {{ Request::route()->getName() == 'customer.workflow.index' ? 'active' : '' }}">
                         <a href="{{ route('customer.workflow.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-calendar"></i></span>
-                            <span class="dash-mtext">{{ __('Client Status') }}</span>
+                            <span class="dash-mtext">{{ __('Customer Status') }}</span>
                         </a>
                     </li>
                 @endif
 
 
-                <!-- {{-- -------  Constant ---------- --}}
+                {{-- -------  Constant ---------- --}}
                 @if (Gate::check('manage constant tax') ||
                         Gate::check('manage constant category') ||
                         Gate::check('manage constant unit') ||
@@ -694,12 +694,12 @@
                         </a>
                         <ul
                             class="dash-submenu {{ Request::segment(1) == 'taxes' || Request::segment(1) == 'product-category' || Request::segment(1) == 'product-unit' || Request::segment(1) == 'payment-method' || Request::segment(1) == 'custom-field' || Request::segment(1) == 'chart-of-account-type' ? 'show' : '' }}">
-                            @can('manage constant tax')
+                            <!-- @can('manage constant tax')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'taxes.index' ? ' active' : '' }}">
                                     <a class="dash-link" href="{{ route('taxes.index') }}">{{ __('Taxes') }}</a>
                                 </li>
-                            @endcan
+                            @endcan -->
                             @can('manage constant category')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'product-category.index' ? 'active' : '' }}">
@@ -707,7 +707,7 @@
                                         href="{{ route('product-category.index') }}">{{ __('Category') }}</a>
                                 </li>
                             @endcan
-                            @can('manage constant unit')
+                            <!-- @can('manage constant unit')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'product-unit.index' ? ' active' : '' }}">
                                     <a class="dash-link"
@@ -727,10 +727,10 @@
                                     <a class="dash-link"
                                         href="{{ route('contractType.index') }}">{{ __('Contract Type') }}</a>
                                 </li>
-                            @endcan
+                            @endcan -->
                         </ul>
                     </li>
-                @endif -->
+                @endif
                 {{-- @if (\Auth::user()->type == 'super admin')
                     @include('landingpage::menu.landingpage')
                 @endif --}}

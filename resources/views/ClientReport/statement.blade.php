@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('page-title')
-{{__('Client Account Statement Summary')}}
+{{__('Customer Account Statement Summary')}}
 @endsection
 @push('script-page')
 <script type="text/javascript" src="{{ asset('js/html2pdf.bundle.min.js') }}"></script>
@@ -51,7 +51,7 @@
 @endpush
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
-<li class="breadcrumb-item">{{__('Client Report')}}</li>
+<li class="breadcrumb-item">{{__('Customer Report')}}</li>
 
 <li class="breadcrumb-item">{{__('Account Statement')}}</li>
 @endsection
