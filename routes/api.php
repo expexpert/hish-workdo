@@ -59,6 +59,23 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/customer-client', [CustomerController::class, 'storeCustomerClient']);
     Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
     Route::get('/customer-client/{id}', [CustomerController::class, 'viewSingleCustomerClient']);
+    Route::put('/customer-client/{id}', [CustomerController::class, 'updateCustomerClient']);
+    Route::delete('/customer-client/{id}', [CustomerController::class, 'deleteCustomerClient']);
+
+
+    Route::post('customer-expense', [CustomerController::class, 'storeExpense']);
+    Route::get('customer-expenses', [CustomerController::class, 'getExpenses']);
+    Route::get('customer-expense/{id}', [CustomerController::class, 'viewSingleExpense']);
+    Route::put('customer-expense/{id}', [CustomerController::class, 'updateExpense']);
+    Route::delete('customer-expense/{id}', [CustomerController::class, 'deleteExpense']);
+
+
+    Route::get('/customer-clients-resources', [LookupController::class, 'getCustomerClientResources']);
+    Route::post('/customer-invoice', [CustomerController::class, 'storeInvoice']);
+    Route::get('/customer-invoices', [CustomerController::class, 'getInvoices']);
+    Route::get('/customer-invoice/{id}', [CustomerController::class, 'viewSingleInvoice']);
+    Route::put('/customer-invoice/{id}', [CustomerController::class, 'updateInvoice']);
+    Route::delete('/customer-invoice/{id}', [CustomerController::class, 'deleteInvoice']);
 
 });
 
