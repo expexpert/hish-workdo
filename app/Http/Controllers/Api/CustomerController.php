@@ -860,49 +860,38 @@ class CustomerController extends Controller
 
     public function sendToAccountant(Request $request)
     {
-        // 1. Validate the incoming request
-        $validator = \Validator::make($request->all(), [
+        $request->validate([
             'to'         => 'required|email',
             'subject'    => 'required|string',
             'message'    => 'required|string',
-            'attachment' => 'nullable|file|max:10240', // 10MB limit
+            'attachment' => 'nullable|file|max:10240',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-        }
-
-        // 2. Get SMTP details and settings
+        // 1. Authenticate SMTP
         Utility::getSMTPDetails(1);
         $settings = Utility::settings();
 
-        // 3. Prepare the data for CommonEmailTemplate
-        $template = (object) [
-            'from'    => $settings['mail_from_name'] ?? 'Accounting System',
-            'subject' => $request->subject,
-            'content' => $request->message
-        ];
+        // 2. Get Authenticated Customer Data
+        $customer = $request->user();
 
-        $templateSettings = [
-            'mail_from_address' => $settings['mail_username'],
+        // 3. Prepare detailed data array
+        $details = [
+            'customer_name'  => $customer ? $customer->name : 'Guest Customer',
+            'customer_email' => $customer ? $customer->email : $request->email ?? 'N/A',
+            'subject'        => $request->subject,
+            'message'        => $request->message,
+            'from_email'     => $settings['mail_username'], // System sender
+            'has_attachment' => $request->hasFile('attachment')
         ];
 
         try {
-            // 4. Send using your CommonEmailTemplate and handle attachment
             \Mail::to($request->to)->send(
-                new \App\Mail\CommonEmailTemplate($template, $templateSettings, $request->file('attachment'))
+                new \App\Mail\AccountantContactMail($details, $request->file('attachment'))
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Email sent to accountant successfully!'
-            ], 200);
+            return response()->json(['success' => true, 'message' => 'Email sent to accountant.']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to send email.',
-                'error'   => $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
 }
