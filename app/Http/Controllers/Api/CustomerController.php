@@ -10,7 +10,11 @@ use App\Models\ClientTransaction;
 use App\Models\ClientBankStatement;
 use App\Models\Customer;
 use App\Models\CustomerClient;
+use App\Models\CustomerExpense;
+use App\Models\CustomerInvoice;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 
 
@@ -109,7 +113,7 @@ class CustomerController extends Controller
             'data'    => $accountant
         ], 200);
     }
-    
+
 
     public function getCustomerNotifications(Request $request): JsonResponse
     {
@@ -382,5 +386,407 @@ class CustomerController extends Controller
             'message' => 'Customer client retrieved successfully.',
             'data'    => $client
         ], 200);
+    }
+
+    public function updateCustomerClient(Request $request, $id)
+    {
+        $user = $request->user();
+        $client = CustomerClient::where('id', $id)->where('customer_id', $user->id)->first();
+
+        if (! $client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer client not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'company_name' => 'sometimes|required|string|max:255',
+            'client_name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:customer_clients,email,' . $client->id,
+            'telephone' => 'nullable|string|max:20',
+            'postal_code' => 'sometimes|required|string|max:20',
+            'city' => 'sometimes|required|string|max:100',
+            'commercial_register' => 'nullable|string|max:255',
+            'ice' => 'nullable|string|max:255',
+        ]);
+
+        $client->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer client updated successfully.',
+            'data'    => $client
+        ], 200);
+    }
+
+    public function deleteCustomerClient(Request $request, $id)
+    {
+        $user = $request->user();
+        $client = CustomerClient::where('id', $id)->where('customer_id', $user->id)->first();
+
+        if (! $client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer client not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $client->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer client deleted successfully.'
+        ], 200);
+    }
+
+
+    public function storeExpense(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id'    => 'required|exists:customers,id',
+            'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'date'           => 'required|date',
+            'ttc'            => 'required|numeric|min:0',
+            'tva'            => 'nullable|numeric|min:0',
+            'payment_method' => 'required|string|max:255',
+            'category_id'    => 'required|exists:product_service_categories,id',
+            'total_ttc'      => 'nullable|numeric|min:0',
+            'total_tva'      => 'nullable|numeric|min:0',
+        ]);
+
+        // Handle File Upload
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('expenses', 'public');
+            $validated['file'] = $path;
+        }
+
+        $expense = CustomerExpense::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expense recorded successfully.',
+            'debug_info' => [
+                'received_payload' => $request->all(),
+                'server_time' => now()->toDateTimeString()
+            ],
+            'data' => $expense
+        ], 201);
+    }
+
+
+    public function getExpenses(Request $request)
+    {
+        $user = $request->user();
+
+        $expenses = CustomerExpense::where('customer_id', $user->id)
+            ->with('category:id,name')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer expenses retrieved successfully.',
+            'data'    => $expenses
+        ], 200);
+    }
+
+
+    public function viewSingleExpense(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $expense = CustomerExpense::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with('category:id,name')
+            ->first();
+
+        if (! $expense) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expense retrieved successfully.',
+            'data'    => $expense
+        ], 200);
+    }
+
+
+    public function updateExpense(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $expense = CustomerExpense::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $expense) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'date'           => 'sometimes|required|date',
+            'ttc'            => 'sometimes|required|numeric|min:0',
+            'tva'            => 'nullable|numeric|min:0',
+            'payment_method' => 'sometimes|required|string|max:255',
+            'category_id'    => 'sometimes|required|exists:product_service_categories,id',
+            'total_ttc'      => 'nullable|numeric|min:0',
+            'total_tva'      => 'nullable|numeric|min:0',
+        ]);
+
+        // Handle File Upload
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('expenses', 'public');
+            $validated['file'] = $path;
+        }
+
+        $expense->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expense updated successfully.',
+            'data'    => $expense
+        ], 200);
+    }
+
+
+    public function deleteExpense(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $expense = CustomerExpense::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $expense) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $expense->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expense deleted successfully.'
+        ], 200);
+    }
+
+
+
+    public function storeInvoice(Request $request)
+    {
+        $validated = $request->validate([
+            // Invoice Header
+            'customer_id'    => 'required|exists:customers,id',
+            'client_id'      => 'required|exists:customer_clients,id',
+            'date'           => 'required|date',
+            'invoice_number' => 'required|string|max:255|unique:customer_invoices,invoice_number',
+            'payment_method' => 'required|string|max:255',
+            'status'         => 'required|string|max:50',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+
+
+            'articles'                 => 'sometimes|array',
+            'articles.*.designation'    => 'required_with:articles|string|max:255',
+            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.quantity'      => 'required_with:articles|integer|min:1',
+            'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request, $validated) {
+                // 1. Handle File Upload
+                if ($request->hasFile('document')) {
+                    $path = $request->file('document')->store('customer_invoices', 'public');
+                    $validated['document_path'] = $path;
+                }
+
+                // 2. Create the Invoice Header
+                $invoice = CustomerInvoice::create($validated);
+
+                // 3. Create Articles ONLY if they exist in the request
+                if (!empty($validated['articles'])) {
+                    $invoice->articles()->createMany($validated['articles']);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice created successfully.',
+                    'data'    => $invoice->load('articles')
+                ], 201);
+            });
+        } catch (\Exception $e) {
+            if (isset($validated['document_path'])) {
+                Storage::disk('public')->delete($validated['document_path']);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function getInvoices(Request $request)
+    {
+        $user = $request->user();
+
+        $invoices = CustomerInvoice::where('customer_id', $user->id)
+            ->with(['client:id,client_name', 'articles'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer invoices retrieved successfully.',
+            'data'    => $invoices
+        ], 200);
+    }
+
+
+    public function viewSingleInvoice(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $invoice = CustomerInvoice::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with(['client:id,client_name', 'articles'])
+            ->first();
+
+        if (! $invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice retrieved successfully.',
+            'data'    => $invoice
+        ], 200);
+    }
+
+
+    public function updateInvoice(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $invoice = CustomerInvoice::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (!$invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'client_id'      => 'sometimes|required|exists:customer_clients,id',
+            'date'           => 'sometimes|required|date',
+            'invoice_number' => 'sometimes|required|string|max:255|unique:customer_invoices,invoice_number,' . $invoice->id,
+            'payment_method' => 'sometimes|required|string|max:255',
+            'status'         => 'sometimes|required|string|max:50',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+
+            // Articles validation (optional during update)
+            'articles'                 => 'sometimes|array',
+            'articles.*.designation'    => 'required_with:articles|string|max:255',
+            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.quantity'      => 'required_with:articles|integer|min:1',
+            'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request, $validated, $invoice) {
+
+                // 1. Handle File Upload (and delete old file if a new one is uploaded)
+                if ($request->hasFile('document')) {
+                    if ($invoice->document_path) {
+                        Storage::disk('public')->delete($invoice->document_path);
+                    }
+                    $path = $request->file('document')->store('customer_invoices', 'public');
+                    $validated['document_path'] = $path;
+                }
+
+                // 2. Update Invoice Header
+                $invoice->update($validated);
+
+                if ($request->has('articles')) {
+                    // Delete existing articles first
+                    $invoice->articles()->delete();
+
+                    // If the array isn't empty, create the new ones
+                    if (!empty($validated['articles'])) {
+                        $invoice->articles()->createMany($validated['articles']);
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice and articles updated successfully.',
+                    'data'    => $invoice->load('articles')
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Update failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteInvoice(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $invoice = CustomerInvoice::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first(); 
+
+        if (!$invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        try {
+            return DB::transaction(function () use ($invoice) {
+                // 1. Delete the physical file from storage if it exists
+                if ($invoice->document_path) {
+                    Storage::disk('public')->delete($invoice->document_path);
+                }
+
+                // Delete associated articles first
+                $invoice->articles()->delete();                
+                $invoice->delete();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice and associated files deleted successfully.'
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete invoice: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

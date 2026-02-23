@@ -48,4 +48,12 @@ class CustomerClient extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+
+    /**
+     * Get the invoices for this client.
+     */
+    public function invoices()
+    {
+        return $this->hasMany(CustomerInvoice::class, 'client_id');
+    }
 }
