@@ -15,7 +15,8 @@ use App\Models\CustomerInvoice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Mail;
+use App\Models\Utility;
 
 
 class CustomerController extends Controller
@@ -582,6 +583,34 @@ class CustomerController extends Controller
     }
 
 
+    public function exportExpenses(Request $request)
+    {
+        $user = $request->user();
+
+        $expenses = CustomerExpense::where('customer_id', $user->id)
+            ->with('category:id,name')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $csvData = "Date,Amount TTC,TVA,Payment Method,Category,Total TTC,Total TVA\n";
+
+        foreach ($expenses as $expense) {
+            $csvData .= "{$expense->date},{$expense->ttc},{$expense->tva},\"{$expense->payment_method}\",\"{$expense->category->name}\",{$expense->total_ttc},{$expense->total_tva}\n";
+        }
+
+        $fileName = "customer_expenses_{$user->id}_" . now()->format('Ymd_His') . ".csv";
+        Storage::disk('public')->put($fileName, $csvData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expenses exported successfully.',
+            'data'    => [
+                'file_url' => Storage::url($fileName)
+            ]
+        ], 200);
+    }
+
+
 
     public function storeInvoice(Request $request)
     {
@@ -757,7 +786,7 @@ class CustomerController extends Controller
 
         $invoice = CustomerInvoice::where('id', $id)
             ->where('customer_id', $user->id)
-            ->first(); 
+            ->first();
 
         if (!$invoice) {
             return response()->json([
@@ -774,7 +803,7 @@ class CustomerController extends Controller
                 }
 
                 // Delete associated articles first
-                $invoice->articles()->delete();                
+                $invoice->articles()->delete();
                 $invoice->delete();
 
                 return response()->json([
@@ -786,6 +815,93 @@ class CustomerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function exportInvoices(Request $request)
+    {
+        $user = $request->user();
+
+        $invoices = CustomerInvoice::where('customer_id', $user->id)
+            ->with(['client:id,client_name', 'articles'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $csvData = "Invoice#,Date,Client,Article,Amount TTC,TVA,Payment Method,Category,Total TTC,Total TVA\n";
+
+        foreach ($invoices as $invoice) {
+            // use null‑safe operator / optional() to avoid accessing ->client_name on null
+            $clientName = optional($invoice->client)->client_name ?? '';
+
+            foreach ($invoice->articles as $article) {
+                $articleName = $article->designation ?? '';
+
+                $csvData .= "{$invoice->invoice_number},{$invoice->date},\"{$clientName}\",\"{$articleName}\","
+                    . "{$article->total_price_ht},{$article->tva_percentage},"
+                    . "\"{$invoice->payment_method}\",\"{$articleName}\","
+                    . "{$article->total_price_ht},{$article->tva_percentage}\n";
+            }
+        }
+
+        $fileName = "invoices_{$user->id}_" . now()->format('Ymd_His') . ".csv";
+        Storage::disk('public')->put($fileName, $csvData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoices exported successfully.',
+            'data'    => [
+                'file_url' => Storage::url($fileName)
+            ]
+        ], 200);
+    }
+
+
+    public function sendToAccountant(Request $request)
+    {
+        // 1. Validate the incoming request
+        $validator = \Validator::make($request->all(), [
+            'to'         => 'required|email',
+            'subject'    => 'required|string',
+            'message'    => 'required|string',
+            'attachment' => 'nullable|file|max:10240', // 10MB limit
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        // 2. Get SMTP details and settings
+        Utility::getSMTPDetails(1);
+        $settings = Utility::settings();
+
+        // 3. Prepare the data for CommonEmailTemplate
+        $template = (object) [
+            'from'    => $settings['mail_from_name'] ?? 'Accounting System',
+            'subject' => $request->subject,
+            'content' => $request->message
+        ];
+
+        $templateSettings = [
+            'mail_from_address' => $settings['mail_username'],
+        ];
+
+        try {
+            // 4. Send using your CommonEmailTemplate and handle attachment
+            \Mail::to($request->to)->send(
+                new \App\Mail\CommonEmailTemplate($template, $templateSettings, $request->file('attachment'))
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent to accountant successfully!'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email.',
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

@@ -37,7 +37,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [CustomerController::class, 'getProfile']);
     Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
     
-    Route::get('accoutant-info', [CustomerController::class, 'getAccountantInfo']);
+    Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);
 
     Route::get('/notification', [CustomerController::class, 'getCustomerNotifications']);
     Route::get('/view-single-notification/{id}', [CustomerController::class, 'viewSingleNotification']);
@@ -63,11 +63,12 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::delete('/customer-client/{id}', [CustomerController::class, 'deleteCustomerClient']);
 
 
-    Route::post('customer-expense', [CustomerController::class, 'storeExpense']);
-    Route::get('customer-expenses', [CustomerController::class, 'getExpenses']);
-    Route::get('customer-expense/{id}', [CustomerController::class, 'viewSingleExpense']);
-    Route::put('customer-expense/{id}', [CustomerController::class, 'updateExpense']);
-    Route::delete('customer-expense/{id}', [CustomerController::class, 'deleteExpense']);
+    Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
+    Route::get('/customer-expenses', [CustomerController::class, 'getExpenses']);
+    Route::get('/customer-expense/{id}', [CustomerController::class, 'viewSingleExpense']);
+    Route::put('/customer-expense/{id}', [CustomerController::class, 'updateExpense']);
+    Route::delete('/customer-expense/{id}', [CustomerController::class, 'deleteExpense']);
+    Route::get('/export-expenses', [CustomerController::class, 'exportExpenses']);
 
 
     Route::get('/customer-clients-resources', [LookupController::class, 'getCustomerClientResources']);
@@ -76,6 +77,10 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::get('/customer-invoice/{id}', [CustomerController::class, 'viewSingleInvoice']);
     Route::put('/customer-invoice/{id}', [CustomerController::class, 'updateInvoice']);
     Route::delete('/customer-invoice/{id}', [CustomerController::class, 'deleteInvoice']);
+    Route::get('/export-invoices', [CustomerController::class, 'exportInvoices']);
+
+
+    Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
 
 });
 
