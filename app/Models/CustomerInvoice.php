@@ -43,6 +43,6 @@ class CustomerInvoice extends Model
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(CustomerClient::class, 'customer_client_id');
+        return $this->belongsTo(CustomerClient::class, 'client_id', 'id');
     }
 }

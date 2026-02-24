@@ -22,7 +22,7 @@ class AccountantContactMail extends Mailable
     public function build()
     {
         $email = $this->from($this->details['from_email'], $this->details['customer_name'])
-            ->subject('New Customer Document: ' . $this->details['subject'])
+            ->subject('New Customer Message: ' . $this->details['subject'])
             ->view('email.accountant_contact') // We will create this view
             ->with(['data' => $this->details]);
 
