@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="header">
-        <h2>New Document Submission</h2>
+        <h2>New Customer Message</h2>
     </div>
 
     <div class="customer-box">
