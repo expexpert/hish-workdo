@@ -35,6 +35,8 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     
     Route::get('/profile', [CustomerController::class, 'getProfile']);
+    Route::put('/profile', [CustomerController::class, 'updateProfile']);
+    Route::delete('/profile', [CustomerController::class, 'deleteProfile']);
     Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
     
     Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);
