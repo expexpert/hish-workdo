@@ -34,6 +34,58 @@ class CustomerController extends Controller
     }
 
 
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:customers,email,' . $user->id,
+            'bio' => 'nullable|string|max:1000',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $validated['avatar'] = $path;
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer profile updated successfully.',
+            'data'    => $user
+        ], 200);
+    }
+
+    public function deleteProfile(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $customer = Customer::where('user_id', $userId)->first();
+
+        if ($customer) {
+            $customer->delete();
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer record not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer profile deleted successfully.'
+        ], 200);
+    }
+
+
     public function getDashboardData(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -480,9 +532,18 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
+        $month = $request->query('month');
+        $year = $request->query('year');
+
         $expenses = CustomerExpense::where('customer_id', $user->id)
             ->with('category:id,name')
             ->orderBy('date', 'desc')
+            ->when($year, function ($query, $year) {
+                return $query->whereYear('date', $year);
+            })
+            ->when($month, function ($query, $month) {
+                return $query->whereMonth('date', $month);
+            })
             ->get();
 
         return response()->json([
@@ -672,9 +733,18 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
+        $month = $request->query('month');
+        $year = $request->query('year');
+
         $invoices = CustomerInvoice::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles'])
             ->orderBy('date', 'desc')
+            ->when($year, function ($query) use ($year) {
+                $query->whereYear('date', $year);
+            })
+            ->when($month, function ($query) use ($month) {
+                $query->whereMonth('date', $month);
+            })
             ->get();
 
         return response()->json([
