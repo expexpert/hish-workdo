@@ -36,6 +36,7 @@ class CustomerExpense extends Model
         'total_tva' => 'decimal:2',
     ];
 
+    protected $appends = ['file_url'];
     /**
      * Get the customer that owns the expense.
      */
@@ -51,5 +52,14 @@ class CustomerExpense extends Model
     {
         // Explicitly defining the foreign key if it differs from the table name
         return $this->belongsTo(ProductServiceCategory::class, 'category_id');
+    }
+
+    public function getFileUrlAttribute()
+    {
+        if (!$this->file) {
+            return null;
+        }
+
+        return asset('storage/' . $this->file);
     }
 }

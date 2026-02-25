@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ClientNotification extends Model
 {
     protected $table = 'client_notifications';
+    protected $appends = ['document_url'];
 
     protected $fillable = [
         'customer_id',
@@ -31,5 +32,14 @@ class ClientNotification extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function getDocumentUrlAttribute()
+    {
+        if (!$this->document) {
+            return null;
+        }
+    
+        return asset('storage/' . $this->document);
     }
 }

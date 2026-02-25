@@ -13,6 +13,7 @@ class ClientTransaction extends Model
 
     protected $fillable = ['type', 'transaction_date', 'amount', 'customer_id', 'account_id', 'category_id', 'description', 'reference', 'attachment_path',];
 
+    protected $appends = ['receipt_url'];
 
     public function customer()
     {
@@ -32,5 +33,14 @@ class ClientTransaction extends Model
     public function bankAccount()
     {
         return $this->hasOne('App\Models\BankAccount', 'id', 'account_id')->first();
+    }
+
+    public function getReceiptUrlAttribute()
+    {
+        if (!$this->attachment_path) {
+            return null;
+        }
+
+        return asset('storage/' . $this->attachment_path);
     }
 }

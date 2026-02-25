@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Utility;
+use App\Models\InvoiceArticle;
 
 
 class CustomerController extends Controller
@@ -50,12 +51,12 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             'billing_name' => 'nullable|string|max:255',
-            'billing_phone' => 'nullable|string|max:20',   
+            'billing_phone' => 'nullable|string|max:20',
             'vat_number' => 'nullable|string|max:255',
             'billing_address' => 'nullable|string|max:255',
             'billing_zip' => 'nullable|string|max:20',
             'billing_city' => 'nullable|string|max:100',
-            'website' => 'nullable|string|max:255',     
+            'website' => 'nullable|string|max:255',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -370,6 +371,24 @@ class CustomerController extends Controller
         return response()->json(['data' => $statement], 200);
     }
 
+    public function downloadBankStatement($id)
+    {
+        $document = ClientBankStatement::findOrFail($id);
+
+        // Optional security check
+        if ($document->customer_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $filePath = $document->file_path;
+
+        if (!Storage::disk('private')->exists($filePath)) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->download($filePath);
+    }
+
 
     public function getWorkflowStatus(Request $request)
     {
@@ -436,7 +455,12 @@ class CustomerController extends Controller
     public function viewSingleCustomerClient(Request $request, $id)
     {
         $user = $request->user();
-        $client = CustomerClient::where('id', $id)->where('customer_id', $user->id)->first();
+
+        // Get client + invoice count in same query
+        $client = CustomerClient::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->withCount('invoices')
+            ->first();
 
         if (! $client) {
             return response()->json([
@@ -445,10 +469,18 @@ class CustomerController extends Controller
             ], 404);
         }
 
+        $totalPriceHt = $client->invoices()
+            ->join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->sum('invoice_articles.total_price_ht');
+
         return response()->json([
             'success' => true,
             'message' => 'Customer client retrieved successfully.',
-            'data'    => $client
+            'data' => [
+                'client'         => $client,
+                'invoice_count'  => $client->invoices_count,
+                'total_price_ht' => (float) $totalPriceHt,
+            ]
         ], 200);
     }
 
