@@ -21,6 +21,10 @@ return new class extends Migration
             $table->string('patent_number')->nullable()->after('rc_number');
 
             $table->text('address')->nullable()->after('patent_number');
+
+            $table->enum('require_authentication', ['true', 'false'])->default('false')->after('email_verified_at');
+            $table->string('vat_number')->nullable()->after('require_authentication');
+            $table->string('website')->nullable()->after('vat_number'); 
         });
     }
 
@@ -34,7 +38,10 @@ return new class extends Migration
                 'ice_number',
                 'rc_number',
                 'patent_number',
-                'address'
+                'address',
+                'require_authentication',
+                'vat_number',
+                'website',
             ]);
         });
     }
