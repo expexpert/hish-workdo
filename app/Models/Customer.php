@@ -18,6 +18,7 @@ class Customer extends Authenticatable
     use HasApiTokens;
 
     protected $guard_name = 'web';
+    protected $appends = ['avatar_url'];
 
     protected $fillable = [
         'customer_id',
@@ -333,6 +334,15 @@ class Customer extends Authenticatable
     public function accountant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+    
+        return asset('storage/' . $this->avatar);
     }
 
 }

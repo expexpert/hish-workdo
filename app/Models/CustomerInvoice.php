@@ -25,6 +25,8 @@ class CustomerInvoice extends Model
         'date' => 'date',
     ];
 
+    protected $appends = ['invoice_url'];
+
     /**
      * Get the customer who owns the invoice.
      */
@@ -44,5 +46,14 @@ class CustomerInvoice extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(CustomerClient::class, 'client_id', 'id');
+    }
+
+    public function getInvoiceUrlAttribute()
+    {
+        if (!$this->document_path) {
+            return null;
+        }
+
+        return asset('storage/' . $this->document_path);
     }
 }

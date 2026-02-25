@@ -55,6 +55,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/bank-statement', [CustomerController::class, 'storeStatement']);
     Route::get('/bank-statements', [CustomerController::class, 'getBankStatements']);
     Route::get('/bank-statement/{id}', [CustomerController::class, 'viewSingleBankStatement']);
+    Route::get('/bank-statement/download/{id}', [CustomerController::class, 'downloadBankStatement']);
 
     Route::get('/workflow-status', [CustomerController::class, 'getWorkflowStatus']);
 
