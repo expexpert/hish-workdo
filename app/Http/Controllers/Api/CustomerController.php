@@ -53,7 +53,7 @@ class CustomerController extends Controller
             'billing_phone' => 'nullable|string|max:20',   
             'vat_number' => 'nullable|string|max:255',
             'billing_address' => 'nullable|string|max:255',
-            'billing_zip_code' => 'nullable|string|max:20',
+            'billing_zip' => 'nullable|string|max:20',
             'billing_city' => 'nullable|string|max:100',
             'website' => 'nullable|string|max:255',     
         ]);
