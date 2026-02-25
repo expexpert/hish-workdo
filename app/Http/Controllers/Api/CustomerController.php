@@ -186,8 +186,8 @@ class CustomerController extends Controller
         // Prepare the data payload
         $data = [
             'notifications' => ClientNotification::where('customer_id', $user->id)
+                ->where('data', 'like', '%"notification"%')
                 ->orderBy('created_at', 'desc')
-                ->where('data', 'notification')
                 ->limit(20)
                 ->get(),
         ];
@@ -233,7 +233,7 @@ class CustomerController extends Controller
         $user = $request->user();
 
         // Delete all notifications for the authenticated customer
-        ClientNotification::where('customer_id', $user->id)->where('data', 'notification')->delete();
+        ClientNotification::where('customer_id', $user->id)->where('data', 'like', '%"notification"%')->delete();
 
         return response()->json([
             'success' => true,
@@ -249,9 +249,9 @@ class CustomerController extends Controller
         // Prepare the data payload
         $data = [
             'documents' => ClientNotification::where('customer_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->where('data', 'document_notification')
+                ->where('data', 'like', '%"document_notification"%')
                 ->where('title', $documentType)
+                ->orderBy('created_at', 'desc')
                 ->limit(20)
                 ->get(),
         ];
