@@ -38,6 +38,8 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [CustomerController::class, 'updateProfile']);
     Route::delete('/profile', [CustomerController::class, 'deleteProfile']);
     Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
+
+    Route::get('/has-unread-notifications', [CustomerController::class, 'hasUnreadNotifications']);
     
     Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);
 
@@ -64,6 +66,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::get('/customer-client/{id}', [CustomerController::class, 'viewSingleCustomerClient']);
     Route::put('/customer-client/{id}', [CustomerController::class, 'updateCustomerClient']);
     Route::delete('/customer-client/{id}', [CustomerController::class, 'deleteCustomerClient']);
+    Route::get('/customer-client-invoice/{id}', [CustomerController::class, 'getCustomerClientInvoices']);
 
 
     Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
