@@ -24,8 +24,8 @@ use App\Exports\CustomerExport;
 use App\Imports\CustomerImport;
 use App\Models\ClientTransaction;
 use App\Models\ClientBankStatement;
-
-
+use App\Models\CustomerExpense;
+use App\Models\CustomerInvoice;
 
 class CustomerController extends Controller
 {
@@ -43,9 +43,10 @@ class CustomerController extends Controller
     {
         if (\Auth::user()->can('manage customer')) {
             $filterIds = \Auth::user()->getCustomerFilterIds();
-            $customers = Customer::whereIn('created_by', $filterIds)->get();
+            $customers = Customer::whereIn('created_by', $filterIds)->with('accountant')->get();
+            $isAccountant = \Auth::user()->type == 'accountant';
 
-            return view('customer.index', compact('customers'));
+            return view('customer.index', compact('customers', 'isAccountant'));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
@@ -906,4 +907,65 @@ class CustomerController extends Controller
 
         return Storage::disk('private')->response($bankStatement->file_path);
     }
+
+
+    public function getExpenses(Request $request)
+    {
+        $user = Auth::user();
+        $query = CustomerExpense::with(['category:id,name'])
+                    ->orderBy('date', 'desc');
+
+        if ($user->type == 'accountant') {
+            // Expenses for customers created by this specific accountant
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->where('created_by', $user->id);
+            });
+
+        } else if ($user->type == 'company') {
+            // Expenses for customers created by ANY accountant belonging to this company
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->whereIn('created_by', function ($subQ) use ($user) {
+                    // Fetch IDs of accountants created by this company
+                    $subQ->select('id')->from('users')->where('created_by', $user->id);
+                });
+            });
+        }
+
+        $expenses = $query->get();
+
+        return view('ClientReport.expense', compact('expenses'));
+    }
+
+
+    public function getInvoices(Request $request)
+    {
+        $user = Auth::user();
+        $query = CustomerInvoice::with([
+                        'customer:id,name',
+                        'client:id,client_name',
+                        'articles:id,invoice_id,designation,unit_price_ht,quantity,total_price_ht,tva_percentage'
+                    ])
+                    ->orderBy('date', 'desc');
+
+        if ($user->type == 'accountant') {
+            // Invoices for customers created by this specific accountant
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->where('created_by', $user->id);
+            });
+
+        } else if ($user->type == 'company') {
+            // Invoices for customers created by ANY accountant belonging to this company
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->whereIn('created_by', function ($subQ) use ($user) {
+                    // Fetch IDs of accountants created by this company
+                    $subQ->select('id')->from('users')->where('created_by', $user->id);
+                });
+            });
+        }
+
+        $invoices = $query->get();
+
+        return view('ClientReport.invoice', compact('invoices'));
+    }
+   
 }

@@ -102,58 +102,35 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        // Set 'this_week' as the default filter if none is provided
-        $filter = $request->query('filter', 'this_week');
+        $totalInvoiceSum = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->sum('invoice_articles.unit_price_ht');
 
-        $startDate = Carbon::now()->startOfWeek();
-        $endDate = Carbon::now();
+        $totalInvoiceIssuedSum = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->where('customer_invoices.status', 'ISSUED')
+            ->sum('invoice_articles.unit_price_ht');
 
-        // Change dates based on selection
-        switch ($filter) {
-            case 'this_month':
-                $startDate = Carbon::now()->startOfMonth();
-                break;
-            case 'this_year':
-                $startDate = Carbon::now()->startOfYear();
-                break;
-            case 'last_year':
-                $startDate = Carbon::now()->subYear()->startOfYear();
-                $endDate = Carbon::now()->subYear()->endOfYear();
-                break;
-            case 'all':
-                $startDate = null; // No date restriction
-                break;
-            case 'this_week':
-            default:
-                $startDate = Carbon::now()->startOfWeek();
-                break;
-        }
+        $totalExpenseSum = CustomerExpense::where('customer_id', $user->id)->sum('ttc');
 
-        // 1. Base Query for Transactions
-        $transactionQuery = ClientTransaction::where('customer_id', $user->id);
+        $totalVatCollected = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
 
-        // 2. Apply Date Filter
-        if ($startDate) {
-            $transactionQuery->whereBetween('created_at', [$startDate, $endDate]);
-        }
+        $totalVatDeductible = CustomerExpense::where('customer_id', $user->id)->sum('ttc');
 
-        // 3. Calculate Totals (using clone to reuse the date filters)
-        $totalExpenses = (clone $transactionQuery)->where('type', 'expense')->sum('amount');
-        $totalRevenue = (clone $transactionQuery)->where('type', 'revenue')->sum('amount');
-
-        // 4. Other data points (e.g., unread notifications)
-        $isNotification = ClientNotification::where('customer_id', $user->id)
-            ->where('is_read', false)
-            ->exists();
+        $totalVatPayable = $totalVatCollected - $totalVatDeductible;
 
         return response()->json([
             'success' => true,
             'message' => 'Dashboard data retrieved successfully.',
-            'applied_filter' => $filter,
-            'data' => [
-                'total_expenses' => (float) $totalExpenses,
-                'total_revenue' => (float) $totalRevenue,
-                'has_unread_notifications' => $isNotification
+            'data'    => [
+                'total_invoices_sum' => (float) $totalInvoiceSum,
+                'total_invoices_issued_sum' => (float) $totalInvoiceIssuedSum,
+                'total_expenses_sum' => (float) $totalExpenseSum,
+                'total_vat_payable' => (float) $totalVatPayable,
             ]
         ], 200);
     }
@@ -371,13 +348,42 @@ class CustomerController extends Controller
         return response()->json(['message' => 'Statement uploaded successfully', 'data' => $statement], 201);
     }
 
+
     public function getBankStatements(Request $request)
     {
         $user = $request->user();
-        $statements = ClientBankStatement::where('customer_id', $user->id)->orderBy('created_at', 'desc')->get();
+
+        // 1. Get the filter input (e.g., '2025' or '6')
+        $filter = $request->query('filter');
+
+        $query = ClientBankStatement::select('client_bank_statement.*', 'customer_month_statuses.status')
+            ->leftJoin('customer_month_statuses', function ($join) {
+                $join->on('customer_month_statuses.customer_id', '=', 'client_bank_statement.customer_id')
+                    ->whereRaw("customer_month_statuses.month = MONTH(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y'))")
+                    ->whereRaw("customer_month_statuses.year = YEAR(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y'))");
+            })
+            ->where('client_bank_statement.customer_id', $user->id);
+
+        if (is_numeric($filter)) {
+            if (strlen($filter) === 4) {
+                // Filter by year e.g. '2026'
+                $query->whereRaw("YEAR(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y')) = ?", [$filter]);
+            } else {
+                // Filter by duration in months from start of current year e.g. '3', '6'
+                $months = (int) $filter;
+                $query->whereRaw("YEAR(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y')) = ?", [date('Y')])
+                    ->whereRaw("MONTH(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y')) BETWEEN 1 AND ?", [$months]);
+            }
+        } else {
+            // Default: first 3 months of current year
+            $query->whereRaw("YEAR(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y')) = ?", [date('Y')])
+                ->whereRaw("MONTH(STR_TO_DATE(client_bank_statement.month_year, '%m-%Y')) BETWEEN 1 AND 3");
+        }
+
+        $statements = $query->orderByRaw("STR_TO_DATE(client_bank_statement.month_year, '%m-%Y') DESC")->get();
+
         return response()->json(['data' => $statements], 200);
     }
-
 
     public function viewSingleBankStatement(Request $request, $id)
     {
@@ -388,6 +394,7 @@ class CustomerController extends Controller
         }
         return response()->json(['data' => $statement], 200);
     }
+
 
     public function downloadBankStatement($id)
     {

@@ -76,19 +76,21 @@
                             @if(!empty($bankStatements))
                             @foreach ($bankStatements as $bankStatement)
                             <tr class="font-style">
-                                <td>{{ $bankStatement->month_year ?? '-' }}</td>
+                                <td>
+                                    {{ $bankStatement->month_year ? \Carbon\Carbon::createFromFormat('m-Y', $bankStatement->month_year)->format('M Y') : '-' }}
+                                </td>
                                 <td>{{ $bankStatement->customer->name ?? '-' }}</td>
                                 <td>
-                                @if($bankStatement->file_path)
-                                    <a href="{{ route('customer.bank-statements.view-file', $bankStatement->id) }}" 
-                                       target="_blank" 
-                                       class="btn btn-sm btn-primary">
+                                    @if($bankStatement->file_path)
+                                    <a href="{{ route('customer.bank-statements.view-file', $bankStatement->id) }}"
+                                        target="_blank"
+                                        class="btn btn-sm btn-primary">
                                         {{ __('View Attachment') }}
                                     </a>
-                                @else
+                                    @else
                                     {{ __('No Attachment') }}
-                                @endif
-                                 </td>
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                             @endif

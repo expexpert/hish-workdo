@@ -175,4 +175,13 @@ class AuthController extends Controller
             'message' => 'Password updated successfully.'
         ], 200);
     }
+
+    public function lastPasswordUpdate(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'last_password_update' => $user->password_changed_at ? Carbon::parse($user->password_changed_at)->toDateTimeString() : null
+        ], 200);
+    }
 }

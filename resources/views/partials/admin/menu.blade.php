@@ -305,12 +305,12 @@
                                         href="{{ route('bank-account.index') }}">{{ __('Account') }}</a>
                                 </li>
                             @endcan
-                            @can('manage transfer')
+                            <!-- @can('manage transfer')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'transfer.index' || Request::route()->getName() == 'transfer.create' || Request::route()->getName() == 'transfer.edit' ? ' active' : '' }}">
                                     <a class="dash-link" href="{{ route('transfer.index') }}">{{ __('Transfer') }}</a>
                                 </li>
-                            @endcan
+                            @endcan -->
                         </ul>
                     </li>
                 @endif
@@ -647,14 +647,18 @@
                             <span class="dash-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="dash-submenu">                            
-                                <li class="dash-item">
-                                    <a class="dash-link"
-                                        href="{{ route('customer.transactions') }}">{{ __('Transaction') }}</a>
-                                </li>
                                 <li class="dash-item ">
                                     <a class="dash-link"
                                         href="{{ route('customer.bank.statements') }}">{{ __('Account Statement') }}</a>
                                 </li>                  
+                                <li class="dash-item">
+                                    <a class="dash-link"
+                                        href="{{ route('customer.expenses') }}">{{ __('Customer Expense') }}</a>
+                                </li>
+                                <li class="dash-item">
+                                    <a class="dash-link"
+                                        href="{{ route('customer.invoices') }}">{{ __('Customer Invoice') }}</a>
+                                </li>
                          </ul>
                 </li>
                 @endif

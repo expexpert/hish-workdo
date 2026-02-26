@@ -33,6 +33,7 @@ Route::post('/customer/forgot-password-otp', [AuthController::class, 'resetPassw
 Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::get('/last-password-update', [AuthController::class, 'lastPasswordUpdate']);
     
     Route::get('/profile', [CustomerController::class, 'getProfile']);
     Route::put('/profile', [CustomerController::class, 'updateProfile']);
