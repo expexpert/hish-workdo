@@ -80,6 +80,18 @@ $profile = asset(Storage::url('uploads/avatar/'));
                             @enderror
                         </div>
                     </div>
+                    <div class="col-lg-6 col-sm-6">
+                        <div class="form-group">
+                            <label for="phone" class="col-form-label text-dark">{{ __('Phone') }}</label>
+                            <input class="form-control @error('phone') is-invalid @enderror" name="phone"
+                                type="text" id="phone" placeholder="{{ __('Enter Your Phone Number') }}"
+                                value="{{ $userDetail->phone }}" autocomplete="phone">
+                            @error('phone')
+                            <span class="invalid-feedback text-danger text-xs"
+                                role="alert">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
                     <div class="col-lg-6 col-md-6">
                         <div class="form-group">
                             <label for="email" class="col-form-label text-dark">{{ __('Avtar') }}</label>

@@ -25,6 +25,7 @@ return new class extends Migration
             $table->enum('require_authentication', ['true', 'false'])->default('false')->after('email_verified_at');
             $table->string('vat_number')->nullable()->after('require_authentication');
             $table->string('website')->nullable()->after('vat_number'); 
+            $table->timestamp('password_changed_at')->nullable()->after('password');
         });
     }
 

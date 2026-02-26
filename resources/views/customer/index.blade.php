@@ -54,6 +54,9 @@
                                 <tr>
                                     <th>#</th>
                                     <th> {{ __('Name') }}</th>
+                                    @if(!$isAccountant)
+                                    <th> {{ __('Accountant') }}</th>
+                                    @endif
                                     <th> {{ __('Contact') }}</th>
                                     <th> {{ __('Email') }}</th>
                                     <th> {{ __('Balance') }}</th>
@@ -79,6 +82,9 @@
                                             @endcan
                                         </td>
                                         <td class="font-style">{{ $customer['name'] }}</td>
+                                        @if(!$isAccountant)
+                                        <td>{{ $customer->accountant?->name ?? '-' }}</td>
+                                        @endif
                                         <td>{{ $customer['contact'] }}</td>
                                         <td>{{ $customer['email'] }}</td>
                                         <td>{{ \Auth::user()->priceFormat($customer['balance']) }}</td>

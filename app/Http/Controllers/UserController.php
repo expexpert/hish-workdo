@@ -322,6 +322,7 @@ class UserController extends Controller
             [
                 'name' => 'required|max:120',
                 'email' => 'required|email|unique:users,email,' . $userDetail['id'],
+                'phone' => 'nullable|numeric',
             ]
         );
 
@@ -393,6 +394,7 @@ class UserController extends Controller
         }
         $user['name']  = $request['name'];
         $user['email'] = $request['email'];
+        $user['phone'] = $request['phone'];
         $user->save();
         CustomField::saveData($user, $request->customField);
 

@@ -611,8 +611,12 @@ Route::group(['middleware' => ['verified']], function () {
 
         Route::get('/bank-statements', [CustomerController::class, 'getClientBankStatements'])->name('customer.bank.statements');
 
-        Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])
-    ->name('customer.bank-statements.view-file');
+        Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])->name('customer.bank-statements.view-file');
+        
+        Route::get('/customer-expenses', [CustomerController::class, 'getExpenses'])->name('customer.expenses');
+
+        Route::get('/customer-invoices', [CustomerController::class, 'getInvoices'])->name('customer.invoices');
+        
         }
     );
     Route::group(
