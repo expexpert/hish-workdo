@@ -159,6 +159,24 @@ class CustomerController extends Controller
     }
 
 
+    public function hasUnreadNotifications(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $hasUnread = ClientNotification::where('customer_id', $user->id)
+            ->where('is_read', false)
+            ->exists();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unread notifications status retrieved successfully.',
+            'data'    => [
+                'has_unread_notifications' => $hasUnread
+            ]
+        ], 200);
+    }
+
+
     public function getAccountantInfo(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -536,6 +554,32 @@ class CustomerController extends Controller
         ], 200);
     }
 
+
+    public function getCustomerClientInvoices(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $client = CustomerClient::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer client not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $invoices = CustomerInvoice::where('client_id', $client->id)
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoices for the customer client retrieved successfully.',
+            'data'    => $invoices
+        ], 200);
+    }
 
     public function storeExpense(Request $request)
     {
