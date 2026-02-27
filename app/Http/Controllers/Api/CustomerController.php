@@ -765,30 +765,44 @@ class CustomerController extends Controller
         ], 200);
     }
 
-
     public function exportExpenses(Request $request)
     {
         $user = $request->user();
-
         $expenses = CustomerExpense::where('customer_id', $user->id)
             ->with('category:id,name')
             ->orderBy('date', 'desc')
             ->get();
 
-        $csvData = "Date,Amount TTC,TVA,Payment Method,Category,Total TTC,Total TVA\n";
+        $fileName = "exports/expenses_{$user->id}_" . now()->format('Ymd_His') . ".csv";
+
+        // Use a stream to handle CSV escaping properly
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, ['Date', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
 
         foreach ($expenses as $expense) {
-            $csvData .= "{$expense->date},{$expense->ttc},{$expense->tva},\"{$expense->payment_method}\",\"{$expense->category->name}\",{$expense->total_ttc},{$expense->total_tva}\n";
+            fputcsv($handle, [
+                $expense->date,
+                $expense->ttc,
+                $expense->tva,
+                $expense->payment_method,
+                $expense->category->name ?? 'N/A',
+                $expense->total_ttc,
+                $expense->total_tva
+            ]);
         }
 
-        $fileName = "customer_expenses_{$user->id}_" . now()->format('Ymd_His') . ".csv";
-        Storage::disk('public')->put($fileName, $csvData);
+        rewind($handle);
+        $csvContent = stream_get_contents($handle);
+        fclose($handle);
+
+        // Store the file
+        Storage::disk('public')->put($fileName, $csvContent);
 
         return response()->json([
             'success' => true,
             'message' => 'Expenses exported successfully.',
             'data'    => [
-                'file_url' => Storage::url($fileName)
+                'file_url' => asset('storage/' . $fileName)
             ]
         ], 200);
     }
@@ -1027,32 +1041,118 @@ class CustomerController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        $csvData = "Invoice#,Date,Client,Article,Amount TTC,TVA,Payment Method,Category,Total TTC,Total TVA\n";
+        $fileName = "exports/invoices_{$user->id}_" . now()->format('Ymd_His') . ".csv";
+
+        // Create a temporary stream for CSV generation
+        $handle = fopen('php://temp', 'r+');
+
+        // Add Headers
+        fputcsv($handle, [
+            'Invoice#',
+            'Date',
+            'Client',
+            'Article',
+            'Amount TTC',
+            'TVA',
+            'Payment Method',
+            'Category',
+            'Total TTC',
+            'Total TVA'
+        ]);
 
         foreach ($invoices as $invoice) {
-            // use null‑safe operator / optional() to avoid accessing ->client_name on null
-            $clientName = optional($invoice->client)->client_name ?? '';
+            $clientName = $invoice->client->client_name ?? 'N/A';
 
             foreach ($invoice->articles as $article) {
                 $articleName = $article->designation ?? '';
 
-                $csvData .= "{$invoice->invoice_number},{$invoice->date},\"{$clientName}\",\"{$articleName}\","
-                    . "{$article->total_price_ht},{$article->tva_percentage},"
-                    . "\"{$invoice->payment_method}\",\"{$articleName}\","
-                    . "{$article->total_price_ht},{$article->tva_percentage}\n";
+                fputcsv($handle, [
+                    $invoice->invoice_number,
+                    $invoice->date,
+                    $clientName,
+                    $articleName,
+                    $article->total_price_ht,
+                    $article->tva_percentage,
+                    $invoice->payment_method,
+                    $articleName, // Or category if applicable
+                    $article->total_price_ht,
+                    $article->tva_percentage
+                ]);
             }
         }
 
-        $fileName = "invoices_{$user->id}_" . now()->format('Ymd_His') . ".csv";
-        Storage::disk('public')->put($fileName, $csvData);
+        // Get the content from the stream
+        rewind($handle);
+        $csvContent = stream_get_contents($handle);
+        fclose($handle);
+
+        // Save to public disk
+        Storage::disk('public')->put($fileName, $csvContent);
 
         return response()->json([
             'success' => true,
             'message' => 'Invoices exported successfully.',
             'data'    => [
-                'file_url' => Storage::url($fileName)
+                'file_url' => asset(Storage::url($fileName))
             ]
         ], 200);
+    }
+
+
+    public function getDashboardGraphData(Request $request)
+    {
+        $user = $request->user();
+        $year = $request->get('year', date('Y'));
+
+        // 1. Fetch Invoices (CA) grouped by month
+        $invoices = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereYear('customer_invoices.date', $year)
+            ->select(
+                DB::raw('MONTH(customer_invoices.date) as month'),
+                DB::raw('SUM(invoice_articles.unit_price_ht) as total')
+            )
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        // 2. Fetch Expenses grouped by month
+        $expenses = CustomerExpense::where('customer_id', $user->id)
+            ->whereYear('date', $year)
+            ->select(
+                DB::raw('MONTH(date) as month'),
+                DB::raw('SUM(ttc) as total')
+            )
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        // 3. Build the formatted arrays
+        $caFormatted = [];
+        $expensesFormatted = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $monthLabel = Carbon::create()->month($m)->format('M');
+
+            // CA includes the label
+            $caFormatted[] = [
+                'label' => $monthLabel,
+                'value' => (float)($invoices->get($m, 0))
+            ];
+
+            // Expenses just includes the value
+            $expensesFormatted[] = [
+                'label' => $monthLabel, // Optional: include label for consistency
+                'value' => (float)($expenses->get($m, 0))
+            ];
+        }
+
+        return response()->json([
+            'year' => $year,
+            'chart' => [
+                'ca' => $caFormatted,
+                'expenses' => $expensesFormatted
+            ]
+        ]);
     }
 
 

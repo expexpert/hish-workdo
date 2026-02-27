@@ -86,6 +86,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::delete('/customer-invoice/{id}', [CustomerController::class, 'deleteInvoice']);
     Route::get('/export-invoices', [CustomerController::class, 'exportInvoices']);
 
+    Route::get('/dashboard-graph-data', [CustomerController::class, 'getDashboardGraphData']);
 
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
 
