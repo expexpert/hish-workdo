@@ -102,21 +102,49 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
         $totalInvoiceSum = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
             ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('customer_invoices.date', '<=', $dateTo);
+            })
             ->sum('invoice_articles.unit_price_ht');
 
         $totalInvoiceIssuedSum = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
             ->where('customer_invoices.status', 'ISSUED')
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('customer_invoices.date', '<=', $dateTo);
+            })
             ->sum('invoice_articles.unit_price_ht');
 
-        $totalExpenseSum = CustomerExpense::where('customer_id', $user->id)->sum('ttc');
+        $totalExpenseSum = CustomerExpense::where('customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('date', '<=', $dateTo);
+            })
+            ->sum('ttc');
 
         $totalVatCollected = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
             ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('customer_invoices.date', '<=', $dateTo);
+            })
             ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
 
         $totalVatDeductible = CustomerExpense::where('customer_id', $user->id)->sum('ttc');
@@ -829,10 +857,16 @@ class CustomerController extends Controller
 
         $month = $request->query('month');
         $year = $request->query('year');
+        $status = $request->query('status');
 
         $invoices = CustomerInvoice::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles'])
             ->orderBy('date', 'desc')
+            ->where(function ($query) use ($status) {
+                if ($status) {
+                    $query->where('status', $status);
+                }
+            })
             ->when($year, function ($query) use ($year) {
                 $query->whereYear('date', $year);
             })
