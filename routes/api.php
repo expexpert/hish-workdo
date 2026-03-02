@@ -49,11 +49,13 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::post('/clear-notifications', [CustomerController::class, 'clearNotifications']);
 
     Route::get('/documents', [CustomerController::class, 'getDocuments']);
+    Route::get('/documents/download/{id}', [CustomerController::class, 'downloadDocument']);
 
     Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
     Route::post('/transaction', [CustomerController::class, 'storeTransaction']);
     Route::get('/transactions', [CustomerController::class, 'getTransactions']);
     Route::get('/transaction/{id}', [CustomerController::class, 'viewSingleTransaction']);
+    Route::get('/transactions/receipt/{id}', [CustomerController::class, 'downloadReceipt']);
 
     Route::post('/bank-statement', [CustomerController::class, 'storeStatement']);
     Route::get('/bank-statements', [CustomerController::class, 'getBankStatements']);

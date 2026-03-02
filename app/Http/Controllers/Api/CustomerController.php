@@ -47,7 +47,7 @@ class CustomerController extends Controller
             'ice_number' => 'nullable|string|max:255',
             'rc_number' => 'nullable|string|max:255',
             'patent_number' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'contact' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             'billing_name' => 'nullable|string|max:255',
@@ -287,6 +287,19 @@ class CustomerController extends Controller
         ], 200);
     }
 
+    public function downloadDocument($id, Request $request)
+    {
+        $notification = ClientNotification::where('customer_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!$notification->document || !Storage::disk('public')->exists($notification->document)) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        // This forces a download response
+        return Storage::disk('public')->download($notification->document);
+    }
+
 
     public function storeTransaction(Request $request)
     {
@@ -354,6 +367,18 @@ class CustomerController extends Controller
             'status' => 'success',
             'data' => $transaction
         ], 200);
+    }
+
+    public function downloadReceipt($id, Request $request)
+    {
+        $transaction = ClientTransaction::where('customer_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!$transaction->attachment_path || !Storage::disk('public')->exists($transaction->attachment_path)) {
+            return response()->json(['status' => 'error', 'message' => 'Receipt not found.'], 404);
+        }
+
+        return Storage::disk('public')->download($transaction->attachment_path);
     }
 
 

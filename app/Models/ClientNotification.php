@@ -36,10 +36,6 @@ class ClientNotification extends Model
 
     public function getDocumentUrlAttribute()
     {
-        if (!$this->document) {
-            return null;
-        }
-    
-        return asset('storage/' . $this->document);
+        return $this->document ? url("/api/customer/documents/download/{$this->id}") : null;
     }
 }
