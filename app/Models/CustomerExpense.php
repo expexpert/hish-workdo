@@ -60,6 +60,6 @@ class CustomerExpense extends Model
             return null;
         }
 
-        return asset('storage/' . $this->file);
+        return url("/api/customer/customer-expenses/file/{$this->id}");
     }
 }
