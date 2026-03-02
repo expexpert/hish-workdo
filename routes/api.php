@@ -38,7 +38,9 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [CustomerController::class, 'getProfile']);
     Route::put('/profile', [CustomerController::class, 'updateProfile']);
     Route::delete('/profile', [CustomerController::class, 'deleteProfile']);
-    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
+    
+    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);    
+    Route::get('/dashboard-graph-data', [CustomerController::class, 'getDashboardGraphData']);
 
     Route::get('/has-unread-notifications', [CustomerController::class, 'hasUnreadNotifications']);
     
@@ -78,6 +80,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::put('/customer-expense/{id}', [CustomerController::class, 'updateExpense']);
     Route::delete('/customer-expense/{id}', [CustomerController::class, 'deleteExpense']);
     Route::get('/export-expenses', [CustomerController::class, 'exportExpenses']);
+    Route::get('/customer-expenses/file/{id}', [CustomerController::class, 'downloadExpenseFile']);
 
 
     Route::get('/customer-clients-resources', [LookupController::class, 'getCustomerClientResources']);
@@ -87,8 +90,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::put('/customer-invoice/{id}', [CustomerController::class, 'updateInvoice']);
     Route::delete('/customer-invoice/{id}', [CustomerController::class, 'deleteInvoice']);
     Route::get('/export-invoices', [CustomerController::class, 'exportInvoices']);
-
-    Route::get('/dashboard-graph-data', [CustomerController::class, 'getDashboardGraphData']);
+    Route::get('/customer-invoices/download/{id}', [CustomerController::class, 'downloadInvoice']);
 
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
 

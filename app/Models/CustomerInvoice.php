@@ -47,13 +47,13 @@ class CustomerInvoice extends Model
     {
         return $this->belongsTo(CustomerClient::class, 'client_id', 'id');
     }
-
     public function getInvoiceUrlAttribute()
     {
         if (!$this->document_path) {
             return null;
         }
 
-        return asset('storage/' . $this->document_path);
+        // Secure API URL instead of the public storage asset URL
+        return url("/api/customer-invoices/download/{$this->id}");
     }
 }

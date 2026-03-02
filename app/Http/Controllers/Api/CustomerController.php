@@ -164,6 +164,63 @@ class CustomerController extends Controller
     }
 
 
+    public function getDashboardGraphData(Request $request)
+    {
+        $user = $request->user();
+        $year = $request->get('year', date('Y'));
+
+        // 1. Fetch Invoices (CA) grouped by month
+        $invoices = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereYear('customer_invoices.date', $year)
+            ->select(
+                DB::raw('MONTH(customer_invoices.date) as month'),
+                DB::raw('SUM(invoice_articles.unit_price_ht) as total')
+            )
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        // 2. Fetch Expenses grouped by month
+        $expenses = CustomerExpense::where('customer_id', $user->id)
+            ->whereYear('date', $year)
+            ->select(
+                DB::raw('MONTH(date) as month'),
+                DB::raw('SUM(ttc) as total')
+            )
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        // 3. Build the formatted arrays
+        $caFormatted = [];
+        $expensesFormatted = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $monthLabel = Carbon::create()->month($m)->format('M');
+
+            // CA includes the label
+            $caFormatted[] = [
+                'label' => $monthLabel,
+                'value' => (float)($invoices->get($m, 0))
+            ];
+
+            // Expenses just includes the value
+            $expensesFormatted[] = [
+                'label' => $monthLabel, // Optional: include label for consistency
+                'value' => (float)($expenses->get($m, 0))
+            ];
+        }
+
+        return response()->json([
+            'year' => $year,
+            'chart' => [
+                'ca' => $caFormatted,
+                'expenses' => $expensesFormatted
+            ]
+        ]);
+    }
+
+
     public function hasUnreadNotifications(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -297,7 +354,7 @@ class CustomerController extends Controller
         }
 
         // This forces a download response
-        return Storage::disk('public')->download($notification->document);
+        return Storage::disk('public')->download($notification->document, 'Document_' . $notification->id . '.' . pathinfo($notification->document, PATHINFO_EXTENSION));
     }
 
 
@@ -378,7 +435,7 @@ class CustomerController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Receipt not found.'], 404);
         }
 
-        return Storage::disk('public')->download($transaction->attachment_path);
+        return Storage::disk('public')->download($transaction->attachment_path, 'Receipt_' . $transaction->id . '.' . pathinfo($transaction->attachment_path, PATHINFO_EXTENSION));
     }
 
 
@@ -449,22 +506,19 @@ class CustomerController extends Controller
     }
 
 
-    public function downloadBankStatement($id)
+    public function downloadBankStatement($id, Request $request)
     {
-        $document = ClientBankStatement::findOrFail($id);
-
-        // Optional security check
-        if ($document->customer_id !== auth()->id()) {
-            abort(403, 'Unauthorized');
-        }
+        $document = ClientBankStatement::where('customer_id', $request->user()->id)
+            ->findOrFail($id);
 
         $filePath = $document->file_path;
 
-        if (!Storage::disk('private')->exists($filePath)) {
-            abort(404);
+        if (!$filePath || !Storage::disk('private')->exists($filePath)) {
+            return response()->json(['message' => 'Statement file not found.'], 404);
         }
 
-        return Storage::disk('private')->download($filePath);
+
+        return Storage::disk('private')->download($filePath, 'BankStatement_' . $document->month_year . '_' . $document->id . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
     }
 
 
@@ -701,6 +755,22 @@ class CustomerController extends Controller
     }
 
 
+    public function downloadExpenseFile($id, Request $request)
+    {
+        $expense = CustomerExpense::where('customer_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!$expense->file || !Storage::disk('public')->exists($expense->file)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense file not found.'
+            ], 404);
+        }
+
+        return Storage::disk('public')->download($expense->file, 'Expense_' . $expense->id . '_' . now()->format('Ymd_His') . '.' . pathinfo($expense->file, PATHINFO_EXTENSION));
+    }
+
+
     public function viewSingleExpense(Request $request, $id)
     {
         $user = $request->user();
@@ -922,6 +992,22 @@ class CustomerController extends Controller
     }
 
 
+    public function downloadInvoice($id, Request $request)
+    {
+        $invoice = CustomerInvoice::where('customer_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!$invoice->document_path || !Storage::disk('public')->exists($invoice->document_path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice file not found on server.'
+            ], 404);
+        }
+
+        return Storage::disk('public')->download($invoice->document_path, 'Invoice_' . $invoice->id . '.' . pathinfo($invoice->document_path, PATHINFO_EXTENSION));
+    }
+
+
     public function viewSingleInvoice(Request $request, $id)
     {
         $user = $request->user();
@@ -1121,63 +1207,6 @@ class CustomerController extends Controller
                 'file_url' => asset(Storage::url($fileName))
             ]
         ], 200);
-    }
-
-
-    public function getDashboardGraphData(Request $request)
-    {
-        $user = $request->user();
-        $year = $request->get('year', date('Y'));
-
-        // 1. Fetch Invoices (CA) grouped by month
-        $invoices = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
-            ->where('customer_invoices.customer_id', $user->id)
-            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
-            ->whereYear('customer_invoices.date', $year)
-            ->select(
-                DB::raw('MONTH(customer_invoices.date) as month'),
-                DB::raw('SUM(invoice_articles.unit_price_ht) as total')
-            )
-            ->groupBy('month')
-            ->pluck('total', 'month');
-
-        // 2. Fetch Expenses grouped by month
-        $expenses = CustomerExpense::where('customer_id', $user->id)
-            ->whereYear('date', $year)
-            ->select(
-                DB::raw('MONTH(date) as month'),
-                DB::raw('SUM(ttc) as total')
-            )
-            ->groupBy('month')
-            ->pluck('total', 'month');
-
-        // 3. Build the formatted arrays
-        $caFormatted = [];
-        $expensesFormatted = [];
-
-        for ($m = 1; $m <= 12; $m++) {
-            $monthLabel = Carbon::create()->month($m)->format('M');
-
-            // CA includes the label
-            $caFormatted[] = [
-                'label' => $monthLabel,
-                'value' => (float)($invoices->get($m, 0))
-            ];
-
-            // Expenses just includes the value
-            $expensesFormatted[] = [
-                'label' => $monthLabel, // Optional: include label for consistency
-                'value' => (float)($expenses->get($m, 0))
-            ];
-        }
-
-        return response()->json([
-            'year' => $year,
-            'chart' => [
-                'ca' => $caFormatted,
-                'expenses' => $expensesFormatted
-            ]
-        ]);
     }
 
 
