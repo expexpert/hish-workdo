@@ -54,6 +54,6 @@ class CustomerInvoice extends Model
         }
 
         // Secure API URL instead of the public storage asset URL
-        return url("/api/customer-invoices/download/{$this->id}");
+        return url("/api/customer/customer-invoices/download/{$this->id}");
     }
 }
