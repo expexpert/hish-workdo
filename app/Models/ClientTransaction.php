@@ -41,6 +41,6 @@ class ClientTransaction extends Model
             return null;
         }
 
-        return asset('storage/' . $this->attachment_path);
+        return url("/api/customer/transactions/receipt/{$this->id}");
     }
 }
