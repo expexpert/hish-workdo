@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Utility;
 use App\Models\InvoiceArticle;
+use App\Models\CustomerProduct;
 
 
 class CustomerController extends Controller
@@ -1206,6 +1207,130 @@ class CustomerController extends Controller
             'data'    => [
                 'file_url' => asset(Storage::url($fileName))
             ]
+        ], 200);
+    }
+
+
+    public function storeCustomerProduct(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id'   => 'required|exists:customers,id',
+            'designation'    => 'required|string|max:255',
+            'unit_price_ht' => 'required|numeric|min:0',
+            'tva_percent'   => 'required|numeric|min:0',
+            'quantity'      => 'nullable|integer|min:1',
+            'total_price_ht' => 'nullable|numeric|min:0',
+        ]);
+
+        $validated['customer_id'] = $validated['customer_id'];
+
+
+        $product = CustomerProduct::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer product created successfully.',
+            'data'    => $product
+        ], 201);
+    }
+
+
+    public function getCustomerProducts(Request $request)
+    {
+        $user = $request->user();
+        $like = $request->query('like');
+
+        $products = CustomerProduct::where('customer_id', $user->id)
+            ->when($like, function ($query, $like) {
+                return $query->where('designation', 'like', "%{$like}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer products retrieved successfully.',
+            'data'    => $products
+        ], 200);
+    }
+
+
+    public function viewSingleCustomerProduct(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $product = CustomerProduct::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer product not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer product retrieved successfully.',
+            'data'    => $product
+        ], 200);
+    }
+
+    
+    public function updateCustomerProduct(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $product = CustomerProduct::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer product not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'designation'    => 'sometimes|required|string|max:255',
+            'unit_price_ht' => 'sometimes|required|numeric|min:0',
+            'tva_percent'   => 'sometimes|required|numeric|min:0',
+            'quantity'      => 'nullable|integer|min:1',
+            'total_price_ht' => 'nullable|numeric|min:0',
+        ]);
+
+        $product->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer product updated successfully.',
+            'data'    => $product
+        ], 200);
+    }
+
+
+    public function deleteCustomerProduct(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $product = CustomerProduct::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer product not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $product->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer product deleted successfully.'
         ], 200);
     }
 

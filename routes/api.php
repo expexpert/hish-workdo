@@ -92,6 +92,13 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::get('/export-invoices', [CustomerController::class, 'exportInvoices']);
     Route::get('/customer-invoices/download/{id}', [CustomerController::class, 'downloadInvoice']);
 
+
+    Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
+    Route::get('/customer-products', [CustomerController::class, 'getCustomerProducts']);
+    Route::get('/customer-product/{id}', [CustomerController::class, 'viewSingleCustomerProduct']);
+    Route::put('/customer-product/{id}', [CustomerController::class, 'updateCustomerProduct']);
+    Route::delete('/customer-product/{id}', [CustomerController::class, 'deleteCustomerProduct']);
+
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
 
 });
