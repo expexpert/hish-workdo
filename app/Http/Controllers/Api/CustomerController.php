@@ -869,40 +869,40 @@ class CustomerController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        $fileName = "exports/expenses_{$user->id}_" . now()->format('Ymd_His') . ".csv";
+        $fileName = "expenses_" . now()->format('Ymd_His') . ".csv";
 
-        // Use a stream to handle CSV escaping properly
-        $handle = fopen('php://temp', 'r+');
-        fputcsv($handle, ['Date', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
 
-        foreach ($expenses as $expense) {
-            fputcsv($handle, [
-                $expense->date,
-                $expense->ttc,
-                $expense->tva,
-                $expense->payment_method,
-                $expense->category->name ?? 'N/A',
-                $expense->total_ttc,
-                $expense->total_tva
-            ]);
-        }
+        $callback = function () use ($expenses) {
+            // Open the output stream
+            $file = fopen('php://output', 'w');
 
-        rewind($handle);
-        $csvContent = stream_get_contents($handle);
-        fclose($handle);
+            // Add CSV Headers
+            fputcsv($file, ['Date', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
 
-        // Store the file
-        Storage::disk('public')->put($fileName, $csvContent);
+            foreach ($expenses as $expense) {
+                fputcsv($file, [
+                    $expense->date,
+                    $expense->ttc,
+                    $expense->tva,
+                    $expense->payment_method,
+                    $expense->category->name ?? 'N/A',
+                    $expense->total_ttc,
+                    $expense->total_tva
+                ]);
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Expenses exported successfully.',
-            'data'    => [
-                'file_url' => asset('storage/' . $fileName)
-            ]
-        ], 200);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
-
 
 
     public function storeInvoice(Request $request)
@@ -1147,67 +1147,48 @@ class CustomerController extends Controller
     public function exportInvoices(Request $request)
     {
         $user = $request->user();
-
         $invoices = CustomerInvoice::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles'])
             ->orderBy('date', 'desc')
             ->get();
 
-        $fileName = "exports/invoices_{$user->id}_" . now()->format('Ymd_His') . ".csv";
+        $fileName = "invoices_" . now()->format('Ymd_His') . ".csv";
 
-        // Create a temporary stream for CSV generation
-        $handle = fopen('php://temp', 'r+');
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
 
-        // Add Headers
-        fputcsv($handle, [
-            'Invoice#',
-            'Date',
-            'Client',
-            'Article',
-            'Amount TTC',
-            'TVA',
-            'Payment Method',
-            'Category',
-            'Total TTC',
-            'Total TVA'
-        ]);
+        $callback = function () use ($invoices) {
+            $file = fopen('php://output', 'w');
 
-        foreach ($invoices as $invoice) {
-            $clientName = $invoice->client->client_name ?? 'N/A';
+            // Add Headers
+            fputcsv($file, ['Invoice#', 'Date', 'Client', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
 
-            foreach ($invoice->articles as $article) {
-                $articleName = $article->designation ?? '';
-
-                fputcsv($handle, [
-                    $invoice->invoice_number,
-                    $invoice->date,
-                    $clientName,
-                    $articleName,
-                    $article->total_price_ht,
-                    $article->tva_percentage,
-                    $invoice->payment_method,
-                    $articleName, // Or category if applicable
-                    $article->total_price_ht,
-                    $article->tva_percentage
-                ]);
+            foreach ($invoices as $invoice) {
+                $clientName = $invoice->client->client_name ?? 'N/A';
+                foreach ($invoice->articles as $article) {
+                    fputcsv($file, [
+                        $invoice->invoice_number,
+                        $invoice->date,
+                        $clientName,
+                        $article->designation ?? '',
+                        $article->total_price_ht,
+                        $article->tva_percentage,
+                        $invoice->payment_method,
+                        $article->designation ?? '',
+                        $article->total_price_ht,
+                        $article->tva_percentage
+                    ]);
+                }
             }
-        }
+            fclose($file);
+        };
 
-        // Get the content from the stream
-        rewind($handle);
-        $csvContent = stream_get_contents($handle);
-        fclose($handle);
-
-        // Save to public disk
-        Storage::disk('public')->put($fileName, $csvContent);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Invoices exported successfully.',
-            'data'    => [
-                'file_url' => asset(Storage::url($fileName))
-            ]
-        ], 200);
+        return response()->stream($callback, 200, $headers);
     }
 
 
@@ -1277,7 +1258,7 @@ class CustomerController extends Controller
         ], 200);
     }
 
-    
+
     public function updateCustomerProduct(Request $request, $id)
     {
         $user = $request->user();
