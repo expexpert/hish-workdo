@@ -98,13 +98,13 @@
                 },
                 series: [{
                     name: "{{ __('Income') }}",
-                    data: {!! json_encode($incExpBarChartData['income']) !!}
+                    data: {!! json_encode($accountantChartData['income']) !!}
                 }, {
                     name: "{{ __('Expense') }}",
-                    data: {!! json_encode($incExpBarChartData['expense']) !!}
+                    data: {!! json_encode($accountantChartData['expense']) !!}
                 }],
                 xaxis: {
-                    categories: {!! json_encode($incExpBarChartData['month']) !!},
+                    categories: {!! json_encode($accountantChartData['month']) !!},
                 },
                 colors: ['#3ec9d6', '#FF3A6E'],
                 fill: {
@@ -128,8 +128,53 @@
                     }
                 }
             };
-            var chart = new ApexCharts(document.querySelector("#incExpBarChart"), options);
-            chart.render();
+            window.incExpChart = new ApexCharts(document.querySelector("#incExpBarChart"), options);
+            window.incExpChart.render();
+        })();
+
+        (function() {
+            function loadSummaryMetrics() {
+                var customerId = $('#summaryCustomerSelect').val();
+                $.ajax({
+                    url: "{{ route('dashboard.summary-metrics') }}",
+                    data: { customer_id: customerId },
+                    dataType: 'json',
+                    success: function(resp) {
+                        $('#summaryTodayRevenue').text(resp.TodayRevenue);
+                        $('#summaryTodayExpense').text(resp.TodayExpense);
+                        $('#summaryCurrentMonthRevenue').text(resp.currentMonthRevenue);
+                        $('#summaryCurrentMonthExpense').text(resp.currentMonthExpense);
+                        $('#summaryNetResult').text(resp.netResult);
+                        $('#summaryTotalVatPayable').text(resp.totalVatPayable);
+                    }
+                });
+            }
+            $('#summaryCustomerSelect').on('change', loadSummaryMetrics);
+        })();
+
+        (function() {
+            function loadIncExpData() {
+                var customerId = $('#incExpCustomerSelect').val();
+                var year = $('#incExpYearSelect').val();
+                $.ajax({
+                    url: "{{ route('dashboard.income-expense-chart') }}",
+                    data: { customer_id: customerId, year: year },
+                    dataType: 'json',
+                    success: function(resp) {
+                        if (window.incExpChart) {
+                            window.incExpChart.updateOptions({
+                                series: [
+                                    { name: "{{ __('Income') }}", data: resp.data.income },
+                                    { name: "{{ __('Expense') }}", data: resp.data.expense }
+                                ],
+                                xaxis: { categories: resp.month }
+                            });
+                        }
+                    }
+                });
+            }
+            $('#incExpCustomerSelect').on('change', loadIncExpData);
+            $('#incExpYearSelect').on('change', loadIncExpData);
         })();
 
         (function() {
@@ -344,59 +389,46 @@
             <div class="row">
                 <div class="col-xxl-7">
                     <div class="row">
-                        <div class="col-lg-3 col-6">
+                        <div class="col-lg-4 col-6">
                             <div class="card">
                                 <div class="card-body">
                                     <div class="theme-avtar bg-primary">
                                         <i class="ti ti-users"></i>
                                     </div>
                                     <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
-                                    <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-primary" >{{__('Customers')}}</a></h6>
-                                    <h3 class="mb-0 text-primary">{{ \Auth::user()->countFilteredCustomers() }}
+                                    <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-primary" >{{__('Active Customers')}}</a></h6>
+                                    <h3 class="mb-0 text-primary">{{ $totalCustomers }}
 
                                     </h3>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="theme-avtar bg-info">
-                                        <i class="ti ti-note"></i>
-                                    </div>
-                                    <p class="text-muted text-sm mt-4 mb-2 text-info">{{ __('Total') }}</p>
-                                    <h6 class="mb-3 "><a href="{{ route('vender.index') }}" class="text-info" >{{__('Vendors')}}</a></h6>
-                                    <h3 class="mb-0 text-info">{{ \Auth::user()->countVenders() }}
-                                    </h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
+                        <div class="col-lg-4 col-6">
                             <div class="card">
                                 <div class="card-body">
                                     <div class="theme-avtar bg-warning">
                                         <i class="ti ti-file-invoice"></i>
                                     </div>
                                     <p class="text-muted text-sm mt-4 mb-2">{{ __('Total') }}</p>
-                                    <h6 class="mb-3 "><a href="{{ route('invoice.index') }}" class="text-warning" >{{__('Invoices')}}</a></h6>
-                                    <h3 class="mb-0 text-warning">{{ \Auth::user()->countInvoices() }} </h3>
+                                    <h6 class="mb-3 "><a href="/customer-invoices" class="text-warning" >{{__('Invoices')}}</a></h6>
+                                    <h3 class="mb-0 text-warning">{{ $totalInvoices }} </h3>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-6">
+                        <div class="col-lg-4 col-6">
                             <div class="card">
                                 <div class="card-body">
                                     <div class="theme-avtar bg-danger">
                                         <i class="ti ti-report-money"></i>
                                     </div>
                                     <p class="text-muted text-sm mt-4 mb-2">{{ __('Total') }}</p>
-                                    <h6 class="mb-3 "><a href="{{ route('bill.index') }}" class="text-danger" >{{__('Bills')}}</a></h6>
-                                    <h3 class="mb-0 text-danger">{{ \Auth::user()->countBills() }} </h3>
+                                    <h6 class="mb-3 "><a href="/customer-expenses" class="text-danger" >{{__('Expenses')}}</a></h6>
+                                    <h3 class="mb-0 text-danger">{{ $totalExpenses }} </h3>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card">
+                    <!-- <div class="card">
                         <div class="card-header">
                             <h5 class="mt-1 mb-0">{{ __('Account Balance') }}</h5>
                         </div>
@@ -430,14 +462,36 @@
                                 </table>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
                 
                 <div class="col-xxl-5">
                     <!-- income vs expense -->
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="mt-1 mb-0">{{ __('Income Vs Expense') }}</h5>
+                            @php
+                                $user = \Auth::user();
+                                if ($user->type == 'company') {
+                                    $filterIds = $user->getCustomerFilterIds(); 
+                                    $searchIds = array_merge((array)$filterIds, [$user->id]);
+                                    $summaryCustomerOptions = \App\Models\Customer::whereIn('created_by', $searchIds)->orderBy('name')->get();
+                                } else {
+                                    $summaryCustomerOptions = \App\Models\Customer::whereIn('created_by', [$user->creatorId(), $user->id])->orderBy('name')->get();
+                                }
+                            @endphp
+
+                            <div class="d-flex align-items-center justify-content-between gap-3">
+                                <h5 class="mb-0 text-nowrap">{{ __('Income Vs Expense') }}</h5>
+
+                                <div style="flex-shrink: 0;">
+                                    <select id="summaryCustomerSelect" class="form-select form-select-sm" style="min-width: 200px; width: auto;">
+                                        <option value="all">{{ __('All Customers') }}</option>
+                                        @foreach($summaryCustomerOptions as $cust)
+                                            <option value="{{ $cust->id }}">{{ $cust->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             <div class="row mt-4">
 
                                 <div class="col-md-6 col-6">
@@ -447,8 +501,8 @@
                                         </div>
                                         <div class="ms-2">
                                             <p class="text-muted text-sm mb-1">{{ __('Income Today') }}</p>
-                                            <h4 class="mb-2 text-success">
-                                                {{ \Auth::user()->priceFormat(\Auth::user()->todayIncome()) }}</h4>
+                                            <h4 class="mb-2 text-success" id="summaryTodayRevenue">
+                                                {{ \Auth::user()->priceFormat($TodayRevenue) }}</h4>
 
                                         </div>
                                     </div>
@@ -460,8 +514,8 @@
                                         </div>
                                         <div class="ms-2">
                                             <p class="text-muted text-sm mb-1">{{ __('Expense Today') }}</p>
-                                            <h4 class="mb-2 text-info">
-                                                {{ \Auth::user()->priceFormat(\Auth::user()->todayExpense()) }}</h4>
+                                            <h4 class="mb-2 text-info" id="summaryTodayExpense">
+                                                {{ \Auth::user()->priceFormat($TodayExpense) }}</h4>
 
                                         </div>
                                     </div>
@@ -473,8 +527,8 @@
                                         </div>
                                         <div class="ms-2">
                                             <p class="text-muted text-sm mb-1">{{ __('Income This Month') }}</p>
-                                            <h4 class="mb-2 text-warning">
-                                                {{ \Auth::user()->priceFormat(\Auth::user()->incomeCurrentMonth()) }}</h4>
+                                            <h4 class="mb-2 text-warning" id="summaryCurrentMonthRevenue">
+                                                {{ \Auth::user()->priceFormat($currentMonthRevenue) }}</h4>
 
                                         </div>
                                     </div>
@@ -486,8 +540,34 @@
                                         </div>
                                         <div class="ms-2">
                                             <p class="text-muted text-sm mb-1">{{ __('Expense This Month') }}</p>
-                                            <h4 class="mb-2 text-danger">
-                                                {{ \Auth::user()->priceFormat(\Auth::user()->expenseCurrentMonth()) }}</h4>
+                                            <h4 class="mb-2 text-danger" id="summaryCurrentMonthExpense">
+                                                {{ \Auth::user()->priceFormat($currentMonthExpense) }}</h4>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-6 ">
+                                    <div class="d-flex align-items-start">
+                                        <div class="theme-avtar bg-info">
+                                            <i class="ti ti-file-invoice"></i>
+                                        </div>
+                                        <div class="ms-2">
+                                            <p class="text-muted text-sm mb-1">{{ __('VAT to Declare This Month') }}</p>
+                                            <h4 class="mb-2 text-info" id="summaryNetResult">
+                                                {{ \Auth::user()->priceFormat($totalVatPayable) }}</h4>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-6 ">
+                                    <div class="d-flex align-items-start">
+                                        <div class="theme-avtar bg-success">
+                                            <i class="ti ti-file-invoice"></i>
+                                        </div>
+                                        <div class="ms-2">
+                                            <p class="text-muted text-sm mb-1">{{ __('Net Results This Month') }}</p>
+                                            <h4 class="mb-2 text-success" id="summaryTotalVatPayable">
+                                                {{ \Auth::user()->priceFormat($netResult) }}</h4>
 
                                         </div>
                                     </div>
@@ -497,24 +577,52 @@
                     </div>
 
                     <!-- cashflow -->
-                    <div class="card" style="height: 415px">
+                    <!-- <div class="card" style="height: 415px">
                         <div class="card-header">
                             <h5 class="mt-1 mb-0">{{ __('Cashflow') }}</h5>
                         </div>
                         <div class="card-body">
                             <div id="cash-flow"></div>
                         </div>
-                    </div>
+                    </div> -->
                    
                 </div>
 
 
-                <div class="col-xxl-7">
+                <div class="col-xxl-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5>{{ __('Income & Expense') }}
-                                <span class="float-end text-muted">{{ __('Current Year') . ' - ' . $currentYear }}</span>
-                            </h5>
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <h5 class="mb-0">{{ __('Income & Expense') }}</h5>
+                                <div class="d-flex align-items-center gap-2">                                    
+                                    @php
+                                        $user = \Auth::user();
+
+                                        if ($user->type == 'company') {
+                                            $filterIds = $user->getCustomerFilterIds(); 
+                                            $searchIds = array_merge((array)$filterIds, [$user->id]);
+
+                                            $customerOptions = \App\Models\Customer::whereIn('created_by', $searchIds)->orderBy('name')->get();
+                                        } else {
+                                            $customerOptions = \App\Models\Customer::whereIn('created_by', [$user->creatorId(), $user->id])->orderBy('name')->get();
+                                        }
+
+                                        $startYear = $currentYear ?? date('Y');
+                                        $years = range($startYear, 2025);
+                                    @endphp
+                                    <select id="incExpCustomerSelect" class="form-select form-select-sm" style="min-width:200px">
+                                        <option value="all">{{ __('All Customers') }}</option>
+                                        @foreach($customerOptions as $cust)
+                                            <option value="{{ $cust->id }}">{{ $cust->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select id="incExpYearSelect" class="form-select form-select-sm" style="min-width:120px">
+                                        @foreach($years as $y)
+                                            <option value="{{ $y }}" @if($y == $currentYear) selected @endif>{{ $y }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div id="incExpBarChart"></div>
@@ -523,7 +631,7 @@
                 </div>
 
 
-                <div class="col-xxl-5">
+                <!-- <div class="col-xxl-5">
                     <div class="card" style="height: 315px">
                         <div class="card-header">
                             <h5>{{ __('Income By Category') }}
@@ -535,11 +643,11 @@
                             <div id="incomeByCategory"></div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
 
 
-                <div class="col-xxl-7">
+                <div class="@if (\Auth::user()->type == 'company') col-xxl-7 @else col-xxl-12 @endif">
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mt-1 mb-0">{{ __('Latest Income') }}</h5>
@@ -551,7 +659,7 @@
                                         <tr>
                                             <th>{{ __('Date') }}</th>
                                             <th>{{ __('Customer') }}</th>
-                                            <th>{{ __('Amount Due') }}</th>
+                                            <th>{{ __('Invoice Number') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -559,7 +667,7 @@
                                             <tr>
                                                 <td>{{ \Auth::user()->dateFormat($income->date) }}</td>
                                                 <td>{{ !empty($income->customer) ? $income->customer->name : '-' }}</td>
-                                                <td>{{ \Auth::user()->priceFormat($income->amount) }}</td>
+                                                <td>{{ $income->invoice_number }}</td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -576,10 +684,41 @@
                         </div>
                     </div>
                 </div>
+                
+
+            @if(\Auth::user()->type == 'company' && isset($customersPerAccountant) && $customersPerAccountant->count() > 0)
+            <div class="col-xxl-5">
+                <!-- Customers per Accountant -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ __('Customers per Accountant') }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Accountant') }}</th>
+                                        <th>{{ __('Number of Customers') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($customersPerAccountant as $accountantData)
+                                    <tr>
+                                        <td>{{ $accountantData->accountant->name ?? 'Unknown' }}</td>
+                                        <td>{{ $accountantData->count }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
 
-
-                <div class="col-xxl-5">
+                <!-- <div class="col-xxl-5">
                     <div class="card" style="height: 369px">
                         <div class="card-header">
                             <h5>{{ __('Expense By Category') }}
@@ -591,8 +730,8 @@
                             <div id="expenseByCategory"></div>
                         </div>
                     </div>
-                </div>
-                <div class=" @if (\Auth::user()->type == 'company' || !empty($plan)) col-xxl-7 @else col-xxl-12 @endif ">
+                </div> -->
+                <div class="@if (\Auth::user()->type == 'company') col-xxl-7 @else col-xxl-12 @endif">
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mt-1 mb-0">{{ __('Latest Expense') }}</h5>
@@ -603,16 +742,16 @@
                                     <thead>
                                         <tr>
                                             <th>{{ __('Date') }}</th>
-                                            <th>{{ __('Vendor') }}</th>
-                                            <th>{{ __('Amount Due') }}</th>
+                                            <th>{{ __('Customer') }}</th>
+                                            <th>{{ __('Total TTC') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse($latestExpense as $expense)
                                             <tr>
                                                 <td>{{ \Auth::user()->dateFormat($expense->date) }}</td>
-                                                <td>{{ !empty($expense->vender) ? $expense->vender->name : '-' }}</td>
-                                                <td>{{ \Auth::user()->priceFormat($expense->amount) }}</td>
+                                                <td>{{ !empty($expense->customer) ? $expense->customer->name : '-' }}</td>
+                                                <td>{{ \Auth::user()->priceFormat($expense->total_ttc) }}</td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -629,7 +768,43 @@
                         </div>
                     </div>
                 </div>
-                @if (\Auth::user()->type == 'company')
+
+                @if(\Auth::user()->type == 'company' && isset($overdueInvoices))
+                <div class="col-xxl-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">{{ __('Overdue Invoices per Customer') }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ __('Customer') }}</th>
+                                            <th>{{ __('Number of Overdue Invoices') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($overdueInvoices as $overdueInvoice)
+                                        <tr>
+                                            <td>{{ $overdueInvoice->accountant_name ?? 'Unknown' }}</td>
+                                            <td>{{ $overdueInvoice->count }}</td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="2" class="text-center">
+                                                {{ __('No overdue invoice found') }}
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                <!-- @if (\Auth::user()->type == 'company')
                     @if (!empty($plan))
                         <div class="col-xxl-5">
                             <div class="card" style="height: 369px">
@@ -643,8 +818,8 @@
                             </div>
                         </div>
                     @endif
-                @endif
-                <div class="col-xxl-7">
+                @endif -->
+                <!-- <div class="col-xxl-7">
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mt-1 mb-0">{{ __('Recent Invoices') }}</h5>
@@ -1046,7 +1221,7 @@
                             @endforelse
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>

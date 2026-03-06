@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
+use App\Models\CustomerCategory;
 use App\Models\ProductServiceCategory;
 use App\Models\CustomerClient;
 
@@ -16,7 +17,7 @@ class LookupController extends Controller
             'data' => [
                 'accounts' => BankAccount::select('id', 'holder_name as name')->get(),
                 // 'categories' => ProductServiceCategory::select('id', 'name')->where('type', '=', 'income')->get(),
-                'categories' => ProductServiceCategory::select('id', 'name')->get(),
+                'categories' => CustomerCategory::where('is_active', '=', 1)->select('id', 'name')->get(),
             ]
         ]);
     }

@@ -88,6 +88,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\WorkflowController;
+use App\Http\Controllers\CustomerCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -121,6 +122,8 @@ Route::get('/login/{lang?}', [AuthenticatedSessionController::class, 'showLoginF
 Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, 'showLinkRequestForm'])->name('langPass');
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
+Route::get('/dashboard/income-expense-chart', [DashboardController::class, 'getIncomeExpenseChartData'])->name('dashboard.income-expense-chart')->middleware(['auth', 'XSS']);
+Route::get('/dashboard/summary-metrics', [DashboardController::class, 'getSummaryMetrics'])->name('dashboard.summary-metrics')->middleware(['auth', 'XSS']);
 
 Route::post('dashboard/send-clients-notification', [DashboardController::class, 'sendClientsNotification'])->name('dashboard.send.clients.notification')->middleware(['auth', 'XSS']);
 
@@ -820,6 +823,10 @@ Route::group(['middleware' => ['verified']], function () {
     Route::get('plan/plan-trial/{id}', [PlanController::class, 'PlanTrial'])->name('plan.trial');
     Route::post('plan-disable', [PlanController::class, 'planDisable'])->name('plan.disable')->middleware(['auth', 'XSS', 'revalidate']);
     Route::resource('expenses', ExpenseController::class)->middleware(['auth', 'XSS', 'revalidate']);
+
+
+    Route::resource('customer-category', CustomerCategoryController::class)->middleware(['auth', 'XSS', 'revalidate']);
+
 
     Route::group(
         [

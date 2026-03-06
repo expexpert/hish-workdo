@@ -121,7 +121,7 @@
             </div>
         </div>
 
-        <div class="col-xxl-5">
+        <!-- <div class="col-xxl-5">
             <div class="card">
                 <div class="card-header d-flex justify-content-between">
                     <h4 class="h4 font-weight-400">{{__('Recent Order')}}</h4>
@@ -133,7 +133,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
     </div>
 @endsection
 

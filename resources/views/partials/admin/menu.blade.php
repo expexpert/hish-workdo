@@ -207,7 +207,7 @@
                     @endif
                 @endif
 
-                <!-- {{-- -------  Product & Service ---------- --}}
+                {{-- -------  Product & Service ---------- --}}
                 @if (Gate::check('manage product & service'))
                     <li class="dash-item {{ Request::segment(1) == 'productservice' ? 'active' : '' }} ">
                         <a href="{{ route('productservice.index') }}" class="dash-link ">
@@ -217,7 +217,7 @@
                     </li>
                 @endif
 
-                {{-- -------  Product & Stock ---------- --}}
+                <!-- {{-- -------  Product & Stock ---------- --}}
                 @if (Gate::check('manage product & service'))
                     <li class="dash-item {{ Request::segment(1) == 'productstock' ? 'active' : '' }}">
                         <a href="{{ route('productstock.index') }}" class="dash-link ">
@@ -238,14 +238,14 @@
                 @endif
 
                 {{-- -------  Vendor ---------- --}}
-                <!-- @if (Gate::check('manage vender'))
+                @if (Gate::check('manage vender'))
                     <li class="dash-item {{ Request::segment(1) == 'vender' ? 'active' : '' }}">
                         <a href="{{ route('vender.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-note"></i></span>
                             <span class="dash-mtext">{{ __('Vendor') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Proposal ---------- --}}
                 <!-- @if (Gate::check('manage proposal'))
@@ -315,7 +315,7 @@
                     </li>
                 @endif
 
-                <!-- {{-- -------  Income ---------- --}}
+                {{-- -------  Income ---------- --}}
                 @if (Gate::check('manage invoice') || Gate::check('manage revenue') || Gate::check('manage credit note'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'invoice' || Request::segment(1) == 'revenue' || Request::segment(1) == 'credit-note' ? ' active dash-trigger' : '' }}">
@@ -345,10 +345,10 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Expense ---------- --}}
-                <!-- @if (Gate::check('manage bill') || Gate::check('manage payment') || Gate::check('manage debit note'))
+                @if (Gate::check('manage bill') || Gate::check('manage payment') || Gate::check('manage debit note'))
                     <li
                         class="dash-item dash-hasmenu {{ Request::segment(1) == 'bill' || Request::segment(1) == 'payment' || Request::segment(1) == 'debit-note' ? ' active dash-trigger' : '' }}">
                         <a href="#!" class="dash-link "><span class="dash-micon"><i
@@ -377,7 +377,7 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Double Entry ---------- --}}
                 <!-- @if (Gate::check('manage chart of account') ||
@@ -433,7 +433,7 @@
                     </li>
                 @endif -->
 
-                <!-- {{-- -------  Budget Planner ---------- --}}
+                {{-- -------  Budget Planner ---------- --}}
                 @if (\Auth::user()->type == 'company')
                     <li class="dash-item {{ Request::segment(1) == 'budget' ? 'active' : '' }}">
                         <a href="{{ route('budget.index') }}" class="dash-link ">
@@ -454,7 +454,7 @@
                     </li>
                 @endif
 
-                @can('manage customer contract')
+                <!-- @can('manage customer contract')
                     <li class="dash-item {{ Request::segment(2) == 'contract' ? 'active' : '' }}">
                         <a href="{{ route('customer.contract.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-device-floppy"></i></span>
@@ -492,6 +492,18 @@
                             <span class="dash-mtext">{{ __('Plan') }}</span>
                         </a>
                     </li>
+                @endif
+
+
+                @if (\Auth::user()->type == 'super admin')
+                <li
+                    class="dash-item {{ Request::segment(1) == 'customer-category' ? 'active' : '' }}">
+                    <a href="{{ route('customer-category.index') }}" class="dash-link  ">
+                        <span class="dash-micon"><i class="ti ti-chart-arcs"></i></span>
+                        <span class="dash-mtext">{{ __('Customer Category') }}</span>
+                    </a>
+                </li>
+
                 @endif
 
                 {{-- -------  Plan Request---------- --}}
@@ -698,12 +710,12 @@
                         </a>
                         <ul
                             class="dash-submenu {{ Request::segment(1) == 'taxes' || Request::segment(1) == 'product-category' || Request::segment(1) == 'product-unit' || Request::segment(1) == 'payment-method' || Request::segment(1) == 'custom-field' || Request::segment(1) == 'chart-of-account-type' ? 'show' : '' }}">
-                            <!-- @can('manage constant tax')
+                            @can('manage constant tax')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'taxes.index' ? ' active' : '' }}">
                                     <a class="dash-link" href="{{ route('taxes.index') }}">{{ __('Taxes') }}</a>
                                 </li>
-                            @endcan -->
+                            @endcan
                             @can('manage constant category')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'product-category.index' ? 'active' : '' }}">
