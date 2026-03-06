@@ -231,7 +231,9 @@ class CustomerController extends Controller
 
             $customFields = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'customer')->get();
 
-            return view('customer.edit', compact('customer', 'customFields'));
+            $accountant = User::where('created_by', \Auth::user()->creatorId())->where('type', 'accountant')->pluck('name', 'id');
+
+            return view('customer.edit', compact('customer', 'customFields', 'accountant'));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
@@ -261,7 +263,7 @@ class CustomerController extends Controller
             $customer->contact          = $request->contact;
             $customer->email            = $request->email;
             $customer->tax_number       = $request->tax_number;
-            $customer->created_by       = \Auth::user()->creatorId();
+            $customer->created_by       = $request->accountant;
             $customer->billing_name     = $request->billing_name;
             $customer->billing_country  = $request->billing_country;
             $customer->billing_state    = $request->billing_state;
@@ -289,8 +291,9 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
+        $authorizedIds = \Auth::user()->getCustomerFilterIds();
         if (\Auth::user()->can('delete customer')) {
-            if ($customer->created_by == \Auth::user()->creatorId()) {
+            if (in_array($customer->created_by, $authorizedIds) || $customer->created_by == \Auth::id()) {
                 $customer->delete();
 
                 return redirect()->route('customer.index')->with('success', __('Customer successfully deleted.'));

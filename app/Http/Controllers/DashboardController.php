@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Customer;
 use App\Models\ClientNotification;
+use App\Models\CustomerInvoice;
+use App\Models\CustomerExpense;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -56,8 +59,6 @@ class DashboardController extends Controller
                 return view('dashboard.super_admin', compact('user', 'chartData'));
             } else {
                 if (\Auth::user()->can('show dashboard')) {
-                    $data['latestIncome']  = Revenue::where('created_by', '=', \Auth::user()->creatorId())->orderBy('id', 'desc')->limit(5)->get();
-                    $data['latestExpense'] = Payment::where('created_by', '=', \Auth::user()->creatorId())->orderBy('id', 'desc')->limit(5)->get();
 
                     $incomeCategory = ProductServiceCategory::where('created_by', '=', \Auth::user()->creatorId())->where('type', '=', 'income')->get();
                     $inColor        = array();
@@ -90,6 +91,7 @@ class DashboardController extends Controller
 
                     $data['incExpBarChartData']  = \Auth::user()->getincExpBarChartData();
                     $data['incExpLineChartData'] = \Auth::user()->getIncExpLineChartDate();
+                    $data['accountantChartData'] = \Auth::user()->getAccountantChartData();
 
                     $data['currentYear']  = date('Y');
                     $data['currentMonth'] = date('M');
@@ -110,6 +112,129 @@ class DashboardController extends Controller
                 } else {
                     $data = [];
                 }
+
+                if (\Auth::user()->type == 'accountant') {
+
+                    $data['latestIncome']  = CustomerInvoice::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->orderBy('id', 'desc')->limit(5)->get();
+                    $data['latestExpense'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->orderBy('id', 'desc')->limit(5)->get();
+
+
+
+                    $data['totalCustomers'] = Customer::where('created_by', \Auth::user()->id)->where('is_active', 1)->count();
+                    $data['totalInvoices'] = CustomerInvoice::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->count();
+                    $data['totalExpenses'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->count();
+
+
+                    $data['currentMonthRevenue'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->whereIn('customer_invoices.customer_id', \Auth::user()->getAccountantCustomersIds())
+                        ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+                        ->whereMonth('customer_invoices.date', date('m'))
+                        ->whereYear('customer_invoices.date', date('Y'))
+                        ->sum('invoice_articles.unit_price_ht');
+
+                    $data['TodayRevenue'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->whereIn('customer_invoices.customer_id', \Auth::user()->getAccountantCustomersIds())
+                        ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+                        ->whereDate('customer_invoices.date', date('Y-m-d'))
+                        ->sum('invoice_articles.unit_price_ht');
+
+                    $data['currentMonthExpense'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())
+                        ->whereMonth('date', date('m'))
+                        ->whereYear('date', date('Y'))
+                        ->sum('ttc');
+
+                    $data['TodayExpense'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())
+                        ->whereDate('date', date('Y-m-d'))
+                        ->sum('ttc');
+
+                    $data['netResult'] = $data['currentMonthRevenue'] - $data['currentMonthExpense'];
+
+
+                    $data['totalVatCollected'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->whereIn('customer_invoices.customer_id', \Auth::user()->getAccountantCustomersIds())
+                        ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+                        ->whereMonth('customer_invoices.date', date('m'))
+                        ->whereYear('customer_invoices.date', date('Y'))
+                        ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
+
+                    $data['totalVatDeductible'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->whereMonth('date', date('m'))
+                        ->whereYear('date', date('Y'))
+                        ->sum('ttc');
+
+                    $data['totalVatPayable'] = $data['totalVatCollected'] - $data['totalVatDeductible'];
+                } else if (\Auth::user()->type == 'company') {
+
+                    $filterIds = \Auth::user()->getCustomerFilterIds();
+                    $companyCustomerIds = Customer::whereIn('created_by', $filterIds)->pluck('id');
+
+                    $data['latestIncome']  = CustomerInvoice::whereIn('customer_id', $companyCustomerIds)->orderBy('id', 'desc')->limit(5)->get();
+                    $data['latestExpense'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)->orderBy('id', 'desc')->limit(5)->get();
+
+                    $data['totalCustomers'] = Customer::whereIn('created_by', $filterIds)->where('is_active', 1)->count();
+                    $data['totalInvoices'] = CustomerInvoice::whereIn('customer_id', $companyCustomerIds)->count();
+                    $data['totalExpenses'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)->count();
+
+                    $data['currentMonthRevenue'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->whereIn('customer_invoices.customer_id', $companyCustomerIds)
+                        ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+                        ->whereMonth('customer_invoices.date', date('m'))
+                        ->whereYear('customer_invoices.date', date('Y'))
+                        ->sum('invoice_articles.unit_price_ht');
+
+                    $data['TodayRevenue'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->whereIn('customer_invoices.customer_id', $companyCustomerIds)
+                        ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+                        ->whereDate('customer_invoices.date', date('Y-m-d'))
+                        ->sum('invoice_articles.unit_price_ht');
+
+                    $data['currentMonthExpense'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)
+                        ->whereMonth('date', date('m'))
+                        ->whereYear('date', date('Y'))
+                        ->sum('ttc');
+
+                    $data['TodayExpense'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)
+                        ->whereDate('date', date('Y-m-d'))
+                        ->sum('ttc');
+
+                    $data['netResult'] = $data['currentMonthRevenue'] - $data['currentMonthExpense'];
+
+
+                    $data['totalVatCollected'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->whereIn('customer_invoices.customer_id', $companyCustomerIds)
+                        ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+                        ->whereMonth('customer_invoices.date', date('m'))
+                        ->whereYear('customer_invoices.date', date('Y'))
+                        ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
+
+                    $data['totalVatDeductible'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)->sum('ttc');
+
+                    $data['totalVatPayable'] = $data['totalVatCollected'] - $data['totalVatDeductible'];
+
+                    // Customers per accountant
+                    $accountantIds = User::where('created_by', \Auth::user()->creatorId())->where('type', 'accountant')->pluck('id');
+                    $data['customersPerAccountant'] = Customer::select('created_by', DB::raw('count(*) as count'))
+                        ->whereIn('created_by', $accountantIds)
+                        ->groupBy('created_by')
+                        ->with('accountant:id,name')
+                        ->get();
+
+                    $data['overdueInvoices'] = DB::table('customer_invoices as ci')
+                        ->join('customers as c', 'c.id', '=', 'ci.customer_id')
+                        ->join('users as u', 'u.id', '=', 'c.created_by')
+                        ->select(
+                            'ci.customer_id',
+                            'u.name as accountant_name',
+                            DB::raw('COUNT(ci.id) as count')
+                        )
+                        ->whereIn('ci.customer_id', $companyCustomerIds)
+                        ->where('ci.status', 'ISSUED')
+                        ->whereDate('ci.date', '<', now())
+                        ->groupBy('ci.customer_id', 'u.name')
+                        ->orderByDesc('count')
+                        ->limit(10)
+                        ->get();
+                }
+
 
                 $users = User::find(\Auth::user()->creatorId());
                 $plan = Plan::find($users->plan);
@@ -164,6 +289,105 @@ class DashboardController extends Controller
         }
 
         return $arrTask;
+    }
+
+    public function getIncomeExpenseChartData(Request $request)
+    {
+        $year = (int)($request->input('year', date('Y')));
+        $customerId = $request->input('customer_id');
+        $authUser = Auth::user();
+        if (\Auth::user()->type == 'company') {
+            $filterIds = $authUser->getCustomerFilterIds();
+            $baseCustomerIds = Customer::whereIn('created_by', $filterIds)->pluck('id')->toArray();
+        } else {
+            $baseCustomerIds = $authUser->getAccountantCustomersIds();
+        }
+        $customerIds = $baseCustomerIds;
+        if (!empty($customerId) && $customerId !== 'all') {
+            $customerIds = [intval($customerId)];
+        }
+        $months = array_map(fn($m) => __(date('F', mktime(0, 0, 0, $m, 1))), range(1, 12));
+        $monthlyRevenueData = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->whereIn('customer_invoices.customer_id', $customerIds)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereYear('customer_invoices.date', $year)
+            ->selectRaw('month(customer_invoices.date) as month, sum(invoice_articles.unit_price_ht) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+        $monthlyExpenseData = CustomerExpense::whereIn('customer_id', $customerIds)
+            ->whereYear('date', $year)
+            ->selectRaw('month(date) as month, sum(ttc) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+        $incomeArr = [];
+        $expenseArr = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $incomeArr[] = number_format($monthlyRevenueData->get($i, 0), 2, '.', '');
+            $expenseArr[] = number_format($monthlyExpenseData->get($i, 0), 2, '.', '');
+        }
+        return response()->json([
+            'month' => $months,
+            'data' => [
+                'income' => $incomeArr,
+                'expense' => $expenseArr,
+            ],
+            'year' => $year,
+        ]);
+    }
+
+
+    public function getSummaryMetrics(Request $request)
+    {
+        $auth = Auth::user();
+        if (\Auth::user()->type == 'company') {
+            $filterIds = $auth->getCustomerFilterIds();
+            $baseCustomerIds = Customer::whereIn('created_by', $filterIds)->pluck('id')->toArray();
+        } else {
+            $baseCustomerIds = $auth->getAccountantCustomersIds();
+        }
+        $customerId = $request->input('customer_id');
+        $customerIds = $baseCustomerIds;
+        if (!empty($customerId) && $customerId !== 'all') {
+            $customerIds = [intval($customerId)];
+        }
+        $todayRevenue = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->whereIn('customer_invoices.customer_id', $customerIds)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereDate('customer_invoices.date', date('Y-m-d'))
+            ->sum('invoice_articles.unit_price_ht');
+        $todayExpense = CustomerExpense::whereIn('customer_id', $customerIds)
+            ->whereDate('date', date('Y-m-d'))
+            ->sum('ttc');
+        $currentMonthRevenue = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->whereIn('customer_invoices.customer_id', $customerIds)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereMonth('customer_invoices.date', date('m'))
+            ->whereYear('customer_invoices.date', date('Y'))
+            ->sum('invoice_articles.unit_price_ht');
+        $currentMonthExpense = CustomerExpense::whereIn('customer_id', $customerIds)
+            ->whereMonth('date', date('m'))
+            ->whereYear('date', date('Y'))
+            ->sum('ttc');
+        $netResult = $currentMonthRevenue - $currentMonthExpense;
+        $totalVatCollected = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->whereIn('customer_invoices.customer_id', $customerIds)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereMonth('customer_invoices.date', date('m'))
+            ->whereYear('customer_invoices.date', date('Y'))
+            ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
+        $totalVatDeductible = CustomerExpense::whereIn('customer_id', $customerIds)
+            ->whereMonth('date', date('m'))
+            ->whereYear('date', date('Y'))
+            ->sum('ttc');
+        $totalVatPayable = $totalVatCollected - $totalVatDeductible;
+        return response()->json([
+            'TodayRevenue' => $auth->priceFormat($todayRevenue),
+            'TodayExpense' => $auth->priceFormat($todayExpense),
+            'currentMonthRevenue' => $auth->priceFormat($currentMonthRevenue),
+            'currentMonthExpense' => $auth->priceFormat($currentMonthExpense),
+            'netResult' => $auth->priceFormat($netResult),
+            'totalVatPayable' => $auth->priceFormat($totalVatPayable),
+        ]);
     }
 
     /**
@@ -237,7 +461,7 @@ class DashboardController extends Controller
                 Storage::disk('public')->delete($notification->document);
             }
         }
-    
+
         $notification->delete();
 
         return back()->with('success', __('Notification and associated document deleted.'));

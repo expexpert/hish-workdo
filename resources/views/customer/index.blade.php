@@ -59,7 +59,6 @@
                                     @endif
                                     <th> {{ __('Contact') }}</th>
                                     <th> {{ __('Email') }}</th>
-                                    <th> {{ __('Balance') }}</th>
                                     <th> {{ __('Last Login') }}</th>
                                     <th>{{ __('Action') }}</th>
                                 </tr>
@@ -87,7 +86,6 @@
                                         @endif
                                         <td>{{ $customer['contact'] }}</td>
                                         <td>{{ $customer['email'] }}</td>
-                                        <td>{{ \Auth::user()->priceFormat($customer['balance']) }}</td>
                                         <td>
                                             {{ !empty($customer->last_login_at) ? $customer->last_login_at : '-' }}
                                         </td>
@@ -120,7 +118,6 @@
                                                         </div>
                                                     @endcan
 
-                                                    @if (\Auth::user()->type !== 'company')
 
                                                     @can('edit customer')
                                                         <div class="action-btn me-2">
@@ -151,7 +148,6 @@
                                                         </div>
                                                     @endcan
 
-                                                    @endif
                                                 @endif
                                             </span>
                                         </td>

@@ -16,7 +16,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Lab404\Impersonate\Models\Impersonate;
 use App\Models\ReferralTransactionOrder;
 use App\Models\ReferralTransaction;
-
+use Illuminate\Container\Attributes\Auth;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -120,6 +120,15 @@ class User extends Authenticatable implements MustVerifyEmail
         }
     }
 
+    public function getAccountantCustomersIds()
+    {
+        if ($this->type == 'accountant') {
+            return Customer::where('created_by', $this->id)->pluck('id')->toArray();
+        } else {
+            return Customer::where('created_by', $this->creatorId())->pluck('id')->toArray();
+        }
+    }
+
 
     public function currentLanguage()
     {
@@ -154,7 +163,6 @@ class User extends Authenticatable implements MustVerifyEmail
         $settings = Utility::settings();
 
         return date($settings['site_date_format'], strtotime($date));
-
     }
 
     public function timeFormat($time)
@@ -492,7 +500,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $month[]          = __('October');
         $month[]          = __('November');
         $month[]          = __('December');
-    $dataArr['month'] = $month;
+        $dataArr['month'] = $month;
 
 
         for ($i = 1; $i <= 12; $i++) {
@@ -521,6 +529,57 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $dataArr['income']  = $incomeArr;
+        $dataArr['expense'] = $expenseArr;
+
+        return $dataArr;
+    }
+
+    public function getAccountantChartData()
+    {
+        $year = date('Y');
+
+        if(\Auth::user()->type == 'accountant') {
+            $customerIds = \Auth::user()->getAccountantCustomersIds();
+        } else {
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customerIds = Customer::whereIn('created_by', $filterIds)->pluck('id');
+        }
+        
+
+        // 1. Prepare Month Labels (Standard 12 months)
+        $dataArr['month'] = array_map(fn($m) => __(date('F', mktime(0, 0, 0, $m, 1))), range(1, 12));
+
+        // 2. Fetch Monthly Revenue (Joins & Sums grouped by month)
+        $monthlyRevenueData = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->whereIn('customer_invoices.customer_id', $customerIds)
+            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereYear('customer_invoices.date', $year) // Assuming the date column is 'date'
+            ->selectRaw('month(customer_invoices.date) as month, sum(invoice_articles.unit_price_ht) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        // 3. Fetch Monthly Expenses (Grouped by month)
+        $monthlyExpenseData = CustomerExpense::whereIn('customer_id', $customerIds)
+            ->whereYear('date', $year) // Assuming the date column is 'date'
+            ->selectRaw('month(date) as month, sum(ttc) as total')
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $incomeArr = [];
+        $expenseArr = [];
+
+        // 4. Map the data to the 1-12 index
+        for ($i = 1; $i <= 12; $i++) {
+            // Handle Income
+            $revenue = $monthlyRevenueData->get($i, 0);
+            $incomeArr[] = number_format($revenue, 2, '.', '');
+
+            // Handle Expense
+            $expense = $monthlyExpenseData->get($i, 0);
+            $expenseArr[] = number_format($expense, 2, '.', '');
+        }
+
+        $dataArr['income'] = $incomeArr;
         $dataArr['expense'] = $expenseArr;
 
         return $dataArr;
@@ -2639,15 +2698,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function commissionAmount()
     {
-        $transactionsOrder  = ReferralTransactionOrder::where('req_user_id',$this->id)->get();
-        $paidAmount         = $transactionsOrder->where('status' , 2)->sum('req_amount');
+        $transactionsOrder  = ReferralTransactionOrder::where('req_user_id', $this->id)->get();
+        $paidAmount         = $transactionsOrder->where('status', 2)->sum('req_amount');
 
         $ReferralTransaction = ReferralTransaction::where('referral_code', $this->referral_code)->get()
-                                    ->map(function($trans){
-                                        return $trans->plan_price * $trans->commission / 100;
-                                    })->sum();
+            ->map(function ($trans) {
+                return $trans->plan_price * $trans->commission / 100;
+            })->sum();
 
         return $ReferralTransaction - $paidAmount;
     }
-
 }

@@ -148,7 +148,14 @@ class CustomerController extends Controller
             })
             ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
 
-        $totalVatDeductible = CustomerExpense::where('customer_id', $user->id)->sum('ttc');
+        $totalVatDeductible = CustomerExpense::where('customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('date', '<=', $dateTo);
+            })
+            ->sum('ttc');
 
         $totalVatPayable = $totalVatCollected - $totalVatDeductible;
 
