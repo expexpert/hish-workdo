@@ -20,6 +20,7 @@ use App\Models\Utility;
 use App\Models\InvoiceArticle;
 use App\Models\CustomerProduct;
 use App\Models\CustomerSupplier;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class CustomerController extends Controller
@@ -1186,6 +1187,75 @@ class CustomerController extends Controller
         return Storage::disk('public')->download($invoice->document_path, 'Invoice_' . $invoice->id . '.' . pathinfo($invoice->document_path, PATHINFO_EXTENSION));
     }
 
+    public function downloadInvoicePdf($id, Request $request)
+    {
+        $invoice = CustomerInvoice::where('customer_id', $request->user()->id)
+            ->with(['client', 'articles', 'customer'])
+            ->findOrFail($id);
+
+        $company = $invoice->customer;
+
+        $totals = [
+            'total_ht' => $invoice->articles->sum('total_price_ht'),
+            'total_tva' => $invoice->articles->sum(function ($a) {
+                return round($a->total_price_ht * ($a->tva_percentage / 100), 2);
+            }),
+        ];
+        $totals['total_ttc'] = round($totals['total_ht'] + $totals['total_tva'], 2);
+
+        $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
+        $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
+
+        $logoDataUri = null;
+        $signatureDataUri = null;
+
+        try {
+            if ($company && $company->avatar) {
+                $logoPath = storage_path('app/public/' . $company->avatar);
+                if (is_file($logoPath)) {
+                    $mime = mime_content_type($logoPath) ?: 'image/png';
+                    $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        try {
+            if ($company && $company->signature) {
+                $sigPath = storage_path('app/public/' . $company->signature);
+                if (is_file($sigPath)) {
+                    $mime = mime_content_type($sigPath) ?: 'image/png';
+                    $signatureDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($sigPath));
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $pdf = Pdf::loadView('customer_invoices.pdf', [
+            'invoice'          => $invoice,
+            'company'          => $company,
+            'totals'           => $totals,
+            'currency_symbol'  => $company ? $company->currencySymbol() : '',
+            'logo_url'         => $logoUrl,
+            'signature_url'    => $signatureUrl,
+            'logo_data_uri'    => $logoDataUri,
+            'signature_data_uri' => $signatureDataUri,
+        ])->setPaper('a4')->setOptions(['isRemoteEnabled' => true]);
+
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+            'http' => [
+                'timeout' => 3,
+                'user_agent' => 'Mozilla/5.0',
+            ],
+        ]);
+        $pdf->setHttpContext($context);
+
+        $filename = 'Invoice_' . $invoice->invoice_number . '.pdf';
+        return $pdf->download($filename);
+    }
 
     public function viewSingleInvoice(Request $request, $id)
     {
