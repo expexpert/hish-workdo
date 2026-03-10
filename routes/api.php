@@ -88,6 +88,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::delete('/customer-expense/{id}', [CustomerController::class, 'deleteExpense']);
     Route::get('/export-expenses', [CustomerController::class, 'exportExpenses']);
     Route::get('/customer-expenses/file/{id}', [CustomerController::class, 'downloadExpenseFile']);
+    Route::get('/customer-expenses/chart', [CustomerController::class, 'getExpenseCategoryChart']);
 
 
     Route::get('/customer-clients-resources', [LookupController::class, 'getCustomerClientResources']);
