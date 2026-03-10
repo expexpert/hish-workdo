@@ -26,7 +26,7 @@ class CustomerInvoice extends Model
         'date' => 'date',
     ];
 
-    protected $appends = ['invoice_url'];
+    protected $appends = ['invoice_url', 'pdf_url'];
 
     /**
      * Get the customer who owns the invoice.
@@ -56,5 +56,10 @@ class CustomerInvoice extends Model
 
         // Secure API URL instead of the public storage asset URL
         return url("/api/customer/customer-invoices/download/{$this->id}");
+    }
+
+    public function getPdfUrlAttribute()
+    {
+        return url("/api/customer/customer-invoices/pdf/{$this->id}");
     }
 }

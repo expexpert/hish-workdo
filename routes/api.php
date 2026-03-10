@@ -98,6 +98,7 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::delete('/customer-invoice/{id}', [CustomerController::class, 'deleteInvoice']);
     Route::get('/export-invoices', [CustomerController::class, 'exportInvoices']);
     Route::get('/customer-invoices/download/{id}', [CustomerController::class, 'downloadInvoice']);
+    Route::get('/customer-invoices/pdf/{id}', [CustomerController::class, 'downloadInvoicePdf']);
 
 
     Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
