@@ -933,6 +933,37 @@ class CustomerController extends Controller
     }
 
 
+    public function getExpenseCategoryChart(Request $request)
+    {
+        $user = $request->user();
+        $month = $request->query('month');
+        $year = $request->query('year');
+
+        $rows = CustomerExpense::where('customer_id', $user->id)
+            ->join('customer_categories', 'customer_expenses.category_id', '=', 'customer_categories.id')
+            ->select(
+                'customer_expenses.category_id',
+                DB::raw('customer_categories.name as label'),
+                DB::raw('SUM(COALESCE(customer_expenses.total_ttc, customer_expenses.ttc)) as value')
+            )
+            ->when($year, function ($query, $year) {
+                return $query->whereYear('customer_expenses.date', $year);
+            })
+            ->when($month, function ($query, $month) {
+                return $query->whereMonth('customer_expenses.date', $month);
+            })
+            ->groupBy('customer_expenses.category_id', 'customer_categories.name')
+            ->orderByDesc('value')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expense totals by category retrieved successfully.',
+            'data' => $rows
+        ], 200);
+    }
+
+
     public function downloadExpenseFile($id, Request $request)
     {
         $expense = CustomerExpense::where('customer_id', $request->user()->id)
