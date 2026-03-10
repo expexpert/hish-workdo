@@ -15,6 +15,7 @@ class CustomerExpense extends Model
      */
     protected $fillable = [
         'customer_id',
+        'supplier_id',
         'category_id',
         'file',
         'date',
@@ -23,6 +24,7 @@ class CustomerExpense extends Model
         'payment_method',
         'total_ttc',
         'total_tva',
+        'notes',
     ];
 
     /**
@@ -52,6 +54,11 @@ class CustomerExpense extends Model
     {
         // Explicitly defining the foreign key if it differs from the table name
         return $this->belongsTo(ProductServiceCategory::class, 'category_id');
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(CustomerSupplier::class, 'supplier_id');
     }
 
     public function getFileUrlAttribute()

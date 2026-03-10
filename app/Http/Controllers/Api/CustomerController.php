@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Utility;
 use App\Models\InvoiceArticle;
 use App\Models\CustomerProduct;
+use App\Models\CustomerSupplier;
 
 
 class CustomerController extends Controller
@@ -703,10 +704,166 @@ class CustomerController extends Controller
         ], 200);
     }
 
+
+    public function storeCustomerSupplier(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'supplier_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:customer_suppliers,email',
+            'telephone' => 'nullable|string|max:20',
+            'postal_code' => 'required|string|max:20',
+            'city' => 'required|string|max:100',
+            'commercial_register' => 'nullable|string|max:255',
+            'ice' => 'nullable|string|max:255',
+        ]);
+
+        $validated['customer_id'] = $request->user()->id;
+
+        $supplier = CustomerSupplier::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer supplier created successfully.',
+            'data'    => $supplier
+        ], 201);
+    }
+
+
+    public function getCustomerSuppliers(Request $request)
+    {
+        $user = $request->user();
+        $like = $request->query('like');
+        $suppliers = CustomerSupplier::where('customer_id', $user->id);
+        if ($like) {
+            $suppliers = $suppliers->where('company_name', 'like', "%$like%")->OrWhere('supplier_name', 'like', "%$like%");
+        }
+        $suppliers = $suppliers->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer suppliers retrieved successfully.',
+            'data'    => $suppliers
+        ], 200);
+    }
+
+    public function viewSingleCustomerSupplier(Request $request, $id)
+    {
+        $user = $request->user();
+
+        // Get supplier + invoice count in same query
+        $supplier = CustomerSupplier::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->withCount('expenses')
+            ->first();
+
+        if (! $supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer supplier not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $totalPricettc = $supplier->expenses()
+            ->sum('ttc');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer supplier retrieved successfully.',
+            'data' => [
+                'supplier'       => $supplier,
+                'expenses_count'  => $supplier->expenses_count,
+                'total_price_ttc' => (float) $totalPricettc,
+            ]
+        ], 200);
+    }
+
+
+    public function updateCustomerSupplier(Request $request, $id)
+    {
+        $user = $request->user();
+        $supplier = CustomerSupplier::where('id', $id)->where('customer_id', $user->id)->first();
+
+        if (! $supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer supplier not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'company_name' => 'sometimes|required|string|max:255',
+            'supplier_name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:customer_suppliers,email,' . $supplier->id,
+            'telephone' => 'nullable|string|max:20',
+            'postal_code' => 'sometimes|required|string|max:20',
+            'city' => 'sometimes|required|string|max:100',
+            'commercial_register' => 'nullable|string|max:255',
+            'ice' => 'nullable|string|max:255',
+        ]);
+
+        $supplier->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer supplier updated successfully.',
+            'data'    => $supplier
+        ], 200);
+    }
+
+
+    public function deleteCustomerSupplier(Request $request, $id)
+    {
+        $user = $request->user();
+        $supplier = CustomerSupplier::where('id', $id)->where('customer_id', $user->id)->first();
+
+        if (! $supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer supplier not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $supplier->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer supplier deleted successfully.'
+        ], 200);
+    }
+
+
+    public function getCustomerSupplierExpenses(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $supplier = CustomerSupplier::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer supplier not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $expenses = CustomerExpense::where('supplier_id', $supplier->id)
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expenses for the customer supplier retrieved successfully.',
+            'data'    => $expenses
+        ], 200);
+    }
+
     public function storeExpense(Request $request)
     {
         $validated = $request->validate([
             'customer_id'    => 'required|exists:customers,id',
+            'supplier_id'    => 'required|exists:customer_suppliers,id',
             'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'date'           => 'required|date',
             'ttc'            => 'required|numeric|min:0',
@@ -715,6 +872,7 @@ class CustomerController extends Controller
             'category_id'    => 'required|exists:product_service_categories,id',
             'total_ttc'      => 'nullable|numeric|min:0',
             'total_tva'      => 'nullable|numeric|min:0',
+            'notes'           => 'nullable|string',
         ]);
 
         // Handle File Upload
@@ -819,6 +977,7 @@ class CustomerController extends Controller
         }
 
         $validated = $request->validate([
+            'supplier_id'    => 'sometimes|required|exists:customer_suppliers,id',
             'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'date'           => 'sometimes|required|date',
             'ttc'            => 'sometimes|required|numeric|min:0',
@@ -827,6 +986,7 @@ class CustomerController extends Controller
             'category_id'    => 'sometimes|required|exists:product_service_categories,id',
             'total_ttc'      => 'nullable|numeric|min:0',
             'total_tva'      => 'nullable|numeric|min:0',
+            'notes'           => 'nullable|string',
         ]);
 
         // Handle File Upload

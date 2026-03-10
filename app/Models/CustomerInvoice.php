@@ -18,6 +18,7 @@ class CustomerInvoice extends Model
         'invoice_number',
         'payment_method',
         'status',
+        'notes',
         'document_path'
     ];
 
