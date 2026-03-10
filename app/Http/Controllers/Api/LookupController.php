@@ -7,6 +7,7 @@ use App\Models\BankAccount;
 use App\Models\CustomerCategory;
 use App\Models\ProductServiceCategory;
 use App\Models\CustomerClient;
+use App\Models\CustomerSupplier;
 
 class LookupController extends Controller
 {
@@ -18,6 +19,7 @@ class LookupController extends Controller
                 'accounts' => BankAccount::select('id', 'holder_name as name')->get(),
                 // 'categories' => ProductServiceCategory::select('id', 'name')->where('type', '=', 'income')->get(),
                 'categories' => CustomerCategory::where('is_active', '=', 1)->select('id', 'name')->get(),
+                'suppliers' => CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name')->get(),
             ]
         ]);
     }

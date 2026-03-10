@@ -73,6 +73,13 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::delete('/customer-client/{id}', [CustomerController::class, 'deleteCustomerClient']);
     Route::get('/customer-client-invoice/{id}', [CustomerController::class, 'getCustomerClientInvoices']);
 
+    Route::post('/customer-supplier', [CustomerController::class, 'storeCustomerSupplier']);
+    Route::get('/customer-suppliers', [CustomerController::class, 'getCustomerSuppliers']);
+    Route::get('/customer-supplier/{id}', [CustomerController::class, 'viewSingleCustomerSupplier']);
+    Route::put('/customer-supplier/{id}', [CustomerController::class, 'updateCustomerSupplier']);
+    Route::delete('/customer-supplier/{id}', [CustomerController::class, 'deleteCustomerSupplier']);
+    Route::get('/customer-supplier-expenses/{id}', [CustomerController::class, 'getCustomerSupplierExpenses']);
+    
 
     Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
     Route::get('/customer-expenses', [CustomerController::class, 'getExpenses']);
