@@ -18,7 +18,7 @@ class Customer extends Authenticatable
     use HasApiTokens;
 
     protected $guard_name = 'web';
-    protected $appends = ['avatar_url'];
+    protected $appends = ['avatar_url', 'signature_url'];
     protected $casts = [
         'password_changed_at' => 'datetime',
     ];
@@ -32,6 +32,9 @@ class Customer extends Authenticatable
         'ice_number',
         'rc_number',
         'patent_number',
+        'if_number',
+        'cnss',
+        'company_type',
         'phone',
         'address',
         'vat_number',
@@ -40,6 +43,7 @@ class Customer extends Authenticatable
         'password_changed_at',
         'contact',
         'avatar',
+        'signature',
         'is_active',
         'is_enable_login',
         'created_by',
@@ -68,7 +72,6 @@ class Customer extends Authenticatable
 
 
     public $settings;
-
 
     public function authId()
     {
@@ -332,6 +335,15 @@ class Customer extends Authenticatable
         }
 
         return asset('storage/' . $this->avatar);
+    }
+
+    public function getSignatureUrlAttribute()
+    {
+        if (!$this->signature) {
+            return null;
+        }
+
+        return asset('storage/' . $this->signature);
     }
 
     protected static function booted()

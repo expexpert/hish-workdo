@@ -49,9 +49,13 @@ class CustomerController extends Controller
             'ice_number' => 'nullable|string|max:255',
             'rc_number' => 'nullable|string|max:255',
             'patent_number' => 'nullable|string|max:255',
+            'if_number' => 'nullable|string|max:255',
+            'cnss' => 'nullable|string|max:255',
+            'company_type' => 'nullable|string|max:255',
             'contact' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            'signature' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             'billing_name' => 'nullable|string|max:255',
             'billing_phone' => 'nullable|string|max:20',
             'vat_number' => 'nullable|string|max:255',
@@ -69,6 +73,13 @@ class CustomerController extends Controller
             $validated['avatar'] = $path;
         }
 
+        if ($request->hasFile('signature')) {
+            if ($user->signature) {
+                Storage::disk('public')->delete($user->signature);
+            }
+            $path = $request->file('signature')->store('signatures', 'public');
+            $validated['signature'] = $path;
+        }
         $user->update($validated);
 
         return response()->json([
