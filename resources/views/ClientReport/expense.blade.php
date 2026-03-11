@@ -65,6 +65,7 @@
                                 <th>{{__('Customer')}}</th>
                                 <th>{{__('Category')}}</th>
                                 <th>{{__('Payment Method')}}</th>
+                                <th>{{__('Notes')}}</th>
                                 <th>{{__('TTC')}}</th>
                                 <th>{{__('TVA')}}</th>
                                 <th>{{__('Total TTC')}}</th>
@@ -80,6 +81,19 @@
                                 <td>{{ $expense->customer?->name ?? '-' }}</td>
                                 <td>{{ $expense->category->name ?? '-' }}</td>
                                 <td>{{ $expense->payment_method ?? '-' }}</td>
+                                <td style="max-width: 250px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                                    @if($expense->notes)
+                                    <span title="{{ $expense->notes }}">
+                                        {{ \Illuminate\Support\Str::limit($expense->notes, 50, '...') }}
+                                    </span>
+                                    <br>
+                                    <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="modal" data-bs-target="#noteModal-{{ $expense->id }}">
+                                        {{ __('View full note') }}
+                                    </button>
+                                    @else
+                                    {{ __('-') }}
+                                    @endif
+                                </td>
                                 <td>{{ \Auth::user()->priceFormat($expense->ttc) }}</td>
                                 <td>{{ \Auth::user()->priceFormat($expense->tva) }}</td>
                                 <td>{{ \Auth::user()->priceFormat($expense->total_ttc) }}</td>
@@ -97,6 +111,22 @@
                             @endforeach
                         </tbody>
                     </table>
+
+                    @foreach ($expenses as $expense)
+                    <div class="modal fade" id="noteModal-{{ $expense->id }}" tabindex="-1" aria-labelledby="noteModalLabel-{{ $expense->id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="noteModalLabel-{{ $expense->id }}">{{ __('Expense Notes') }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{{ $expense->notes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>

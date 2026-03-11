@@ -122,10 +122,11 @@
                                 <th>{{__('Date')}}</th>
                                 <th>{{__('Customer')}}</th>
                                 <th>{{__('Client')}}</th>
-                                <th>{{__('Invoice Number')}}</th>
-                                <th>{{__('Payment Method')}}</th>
+                                <th>{{__('Invoice No')}}</th>
+                                <th>{{__('Payment Via')}}</th>
                                 <th>{{__('Notes')}}</th>
                                 <th>{{__('Status')}}</th>
+                                <th>{{__('TTC')}}</th>
                                 <th>{{__('Articles')}}</th>
                                 <th>{{__('Document')}}</th>
                                 <th>{{__('Actions')}}</th>
@@ -140,8 +141,31 @@
                                 <td>{{ $invoice->client?->client_name ?? '-' }}</td>
                                 <td>{{ $invoice->invoice_number ?? '-' }}</td>
                                 <td>{{ $invoice->payment_method ?? '-' }}</td>
-                                <td>{{ $invoice->notes ?? '-' }}</td>
+                                <td style="max-width: 100px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
+                                    @if($invoice->notes)
+                                    <span title="{{ $invoice->notes }}">
+                                        {{ \Illuminate\Support\Str::limit($invoice->notes, 30, '...') }}
+                                    </span>
+                                    <br>
+                                    <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="modal" data-bs-target="#noteModal-{{ $invoice->id }}">
+                                        {{ __('View note') }}
+                                    </button>
+                                    @else
+                                    -
+                                    @endif
+                                </td>
                                 <td>{{ $invoice->status ?? '-' }}</td>
+                                @php
+                                $totalTtc = 0;
+                                if ($invoice->articles && $invoice->articles->count()) {
+                                 $totalTtc=$invoice->articles->sum(function ($article) {
+                                    $ht = floatval($article->total_price_ht ?? 0);
+                                    $tvaPct = floatval($article->tva_percentage ?? 0) / 100;
+                                    return $ht + ($ht * $tvaPct);
+                                 });
+                                }
+                                @endphp
+                                <td>{{ \Auth::user()->priceFormat($totalTtc) }}</td>
                                 <td>
                                     @php $count = $invoice->articles?->count() ?? 0; @endphp
                                     @if($count > 0)
@@ -155,7 +179,7 @@
                                 <td>
                                     @if($invoice->document_path)
                                     <a href="{{ Storage::url($invoice->document_path) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        {{ __('View Document') }}
+                                        {{ __('View') }}
                                     </a>
                                     @else
                                     {{ __('No Document') }}
@@ -163,7 +187,7 @@
                                 </td>
                                 <td>
                                     <select class="form-select form-select-sm fw-bold border-2 transition w-100 invoice-action {{ \App\Models\CustomerInvoice::getInvoiceActionStyles($invoice->review_status) }}"
-                                        data-id="{{ $invoice->id }}" style="min-width:100px">
+                                        data-id="{{ $invoice->id }}" style="min-width:80px">
 
                                         <option value="" disabled {{ $invoice->review_status == 'PENDING' ? 'selected' : '' }}>
                                             {{ __('Pending') }}
@@ -212,18 +236,68 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
+                                                @php
+                                                $grandTotalHT = 0;
+                                                $grandTotalTVA = 0;
+                                                @endphp
                                                 @foreach ($invoice->articles as $article)
+                                                @php
+                                                $lineHT = (float) $article->total_price_ht;
+                                                $lineTvaPct = (float) $article->tva_percentage;
+                                                $lineTva = $lineHT * ($lineTvaPct / 100);
+                                                $grandTotalHT += $lineHT;
+                                                $grandTotalTVA += $lineTva;
+                                                @endphp
                                                 <tr>
                                                     <td>{{ $article->designation }}</td>
                                                     <td class="text-end">{{ $article->quantity }}</td>
                                                     <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
-                                                    <td class="text-end">{{ number_format((float) $article->tva_percentage, 2) }}</td>
-                                                    <td class="text-end">{{ number_format((float) $article->total_price_ht, 2) }}</td>
+                                                    <td class="text-end">{{ number_format($lineTvaPct, 2) }}</td>
+                                                    <td class="text-end">{{ number_format($lineHT, 2) }}</td>
                                                 </tr>
                                                 @endforeach
-                                            </tbody>
+                                                @php
+                                                $grandTotalTTC = $grandTotalHT + $grandTotalTVA;
+                                                $avgTvaPct = $grandTotalHT > 0 ? ($grandTotalTVA / $grandTotalHT) * 100 : 0;
+                                                @endphp
+                                            <tfoot>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('Total HT') }}</td>
+                                                    <td class="text-end">{{ number_format($grandTotalHT, 2) }}</td>
+                                                </tr>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('TVA') }} ({{ number_format($avgTvaPct, 2) }}%)</td>
+                                                    <td class="text-end">{{ number_format($grandTotalTVA, 2) }}</td>
+                                                </tr>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('Total TTC') }}</td>
+                                                    <td class="text-end">{{ number_format($grandTotalTTC, 2) }}</td>
+                                                </tr>
+                                            </tfoot>
                                         </table>
                                     </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    @endforeach
+
+
+                    @foreach ($invoices as $invoice)
+                    @if ($invoice->notes)
+                    <div class="modal fade" id="noteModal-{{ $invoice->id }}" tabindex="-1" aria-labelledby="noteLabel-{{ $invoice->id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="noteLabel-{{ $invoice->id }}">{{ __('Full Note') }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{{ $invoice->notes }}</p>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
@@ -268,7 +342,8 @@
 
                     if (data.success) {
                         console.log("Status updated");
-                        show_toastr('success', '{{ __('Action performed successfully ') }}');
+                        show_toastr('success', '{{ __('
+                            Action performed successfully ') }}');
                         const styleMap = {
                             'VALIDATED': 'bg-light text-success border-success',
                             'EDIT_REQUESTED': 'bg-light text-warning border-warning',
@@ -286,7 +361,8 @@
 
                     } else {
                         alert("Something went wrong");
-                        show_toastr('error', '{{ __('Failed to perform action ') }}');
+                        show_toastr('error', '{{ __('
+                            Failed to perform action ') }}');
                     }
                 })
                 .catch(err => console.error(err));
