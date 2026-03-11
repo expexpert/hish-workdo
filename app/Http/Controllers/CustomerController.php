@@ -92,15 +92,14 @@ class CustomerController extends Controller
             }
 
             $enableLogin       = 0;
-            if(!empty($request->password_switch) && $request->password_switch == 'on')
-            {
+            if (!empty($request->password_switch) && $request->password_switch == 'on') {
                 $enableLogin   = 1;
                 $validator = \Validator::make(
-                    $request->all(), ['password' => 'required|min:6']
+                    $request->all(),
+                    ['password' => 'required|min:6']
                 );
 
-                if($validator->fails())
-                {
+                if ($validator->fails()) {
                     return redirect()->back()->with('error', $validator->errors()->first());
                 }
             }
@@ -111,7 +110,7 @@ class CustomerController extends Controller
             $total_customer = $objCustomer->countCustomers();
             $plan           = Plan::find($creator->plan);
 
-            $default_language = DB::table('settings')->select('value')->where('name', 'default_language')->where('created_by',\Auth::user()->id)->first();
+            $default_language = DB::table('settings')->select('value')->where('name', 'default_language')->where('created_by', \Auth::user()->id)->first();
             if ($total_customer < $plan->max_customers || $plan->max_customers == -1) {
                 $customer                  = new Customer();
                 $customer->customer_id     = $this->customerNumber();
@@ -130,7 +129,7 @@ class CustomerController extends Controller
                 $customer->billing_phone   = $request->billing_phone;
                 $customer->billing_zip     = $request->billing_zip;
                 $customer->billing_address = $request->billing_address;
-                if(!empty($request['password'])){
+                if (!empty($request['password'])) {
                     $customer->password        = $request['password'] ?? null;
                 }
                 $customer->shipping_name    = $request->shipping_name;
@@ -624,7 +623,7 @@ class CustomerController extends Controller
             $cust_id = $customer_id++;
             $customer = $customers[$i];
             $customerByEmail = Customer::where('email', $customer[1])->first();
-           
+
             if (!empty($customerByEmail)) {
                 $customerData = $customerByEmail;
             } else {
@@ -775,7 +774,7 @@ class CustomerController extends Controller
         $customerDetail = Customer::findOrFail($customer['id']);
         $invoice = Invoice::where('created_by', '=', \Auth::user()->creatorId())->where('customer_id', '=', $customer->id)->get()->pluck('id');
         $invoice_payment = InvoicePayment::whereIn('invoice_id', $invoice);
-        
+
         if (!empty($request->from_date) && !empty($request->until_date)) {
             $invoice_payment->whereBetween('date', [$request->from_date, $request->until_date]);
             $data['from_date'] = $request->from_date;
@@ -785,15 +784,15 @@ class CustomerController extends Controller
             $data['until_date'] = date('Y-m-t');
             $invoice_payment->whereBetween('date', [$data['from_date'], $data['until_date']]);
         }
-        
+
         $invoice_payment = $invoice_payment->get();
-        
+
         // Get unique invoice IDs from payments
         $payment_invoice_ids = $invoice_payment->pluck('invoice_id')->unique();
-        
+
         // Get only invoices that have payments in the date range
         $invoice_total = Invoice::whereIn('id', $payment_invoice_ids)->get();
-        
+
         $user = \Auth::user();
         $logo = asset(Storage::url('uploads/logo/'));
         $company_logo = Utility::getValByName('company_logo_dark');
@@ -845,14 +844,13 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
         $query = ClientTransaction::with(['account:id,holder_name', 'category:id,name'])
-                    ->orderBy('transaction_date', 'desc');
+            ->orderBy('transaction_date', 'desc');
 
         if ($user->type == 'accountant') {
             // Transactions for customers created by this specific accountant
             $query->whereIn('customer_id', function ($q) use ($user) {
                 $q->select('id')->from('customers')->where('created_by', $user->id);
             });
-
         } else if ($user->type == 'company') {
             // Transactions for customers created by ANY accountant belonging to this company
             $query->whereIn('customer_id', function ($q) use ($user) {
@@ -872,38 +870,37 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
         $query = ClientBankStatement::orderBy('month_year', 'desc');
-    
+
         if ($user->type == 'accountant') {
             // Filter statements for customers created by this specific accountant
             $query->whereIn('customer_id', function ($q) use ($user) {
                 $q->select('id')
-                  ->from('customers')
-                  ->where('created_by', $user->id);
+                    ->from('customers')
+                    ->where('created_by', $user->id);
             });
-    
         } else if ($user->type == 'company') {
             // Filter statements for customers created by ANY accountant belonging to this company
             $query->whereIn('customer_id', function ($q) use ($user) {
                 $q->select('id')
-                  ->from('customers')
-                  ->whereIn('created_by', function ($subQ) use ($user) {
-                      // Get all accountant IDs where the company is the creator
-                      $subQ->select('id')
-                           ->from('users')
-                           ->where('created_by', $user->id);
-                  });
+                    ->from('customers')
+                    ->whereIn('created_by', function ($subQ) use ($user) {
+                        // Get all accountant IDs where the company is the creator
+                        $subQ->select('id')
+                            ->from('users')
+                            ->where('created_by', $user->id);
+                    });
             });
         }
-    
+
         $bankStatements = $query->get();
-    
+
         return view('ClientReport.statement', compact('bankStatements'));
     }
 
 
     public function showFile(ClientBankStatement $bankStatement)
     {
-        
+
         if (!Storage::disk('private')->exists($bankStatement->file_path)) {
             abort(404);
         }
@@ -916,14 +913,13 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
         $query = CustomerExpense::with(['category:id,name'])
-                    ->orderBy('date', 'desc');
+            ->orderBy('date', 'desc');
 
         if ($user->type == 'accountant') {
             // Expenses for customers created by this specific accountant
             $query->whereIn('customer_id', function ($q) use ($user) {
                 $q->select('id')->from('customers')->where('created_by', $user->id);
             });
-
         } else if ($user->type == 'company') {
             // Expenses for customers created by ANY accountant belonging to this company
             $query->whereIn('customer_id', function ($q) use ($user) {
@@ -943,19 +939,19 @@ class CustomerController extends Controller
     public function getInvoices(Request $request)
     {
         $user = Auth::user();
+        $data = [];
         $query = CustomerInvoice::with([
-                        'customer:id,name',
-                        'client:id,client_name',
-                        'articles:id,invoice_id,designation,unit_price_ht,quantity,total_price_ht,tva_percentage'
-                    ])
-                    ->orderBy('date', 'desc');
+            'customer:id,name',
+            'client:id,client_name',
+            'articles:id,invoice_id,designation,unit_price_ht,quantity,total_price_ht,tva_percentage'
+        ])
+            ->orderBy('date', 'desc');
 
         if ($user->type == 'accountant') {
             // Invoices for customers created by this specific accountant
             $query->whereIn('customer_id', function ($q) use ($user) {
                 $q->select('id')->from('customers')->where('created_by', $user->id);
             });
-
         } else if ($user->type == 'company') {
             // Invoices for customers created by ANY accountant belonging to this company
             $query->whereIn('customer_id', function ($q) use ($user) {
@@ -968,7 +964,35 @@ class CustomerController extends Controller
 
         $invoices = $query->get();
 
-        return view('ClientReport.invoice', compact('invoices'));
+        $data['totalInvoiceCount'] = $invoices->count();
+        $data['totalPendingInvoiceCount'] = $invoices->where('review_status', 'PENDING')->count();
+        $data['totalApprovedInvoiceCount'] = $invoices->where('review_status', 'VALIDATED')->count();
+        $data['totalRejectedInvoiceCount'] = $invoices->where('review_status', 'REJECTED')->count();
+
+
+
+        return view('ClientReport.invoice', compact('invoices', 'data'));
     }
-   
+
+
+    public function invoiceReviewAction(Request $request)
+    {
+        $invoice = CustomerInvoice::findOrFail($request->invoice_id);
+
+        $invoice->review_status = $request->action;
+        $invoice->save();
+
+        $counts = [
+            'total'     => CustomerInvoice::count(),
+            'pending'   => CustomerInvoice::where('review_status', 'PENDING')->orWhere('review_status', '')->count(),
+            'validated' => CustomerInvoice::where('review_status', 'VALIDATED')->count(),
+            'rejected'  => CustomerInvoice::where('review_status', 'REJECTED')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'counts'  => $counts,
+            'message' => 'Review status updated'
+        ]);
+    }
 }

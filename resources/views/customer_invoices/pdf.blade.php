@@ -255,7 +255,7 @@ Tél : {{ $invoice->client->telephone }}
 </tr>
 
 <tr>
-<td><strong>TVA</strong></td>
+<td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
 <td>
 {{ number_format($totals['total_tva'],2,',',' ') }}
 {{ $currency_symbol }}

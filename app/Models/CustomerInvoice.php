@@ -18,6 +18,7 @@ class CustomerInvoice extends Model
         'invoice_number',
         'payment_method',
         'status',
+        'review_status',
         'notes',
         'document_path'
     ];
@@ -61,5 +62,15 @@ class CustomerInvoice extends Model
     public function getPdfUrlAttribute()
     {
         return url("/api/customer/customer-invoices/pdf/{$this->id}");
+    }
+
+    public static function getInvoiceActionStyles($status): string
+    {
+        return match ($status) {
+            'VALIDATED' => 'bg-light text-success border-success',
+            'EDIT_REQUESTED' => 'bg-light text-warning border-warning',
+            'REJECTED' => 'bg-light text-danger border-danger',
+            default => 'bg-white text-muted border-secondary',
+        };
     }
 }
