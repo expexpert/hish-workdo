@@ -289,6 +289,7 @@ class CustomerController extends Controller
         $data = [
             'notifications' => ClientNotification::where('customer_id', $user->id)
                 ->where('data', 'like', '%"notification"%')
+                ->where('is_read', false)
                 ->orderBy('created_at', 'desc')
                 ->limit(20)
                 ->get(),
@@ -1233,6 +1234,7 @@ class CustomerController extends Controller
             }),
         ];
         $totals['total_ttc'] = round($totals['total_ht'] + $totals['total_tva'], 2);
+        $totals['average_tva_percentage'] = $totals['total_ht'] > 0 ? round(($totals['total_tva'] / $totals['total_ht']) * 100, 2) : 0;
 
         $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
         $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;

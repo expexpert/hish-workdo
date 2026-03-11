@@ -683,6 +683,14 @@
                         </a>
                     </li>
                 @endif
+                @if (!\Auth::guard('customer')->check() && \Auth::user()->type != 'super admin')
+                <li class="dash-item {{ Request::route()->getName() == 'clients.notifications' ? 'active' : '' }}">
+                        <a href="{{ route('clients.notifications') }}" class="dash-link ">
+                            <span class="dash-micon"><i class="ti ti-bell"></i></span>
+                            <span class="dash-mtext">{{ __('Notifications') }}</span>
+                        </a>
+                    </li>
+                @endif
                 @if (\Auth::guard('customer')->check())
                 <li class="dash-item {{ Request::route()->getName() == 'customer.workflow.index' ? 'active' : '' }}">
                         <a href="{{ route('customer.workflow.index') }}" class="dash-link ">

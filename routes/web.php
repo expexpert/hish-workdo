@@ -126,9 +126,9 @@ Route::get('/dashboard/income-expense-chart', [DashboardController::class, 'getI
 Route::get('/dashboard/summary-metrics', [DashboardController::class, 'getSummaryMetrics'])->name('dashboard.summary-metrics')->middleware(['auth', 'XSS']);
 
 Route::post('dashboard/send-clients-notification', [DashboardController::class, 'sendClientsNotification'])->name('dashboard.send.clients.notification')->middleware(['auth', 'XSS']);
-
-Route::delete('/notifications/{id}/delete', [DashboardController::class, 'destroy'])->name('customer.notification.destroy');
-Route::delete('/notifications/clear-all', [DashboardController::class, 'clearAll'])->name('customer.notification.clearAll');
+Route::get('/clients-notifications', [DashboardController::class, 'getClientsNotifications'])->name('clients.notifications')->middleware(['auth', 'XSS']);
+Route::delete('/notifications/{id}/delete', [DashboardController::class, 'destroy'])->name('customer.notification.destroy')->middleware(['XSS']);
+Route::delete('/notifications/clear-all', [DashboardController::class, 'clearAll'])->name('customer.notification.clearAll')->middleware(['XSS']);
 
 Route::get('/bill/pay/{bill}', [BillController::class, 'paybill'])->name('pay.billpay');
 Route::get('/proposal/pay/{proposal}', [ProposalController::class, 'payproposal'])->name('pay.proposalpay');
@@ -619,6 +619,8 @@ Route::group(['middleware' => ['verified']], function () {
         Route::get('/customer-expenses', [CustomerController::class, 'getExpenses'])->name('customer.expenses');
 
         Route::get('/customer-invoices', [CustomerController::class, 'getInvoices'])->name('customer.invoices');
+
+        Route::post('/customer-invoice/review-action', [CustomerController::class, 'invoiceReviewAction'])->name('invoice.review.action');
         
         }
     );

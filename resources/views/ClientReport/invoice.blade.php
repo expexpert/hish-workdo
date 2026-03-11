@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 @section('page-title')
-{{__('Customer Expense Summary')}}
+{{__('Customer Invoice Summary')}}
 @endsection
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
 <li class="breadcrumb-item">{{__('Customer Report')}}</li>
-<li class="breadcrumb-item">{{__('Expense')}}</li>
+<li class="breadcrumb-item">{{__('Invoice')}}</li>
 @endsection
 @push('css-page')
 <link rel="stylesheet" href="{{ asset('css/datatable/buttons.dataTables.min.css') }}">
@@ -54,6 +54,64 @@
 
 
 <div class="row">
+    <div class="col-xxl-12">
+        <div class="row">
+            <div class="col-lg-3 col-3 dashboard-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="theme-avtar bg-primary">
+                            <i class="ti ti-file"></i>
+                        </div>
+                        <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
+                        <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-primary">{{__('Invoices')}}</a></h6>
+                        <h3 class="mb-0 text-primary" id="total-invoices">{{ $data['totalInvoiceCount'] }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-3 dashboard-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="theme-avtar bg-warning">
+                            <i class="ti ti-file"></i>
+                        </div>
+                        <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
+                        <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-warning">{{__('Pending Invoices')}}</a></h6>
+                        <h3 class="mb-0 text-warning" id="pending-invoices">{{ $data['totalPendingInvoiceCount'] }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-3 dashboard-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="theme-avtar bg-success">
+                            <i class="ti ti-file"></i>
+                        </div>
+                        <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
+                        <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-success">{{__('Validated Invoices')}}</a></h6>
+                        <h3 class="mb-0 text-success" id="validated-invoices">{{ $data['totalApprovedInvoiceCount'] }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-3 dashboard-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="theme-avtar bg-danger">
+                            <i class="ti ti-file"></i>
+                        </div>
+                        <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
+                        <h6 class="mb-3 "><a href="{{ route('customer.index') }}" class="text-danger">{{__('Rejected Invoices')}}</a></h6>
+                        <h3 class="mb-0 text-danger" id="rejected-invoices">{{ $data['totalRejectedInvoiceCount'] }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-body table-border-style">
@@ -66,9 +124,11 @@
                                 <th>{{__('Client')}}</th>
                                 <th>{{__('Invoice Number')}}</th>
                                 <th>{{__('Payment Method')}}</th>
+                                <th>{{__('Notes')}}</th>
                                 <th>{{__('Status')}}</th>
                                 <th>{{__('Articles')}}</th>
                                 <th>{{__('Document')}}</th>
+                                <th>{{__('Actions')}}</th>
                             </tr>
                         </thead>
 
@@ -80,15 +140,16 @@
                                 <td>{{ $invoice->client?->client_name ?? '-' }}</td>
                                 <td>{{ $invoice->invoice_number ?? '-' }}</td>
                                 <td>{{ $invoice->payment_method ?? '-' }}</td>
+                                <td>{{ $invoice->notes ?? '-' }}</td>
                                 <td>{{ $invoice->status ?? '-' }}</td>
                                 <td>
                                     @php $count = $invoice->articles?->count() ?? 0; @endphp
                                     @if($count > 0)
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#articlesModal-{{ $invoice->id }}">
-                                            {{ __('View') }} ({{ $count }})
-                                        </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#articlesModal-{{ $invoice->id }}">
+                                        {{ __('View') }} ({{ $count }})
+                                    </button>
                                     @else
-                                        -
+                                    -
                                     @endif
                                 </td>
                                 <td>
@@ -100,56 +161,136 @@
                                     {{ __('No Document') }}
                                     @endif
                                 </td>
+                                <td>
+                                    <select class="form-select form-select-sm fw-bold border-2 transition w-100 invoice-action {{ \App\Models\CustomerInvoice::getInvoiceActionStyles($invoice->review_status) }}"
+                                        data-id="{{ $invoice->id }}" style="min-width:100px">
+
+                                        <option value="" disabled {{ $invoice->review_status == 'PENDING' ? 'selected' : '' }}>
+                                            {{ __('Pending') }}
+                                        </option>
+
+                                        <option value="VALIDATED"
+                                            {{ $invoice->review_status == 'VALIDATED' ? 'selected' : '' }}>
+                                            {{ __('Validate') }}
+                                        </option>
+                                        <!-- 
+                                        <option value="EDIT_REQUESTED"
+                                            {{ $invoice->review_status == 'EDIT_REQUESTED' ? 'selected' : '' }}>
+                                            {{ __('Edit') }}
+                                        </option> -->
+
+                                        <option value="REJECTED"
+                                            {{ $invoice->review_status == 'REJECTED' ? 'selected' : '' }}>
+                                            {{ __('Reject') }}
+                                        </option>
+
+                                    </select>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                     @foreach ($invoices as $invoice)
-                        @if(($invoice->articles?->count() ?? 0) > 0)
-                            <div class="modal fade" id="articlesModal-{{ $invoice->id }}" tabindex="-1" aria-labelledby="articlesLabel-{{ $invoice->id }}" aria-hidden="true">
-                                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="articlesLabel-{{ $invoice->id }}">{{ __('Invoice Articles') }} — {{ $invoice->invoice_number ?? '#' }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="table-responsive">
-                                                <table class="table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>{{ __('Designation') }}</th>
-                                                            <th class="text-end">{{ __('Qty') }}</th>
-                                                            <th class="text-end">{{ __('Unit Price HT') }}</th>
-                                                            <th class="text-end">{{ __('TVA %') }}</th>
-                                                            <th class="text-end">{{ __('Total HT') }}</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach ($invoice->articles as $article)
-                                                            <tr>
-                                                                <td>{{ $article->designation }}</td>
-                                                                <td class="text-end">{{ $article->quantity }}</td>
-                                                                <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
-                                                                <td class="text-end">{{ number_format((float) $article->tva_percentage, 2) }}</td>
-                                                                <td class="text-end">{{ number_format((float) $article->total_price_ht, 2) }}</td>
-                                                            </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
-                                        </div>
+                    @if(($invoice->articles?->count() ?? 0) > 0)
+                    <div class="modal fade" id="articlesModal-{{ $invoice->id }}" tabindex="-1" aria-labelledby="articlesLabel-{{ $invoice->id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="articlesLabel-{{ $invoice->id }}">{{ __('Invoice Articles') }} — {{ $invoice->invoice_number ?? '#' }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>{{ __('Designation') }}</th>
+                                                    <th class="text-end">{{ __('Qty') }}</th>
+                                                    <th class="text-end">{{ __('Unit Price HT') }}</th>
+                                                    <th class="text-end">{{ __('TVA %') }}</th>
+                                                    <th class="text-end">{{ __('Total HT') }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($invoice->articles as $article)
+                                                <tr>
+                                                    <td>{{ $article->designation }}</td>
+                                                    <td class="text-end">{{ $article->quantity }}</td>
+                                                    <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
+                                                    <td class="text-end">{{ number_format((float) $article->tva_percentage, 2) }}</td>
+                                                    <td class="text-end">{{ number_format((float) $article->total_price_ht, 2) }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                </div>
                             </div>
-                        @endif
+                        </div>
+                    </div>
+                    @endif
                     @endforeach
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+<script>
+    document.addEventListener('change', function(e) {
+
+        if (e.target.classList.contains('invoice-action')) {
+
+            let action = e.target.value;
+            let invoiceId = e.target.dataset.id;
+
+            if (!confirm('Are you sure you want to perform this action?')) {
+                return;
+            }
+
+            fetch("{{ route('invoice.review.action') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        invoice_id: invoiceId,
+                        action: action
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+                        console.log("Status updated");
+                        show_toastr('success', '{{ __('Action performed successfully ') }}');
+                        const styleMap = {
+                            'VALIDATED': 'bg-light text-success border-success',
+                            'EDIT_REQUESTED': 'bg-light text-warning border-warning',
+                            'REJECTED': 'bg-light text-danger border-danger',
+                            '': 'bg-white text-muted border-secondary'
+                        };
+                        e.target.className = `form-select form-select-sm fw-bold border-2 transition w-100 invoice-action ${styleMap[action]}`;
+
+                        console.log(data.counts);
+                        // Update counts
+                        document.getElementById('total-invoices').textContent = data.counts.total;
+                        document.getElementById('pending-invoices').textContent = data.counts.pending;
+                        document.getElementById('validated-invoices').textContent = data.counts.validated;
+                        document.getElementById('rejected-invoices').textContent = data.counts.rejected;
+
+                    } else {
+                        alert("Something went wrong");
+                        show_toastr('error', '{{ __('Failed to perform action ') }}');
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+    });
+</script>
 @endsection

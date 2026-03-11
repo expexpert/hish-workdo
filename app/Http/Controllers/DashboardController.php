@@ -25,6 +25,7 @@ use App\Models\ClientNotification;
 use App\Models\CustomerInvoice;
 use App\Models\CustomerExpense;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -427,9 +428,11 @@ class DashboardController extends Controller
         $documentPath = null;
         if ($request->hasFile('document')) {
             $file = $request->file('document');
-            // Change 'local' to 'public' here
             $documentPath = $file->store('client_notifications', 'public');
         }
+
+        Utility::getSMTPDetails(1);
+        $attachmentPath = $documentPath ? Storage::disk('public')->path($documentPath) : null;
 
         // Create client notifications
         foreach ($customers as $cust) {
@@ -442,17 +445,45 @@ class DashboardController extends Controller
                 'data' => $request->notification_type ?? null,
                 'document' => $documentPath,
             ]);
+
+            if (!empty($cust->email)) {
+                try {
+
+                    $html = view('email.client_notification', [
+                        'subject' => $request->subject,
+                        'messageContent' => $request->message
+                    ])->render();
+
+                    Mail::send([], [], function ($message) use ($cust, $request, $attachmentPath, $html) {
+
+                        $message->to($cust->email)
+                            ->subject($request->subject)
+                            ->html($html);
+
+                        if ($attachmentPath) {
+                            $message->attach($attachmentPath);
+                        }
+                    });
+                } catch (\Exception $e) {
+                }
+            }
         }
 
         return back()->with('success', __('Sent successfully.'));
     }
 
+    public function getClientsNotifications()
+    {
+        $auth = Auth::user();
+        $customerIds = $auth->type === 'company' ? Customer::whereIn('created_by', $auth->getCustomerFilterIds())->pluck('id') : $auth->getAccountantCustomersIds();
+        $notifications = ClientNotification::whereIn('customer_id', $customerIds)->orderBy('created_at', 'desc')->with('customer', 'sender')->get();
+        return view('dashboard.clients_notifications', compact('notifications'));
+    }
+
 
     public function destroy($id)
     {
-        $notification = ClientNotification::where('id', $id)
-            ->where('customer_id', Auth::guard('customer')->user()->id)
-            ->firstOrFail();
+        $notification = ClientNotification::where('id', $id)->firstOrFail();
 
         // Check if document exists and delete it from storage
         if (!empty($notification->document)) {
@@ -464,7 +495,7 @@ class DashboardController extends Controller
 
         $notification->delete();
 
-        return back()->with('success', __('Notification and associated document deleted.'));
+        return back()->with('success', __('Notification deleted.'));
     }
 
     // Clear all notifications and all associated files
