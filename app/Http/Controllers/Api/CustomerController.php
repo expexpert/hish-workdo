@@ -247,6 +247,7 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $hasUnread = ClientNotification::where('customer_id', $user->id)
+            ->where('data', 'like', '%"notification"%')
             ->where('is_read', false)
             ->exists();
 
