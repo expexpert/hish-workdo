@@ -16,7 +16,7 @@ return new class extends Migration
 
             // Foreign Keys
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('category_id')->constrained('product_service_categories')->onDelete('cascade');
+            $table->foreignId('category_id')->constrained('customer_categories')->onDelete('cascade');
 
             // Expense Details
             $table->date('date');
