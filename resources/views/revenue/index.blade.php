@@ -19,7 +19,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : 0;
         <i class="ti ti-file-export"></i>
     </a>
 
-    @if (\Auth::user()->type !== 'company')
     @can('create revenue')
     <a href="#" data-url="{{ route('revenue.create') }}" data-size="lg" data-ajax-popup="true"
         data-title="{{ __('Create New Revenue') }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
@@ -27,7 +26,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : 0;
         <i class="ti ti-plus"></i>
     </a>
     @endcan
-    @endif
 </div>
 @endsection
 
