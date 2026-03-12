@@ -53,7 +53,7 @@ class CustomerExpense extends Model
     public function category(): BelongsTo
     {
         // Explicitly defining the foreign key if it differs from the table name
-        return $this->belongsTo(ProductServiceCategory::class, 'category_id');
+        return $this->belongsTo(CustomerCategory::class, 'category_id');
     }
 
     public function supplier(): BelongsTo
