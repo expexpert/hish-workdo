@@ -20,7 +20,6 @@
             <i class="ti ti-file-export"></i>
         </a>
 
-        @if (\Auth::user()->type !== 'company')
 
         @can('create invoice')
             <a href="{{ route('invoice.create', 0) }}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
@@ -29,7 +28,6 @@
             </a>
         @endcan
 
-        @endif
     </div>
 @endsection
 
