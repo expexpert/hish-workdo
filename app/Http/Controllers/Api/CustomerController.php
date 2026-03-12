@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Utility;
 use App\Models\InvoiceArticle;
+use Illuminate\Validation\ValidationException;
 use App\Models\CustomerProduct;
 use App\Models\CustomerSupplier;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -875,37 +876,45 @@ class CustomerController extends Controller
 
     public function storeExpense(Request $request)
     {
-        $validated = $request->validate([
-            'customer_id'    => 'required|exists:customers,id',
-            'supplier_id'    => 'required|exists:customer_suppliers,id',
-            'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'date'           => 'required|date',
-            'ttc'            => 'required|numeric|min:0',
-            'tva'            => 'nullable|numeric|min:0',
-            'payment_method' => 'required|string|max:255',
-            'category_id'    => 'required|exists:customer_categories,id',
-            'total_ttc'      => 'nullable|numeric|min:0',
-            'total_tva'      => 'nullable|numeric|min:0',
-            'notes'           => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'customer_id'    => 'required|exists:customers,id',
+                'supplier_id'    => 'required|exists:customer_suppliers,id',
+                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+                'date'           => 'required|date',
+                'ttc'            => 'required|numeric|min:0',
+                'tva'            => 'nullable|numeric|min:0',
+                'payment_method' => 'required|string|max:255',
+                'category_id'    => 'required|exists:customer_categories,id',
+                'total_ttc'      => 'nullable|numeric|min:0',
+                'total_tva'      => 'nullable|numeric|min:0',
+                'notes'          => 'nullable|string',
+            ]);
 
-        // Handle File Upload
-        if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('expenses', 'public');
-            $validated['file'] = $path;
+            // Handle File Upload
+            if ($request->hasFile('file')) {
+                $path = $request->file('file')->store('expenses', 'public');
+                $validated['file'] = $path;
+            }
+
+            $expense = CustomerExpense::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Expense recorded successfully.',
+                'data' => $expense
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+                'debug_info' => [
+                    'received_payload' => $request->all(),
+                    'server_time' => now()->toDateTimeString()
+                ]
+            ], 422);
         }
-
-        $expense = CustomerExpense::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expense recorded successfully.',
-            'debug_info' => [
-                'received_payload' => $request->all(),
-                'server_time' => now()->toDateTimeString()
-            ],
-            'data' => $expense
-        ], 201);
     }
 
 
