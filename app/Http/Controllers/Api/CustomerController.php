@@ -44,27 +44,30 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:customers,email,' . $user->id,
-            'bio' => 'nullable|string|max:1000',
-            'short_bio' => 'nullable|string|max:255',
-            'ice_number' => 'nullable|string|max:255',
-            'rc_number' => 'nullable|string|max:255',
-            'patent_number' => 'nullable|string|max:255',
-            'if_number' => 'nullable|string|max:255',
-            'cnss' => 'nullable|string|max:255',
-            'company_type' => 'nullable|string|max:255',
-            'contact' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'signature' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'billing_name' => 'nullable|string|max:255',
-            'billing_phone' => 'nullable|string|max:20',
-            'vat_number' => 'nullable|string|max:255',
-            'billing_address' => 'nullable|string|max:255',
-            'billing_zip' => 'nullable|string|max:20',
-            'billing_city' => 'nullable|string|max:100',
-            'website' => 'nullable|string|max:255',
+            // If these keys are present in the request, they MUST have a value (cannot be empty)
+            'name'             => 'sometimes|required|string|max:255',
+            'email'            => 'sometimes|required|email|unique:customers,email,' . $user->id,
+            'bio'              => 'sometimes|required|string|max:1000',
+            'short_bio'        => 'sometimes|required|string|max:255',
+            'ice_number'       => 'sometimes|required|string|max:255',
+            'rc_number'        => 'sometimes|required|string|max:255',
+            'patent_number'    => 'sometimes|required|string|max:255',
+            'if_number'        => 'sometimes|required|string|max:255',
+            'cnss'             => 'sometimes|required|string|max:255',
+            'company_type'     => 'sometimes|required|string|max:255',
+            'contact'          => 'sometimes|required|string|max:20',
+            'address'          => 'sometimes|required|string|max:255',
+            'billing_name'     => 'sometimes|required|string|max:255',
+            'billing_phone'    => 'sometimes|required|string|max:20',
+            'vat_number'       => 'sometimes|required|string|max:255',
+            'billing_address'  => 'sometimes|required|string|max:255',
+            'billing_zip'      => 'sometimes|required|string|max:20',
+            'billing_city'     => 'sometimes|required|string|max:100',
+
+            // These can be present and empty (null), or missing entirely
+            'website'          => 'nullable|string|max:255',
+            'avatar'           => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            'signature'        => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -1260,7 +1263,8 @@ class CustomerController extends Controller
                     $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
                 }
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         try {
             if ($company && $company->signature) {
@@ -1270,7 +1274,8 @@ class CustomerController extends Controller
                     $signatureDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($sigPath));
                 }
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         $pdf = Pdf::loadView('customer_invoices.pdf', [
             'invoice'          => $invoice,
