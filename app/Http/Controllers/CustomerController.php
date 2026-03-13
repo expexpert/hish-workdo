@@ -908,11 +908,29 @@ class CustomerController extends Controller
         return Storage::disk('private')->response($bankStatement->file_path);
     }
 
+    public function showExpenseFile(CustomerExpense $expense)
+    {
+        if (!$expense->file || !Storage::disk('private')->exists($expense->file)) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response($expense->file);
+    }
+
+    public function showInvoiceFile(CustomerInvoice $invoice)
+    {
+        if (!$invoice->document_path || !Storage::disk('private')->exists($invoice->document_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response($invoice->document_path);
+    }
+
 
     public function getExpenses(Request $request)
     {
         $user = Auth::user();
-        $query = CustomerExpense::with(['category:id,name'])
+        $query = CustomerExpense::with(['category:id,name', 'supplier:id,supplier_name'])
             ->orderBy('date', 'desc');
 
         if ($user->type == 'accountant') {

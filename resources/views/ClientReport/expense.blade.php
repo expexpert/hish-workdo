@@ -63,6 +63,7 @@
                             <tr>
                                 <th>{{__('Date')}}</th>
                                 <th>{{__('Customer')}}</th>
+                                <th>{{__('Supplier')}}</th>
                                 <th>{{__('Category')}}</th>
                                 <th>{{__('Payment Method')}}</th>
                                 <th>{{__('Notes')}}</th>
@@ -79,6 +80,7 @@
                             <tr>
                                 <td>{{ \Auth::user()->dateFormat($expense->date)}}</td>
                                 <td>{{ $expense->customer?->name ?? '-' }}</td>
+                                <td>{{ $expense->supplier?->supplier_name ?? '-' }}</td>
                                 <td>{{ $expense->category->name ?? '-' }}</td>
                                 <td>{{ $expense->payment_method ?? '-' }}</td>
                                 <td style="max-width: 250px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
@@ -100,11 +102,11 @@
                                 <td>{{ \Auth::user()->priceFormat($expense->total_tva) }}</td>
                                 <td>
                                     @if($expense->file)
-                                    <a href="{{ Storage::url($expense->file) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        {{ __('View Receipt') }}
+                                    <a href="{{ route('customer.expenses.view-file', $expense->id) }}" target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="ti ti-download"></i>
                                     </a>
                                     @else
-                                    {{ __('No Receipt') }}
+                                    {{ __('-') }}
                                     @endif
                                 </td>
                             </tr>

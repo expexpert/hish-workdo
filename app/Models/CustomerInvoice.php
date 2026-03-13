@@ -47,7 +47,7 @@ class CustomerInvoice extends Model
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(CustomerClient::class, 'client_id', 'id');
+        return $this->belongsTo(CustomerClient::class, 'client_id', 'id')->withTrashed();
     }
     public function getInvoiceUrlAttribute()
     {
