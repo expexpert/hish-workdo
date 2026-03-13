@@ -5,3 +5,16 @@
 /.env
 /.env.*
 /vendor
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/views/*.php
+/storage/framework/sessions/*
+/storage/logs/*
+/storage/app/public/*
+/database/*.sqlite
+/database/*.sqlite-journal
+/storage/uploads/*
+/storage/installed
