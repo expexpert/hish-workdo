@@ -178,8 +178,8 @@
                                 </td>
                                 <td>
                                     @if($invoice->document_path)
-                                    <a href="{{ Storage::url($invoice->document_path) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        {{ __('View') }}
+                                    <a href="{{ route('customer.invoices.view-file', $invoice->id) }}" target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="ti ti-download"></i>
                                     </a>
                                     @else
                                     {{ __('No Document') }}

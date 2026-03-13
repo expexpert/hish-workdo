@@ -700,7 +700,7 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $client = CustomerClient::where('id', $id)
+        $client = CustomerClient::withTrashed()->where('id', $id)
             ->where('customer_id', $user->id)
             ->first();
 
@@ -728,7 +728,7 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customer_suppliers,email',
+            'email' => 'nullable|email|unique:customer_suppliers,email',
             'telephone' => 'nullable|string|max:20',
             'postal_code' => 'required|string|max:20',
             'city' => 'required|string|max:100',
@@ -896,7 +896,7 @@ class CustomerController extends Controller
 
             // Handle File Upload
             if ($request->hasFile('file')) {
-                $path = $request->file('file')->store('expenses', 'public');
+                $path = $request->file('file')->store('expenses', 'private');
                 $validated['file'] = $path;
             }
 
@@ -983,14 +983,14 @@ class CustomerController extends Controller
         $expense = CustomerExpense::where('customer_id', $request->user()->id)
             ->findOrFail($id);
 
-        if (!$expense->file || !Storage::disk('public')->exists($expense->file)) {
+        if (!$expense->file || !Storage::disk('private')->exists($expense->file)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Expense file not found.'
             ], 404);
         }
 
-        return Storage::disk('public')->download($expense->file, 'Expense_' . $expense->id . '_' . now()->format('Ymd_His') . '.' . pathinfo($expense->file, PATHINFO_EXTENSION));
+        return Storage::disk('private')->download($expense->file, 'Expense_' . $expense->id . '_' . now()->format('Ymd_His') . '.' . pathinfo($expense->file, PATHINFO_EXTENSION));
     }
 
 
@@ -1048,7 +1048,10 @@ class CustomerController extends Controller
 
         // Handle File Upload
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('expenses', 'public');
+            if ($expense->file) {
+                Storage::disk('private')->delete($expense->file);
+            }
+            $path = $request->file('file')->store('expenses', 'private');
             $validated['file'] = $path;
         }
 
@@ -1075,6 +1078,10 @@ class CustomerController extends Controller
                 'success' => false,
                 'message' => 'Expense not found or does not belong to the customer.'
             ], 404);
+        }
+
+        if ($expense->file) {
+            Storage::disk('private')->delete($expense->file);
         }
 
         $expense->delete();
@@ -1154,7 +1161,7 @@ class CustomerController extends Controller
             return DB::transaction(function () use ($request, $validated) {
                 // 1. Handle File Upload
                 if ($request->hasFile('document')) {
-                    $path = $request->file('document')->store('customer_invoices', 'public');
+                    $path = $request->file('document')->store('customer_invoices', 'private');
                     $validated['document_path'] = $path;
                 }
 
@@ -1164,6 +1171,22 @@ class CustomerController extends Controller
                 // 3. Create Articles ONLY if they exist in the request
                 if (!empty($validated['articles'])) {
                     $invoice->articles()->createMany($validated['articles']);
+
+                    foreach ($validated['articles'] as $article) {
+                        // Check if product already exists for this customer based on designation
+                        CustomerProduct::firstOrCreate(
+                            [
+                                'customer_id' => $validated['customer_id'],
+                                'designation' => $article['designation'],
+                            ],
+                            [
+                                'unit_price_ht'  => $article['unit_price_ht'],
+                                'tva_percent'    => $article['tva_percentage'], // Note the name mapping
+                                'quantity'       => $article['quantity'],
+                                'total_price_ht' => $article['total_price_ht'],
+                            ]
+                        );
+                    }
                 }
 
                 return response()->json([
@@ -1174,7 +1197,7 @@ class CustomerController extends Controller
             });
         } catch (\Exception $e) {
             if (isset($validated['document_path'])) {
-                Storage::disk('public')->delete($validated['document_path']);
+                Storage::disk('private')->delete($validated['document_path']);
             }
 
             return response()->json([
@@ -1222,14 +1245,14 @@ class CustomerController extends Controller
         $invoice = CustomerInvoice::where('customer_id', $request->user()->id)
             ->findOrFail($id);
 
-        if (!$invoice->document_path || !Storage::disk('public')->exists($invoice->document_path)) {
+        if (!$invoice->document_path || !Storage::disk('private')->exists($invoice->document_path)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invoice file not found on server.'
             ], 404);
         }
 
-        return Storage::disk('public')->download($invoice->document_path, 'Invoice_' . $invoice->id . '.' . pathinfo($invoice->document_path, PATHINFO_EXTENSION));
+        return Storage::disk('private')->download($invoice->document_path, 'Invoice_' . $invoice->id . '.' . pathinfo($invoice->document_path, PATHINFO_EXTENSION));
     }
 
     public function downloadInvoicePdf($id, Request $request)
@@ -1367,9 +1390,9 @@ class CustomerController extends Controller
                 // 1. Handle File Upload (and delete old file if a new one is uploaded)
                 if ($request->hasFile('document')) {
                     if ($invoice->document_path) {
-                        Storage::disk('public')->delete($invoice->document_path);
+                        Storage::disk('private')->delete($invoice->document_path);
                     }
-                    $path = $request->file('document')->store('customer_invoices', 'public');
+                    $path = $request->file('document')->store('customer_invoices', 'private');
                     $validated['document_path'] = $path;
                 }
 
@@ -1419,7 +1442,7 @@ class CustomerController extends Controller
             return DB::transaction(function () use ($invoice) {
                 // 1. Delete the physical file from storage if it exists
                 if ($invoice->document_path) {
-                    Storage::disk('public')->delete($invoice->document_path);
+                    Storage::disk('private')->delete($invoice->document_path);
                 }
 
                 // Delete associated articles first
@@ -1462,7 +1485,7 @@ class CustomerController extends Controller
             $file = fopen('php://output', 'w');
 
             // Add Headers
-            fputcsv($file, ['Invoice#', 'Date', 'Client', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
+            fputcsv($file, ['Invoice#', 'Date', 'Client', 'Status', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
 
             foreach ($invoices as $invoice) {
                 $clientName = $invoice->client->client_name ?? 'N/A';
@@ -1471,6 +1494,7 @@ class CustomerController extends Controller
                         $invoice->invoice_number,
                         $invoice->date,
                         $clientName,
+                        $invoice->status,
                         $article->designation ?? '',
                         $article->total_price_ht,
                         $article->tva_percentage,
