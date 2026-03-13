@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
 use App\Models\CustomerProduct;
 use App\Models\CustomerSupplier;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Illuminate\Support\Facades\Cache;
 
 class CustomerController extends Controller
 {
@@ -123,66 +123,44 @@ class CustomerController extends Controller
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
 
-        $totalInvoiceSum = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+        // Combined Invoice Stats - only one query for all sums
+        $invoiceStats = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
-            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
             ->when($dateFrom, function ($query, $dateFrom) {
                 $query->whereDate('customer_invoices.date', '>=', $dateFrom);
             })
             ->when($dateTo, function ($query, $dateTo) {
                 $query->whereDate('customer_invoices.date', '<=', $dateTo);
             })
-            ->sum('invoice_articles.unit_price_ht');
+            ->select(
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.unit_price_ht ELSE 0 END) as total_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.unit_price_ht ELSE 0 END) as issued_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected")
+            )
+            ->first();
 
-        $totalInvoiceIssuedSum = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
-            ->where('customer_invoices.customer_id', $user->id)
-            ->where('customer_invoices.status', 'ISSUED')
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('customer_invoices.date', '<=', $dateTo);
-            })
-            ->sum('invoice_articles.unit_price_ht');
-
-        $totalExpenseSum = CustomerExpense::where('customer_id', $user->id)
+        // Combined Expense Stats - only one query for both sums
+        $expenseStats = CustomerExpense::where('customer_id', $user->id)
             ->when($dateFrom, function ($query, $dateFrom) {
                 $query->whereDate('date', '>=', $dateFrom);
             })
             ->when($dateTo, function ($query, $dateTo) {
                 $query->whereDate('date', '<=', $dateTo);
             })
-            ->sum('ttc');
+            ->select(
+                DB::raw("SUM(ttc) as total_sum")
+            )
+            ->first();
 
-        $totalVatCollected = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
-            ->where('customer_invoices.customer_id', $user->id)
-            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('customer_invoices.date', '<=', $dateTo);
-            })
-            ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
-
-        $totalVatDeductible = CustomerExpense::where('customer_id', $user->id)
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('date', '<=', $dateTo);
-            })
-            ->sum('ttc');
-
-        $totalVatPayable = $totalVatCollected - $totalVatDeductible;
+        $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_sum ?? 0);
 
         return response()->json([
             'success' => true,
             'message' => 'Dashboard data retrieved successfully.',
             'data'    => [
-                'total_invoices_sum' => (float) $totalInvoiceSum,
-                'total_invoices_issued_sum' => (float) $totalInvoiceIssuedSum,
-                'total_expenses_sum' => (float) $totalExpenseSum,
+                'total_invoices_sum' => (float) ($invoiceStats->total_sum ?? 0),
+                'total_invoices_issued_sum' => (float) ($invoiceStats->issued_sum ?? 0),
+                'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
             ]
         ], 200);
@@ -194,11 +172,15 @@ class CustomerController extends Controller
         $user = $request->user();
         $year = $request->get('year', date('Y'));
 
+        // Use whereBetween for better performance
+        $startDate = Carbon::createFromDate($year, 1, 1)->startOfYear();
+        $endDate = $startDate->copy()->endOfYear();
+
         // 1. Fetch Invoices (CA) grouped by month
         $invoices = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
             ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
-            ->whereYear('customer_invoices.date', $year)
+            ->whereBetween('customer_invoices.date', [$startDate, $endDate])
             ->select(
                 DB::raw('MONTH(customer_invoices.date) as month'),
                 DB::raw('SUM(invoice_articles.unit_price_ht) as total')
@@ -208,7 +190,7 @@ class CustomerController extends Controller
 
         // 2. Fetch Expenses grouped by month
         $expenses = CustomerExpense::where('customer_id', $user->id)
-            ->whereYear('date', $year)
+            ->whereBetween('date', [$startDate, $endDate])
             ->select(
                 DB::raw('MONTH(date) as month'),
                 DB::raw('SUM(ttc) as total')
@@ -223,15 +205,13 @@ class CustomerController extends Controller
         for ($m = 1; $m <= 12; $m++) {
             $monthLabel = Carbon::create()->month($m)->format('M');
 
-            // CA includes the label
             $caFormatted[] = [
                 'label' => $monthLabel,
                 'value' => (float)($invoices->get($m, 0))
             ];
 
-            // Expenses just includes the value
             $expensesFormatted[] = [
-                'label' => $monthLabel, // Optional: include label for consistency
+                'label' => $monthLabel,
                 'value' => (float)($expenses->get($m, 0))
             ];
         }
@@ -250,9 +230,10 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
+        // Optimized: Check is_read first as it's a simple boolean and likely indexed
         $hasUnread = ClientNotification::where('customer_id', $user->id)
-            ->where('data', 'like', '%"notification"%')
             ->where('is_read', false)
+            ->where('data', 'like', '%"notification"%')
             ->exists();
 
         return response()->json([
@@ -269,7 +250,10 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $accountant = $user->accountant;
+        // Use caching for accountant info as it rarely changes
+        $accountant = Cache::remember("customer_accountant_{$user->id}", 3600, function () use ($user) {
+            return $user->accountant;
+        });
 
         if (! $accountant) {
             return response()->json([
@@ -290,11 +274,11 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        // Prepare the data payload
+        // Prepare the data payload - optimize by checking is_read first
         $data = [
             'notifications' => ClientNotification::where('customer_id', $user->id)
-                ->where('data', 'like', '%"notification"%')
                 ->where('is_read', false)
+                ->where('data', 'like', '%"notification"%')
                 ->orderBy('created_at', 'desc')
                 ->limit(20)
                 ->get(),
@@ -924,20 +908,27 @@ class CustomerController extends Controller
     public function getExpenses(Request $request)
     {
         $user = $request->user();
-
         $month = $request->query('month');
         $year = $request->query('year');
 
-        $expenses = CustomerExpense::where('customer_id', $user->id)
+        $query = CustomerExpense::where('customer_id', $user->id)
             ->with('category:id,name')
-            ->orderBy('date', 'desc')
-            ->when($year, function ($query, $year) {
-                return $query->whereYear('date', $year);
-            })
-            ->when($month, function ($query, $month) {
-                return $query->whereMonth('date', $month);
-            })
-            ->get();
+            ->orderBy('date', 'desc');
+
+        // Use whereBetween for better performance when year is provided
+        if ($year && $month) {
+            $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($year) {
+            $start = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $end = $start->copy()->endOfYear();
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($month) {
+            $query->whereMonth('date', $month);
+        }
+
+        $expenses = $query->get();
 
         return response()->json([
             'success' => true,
@@ -953,20 +944,28 @@ class CustomerController extends Controller
         $month = $request->query('month');
         $year = $request->query('year');
 
-        $rows = CustomerExpense::where('customer_id', $user->id)
+        $query = CustomerExpense::where('customer_id', $user->id)
             ->join('customer_categories', 'customer_expenses.category_id', '=', 'customer_categories.id')
             ->select(
                 'customer_expenses.category_id',
                 DB::raw('customer_categories.name as label'),
                 DB::raw('SUM(COALESCE(customer_expenses.total_ttc, customer_expenses.ttc)) as value')
-            )
-            ->when($year, function ($query, $year) {
-                return $query->whereYear('customer_expenses.date', $year);
-            })
-            ->when($month, function ($query, $month) {
-                return $query->whereMonth('customer_expenses.date', $month);
-            })
-            ->groupBy('customer_expenses.category_id', 'customer_categories.name')
+            );
+
+        // Use whereBetween for better performance when year is provided
+        if ($year && $month) {
+            $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $query->whereBetween('customer_expenses.date', [$start, $end]);
+        } elseif ($year) {
+            $start = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $end = $start->copy()->endOfYear();
+            $query->whereBetween('customer_expenses.date', [$start, $end]);
+        } elseif ($month) {
+            $query->whereMonth('customer_expenses.date', $month);
+        }
+
+        $rows = $query->groupBy('customer_expenses.category_id', 'customer_categories.name')
             ->orderByDesc('value')
             ->get();
 
@@ -1146,6 +1145,7 @@ class CustomerController extends Controller
             'invoice_number' => 'required|string|max:255|unique:customer_invoices,invoice_number',
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
+            'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
 
 
@@ -1216,21 +1216,28 @@ class CustomerController extends Controller
         $year = $request->query('year');
         $status = $request->query('status');
 
-        $invoices = CustomerInvoice::where('customer_id', $user->id)
+        $query = CustomerInvoice::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles'])
-            ->orderBy('date', 'desc')
-            ->where(function ($query) use ($status) {
-                if ($status) {
-                    $query->where('status', $status);
-                }
-            })
-            ->when($year, function ($query) use ($year) {
-                $query->whereYear('date', $year);
-            })
-            ->when($month, function ($query) use ($month) {
-                $query->whereMonth('date', $month);
-            })
-            ->get();
+            ->orderBy('date', 'desc');
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Use whereBetween for better performance when year is provided (avoids YEAR() and MONTH() function calls on indexed column)
+        if ($year && $month) {
+            $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($year) {
+            $start = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $end = $start->copy()->endOfYear();
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($month) {
+            $query->whereMonth('date', $month);
+        }
+
+        $invoices = $query->get();
 
         return response()->json([
             'success' => true,
@@ -1373,6 +1380,7 @@ class CustomerController extends Controller
             'invoice_number' => 'sometimes|required|string|max:255|unique:customer_invoices,invoice_number,' . $invoice->id,
             'payment_method' => 'sometimes|required|string|max:255',
             'status'         => 'sometimes|required|string|max:50',
+            'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
 
             // Articles validation (optional during update)

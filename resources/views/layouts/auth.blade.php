@@ -110,11 +110,11 @@
 <body class="{{ $themeColor }}">
     <!-- [custom-login] start -->
     <div class="custom-login">
-        <div class="login-bg-img">
+        <!-- <div class="login-bg-img">
             <img src="{{ asset('assets/images/auth/' . $color_image . '.svg') }}" class="login-bg-1">
             {{-- <img src="{{ isset($settings['color_flag']) && $settings['color_flag'] == 'false' ? asset('assets/images/auth/'.$color.'.svg') : asset('assets/images/auth/theme-3.svg') }}" class="login-bg-1"> --}}
             <img src="{{ asset('assets/images/auth/common.svg') }}" class="login-bg-2">
-        </div>
+        </div> -->
         <div class="bg-login bg-primary"></div>
         <div class="custom-login-inner">
             <header class="dash-header">
@@ -127,7 +127,7 @@
                                     loading="lazy" style="height: 40px" />
                             </a>
                         </div>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navbarlogin">
                             <span class="navbar-toggler-icon"></span>
                         </button>
@@ -136,7 +136,7 @@
                                 @include('landingpage::layouts.buttons')
                                 @yield('auth-lang')
                             </ul>
-                        </div>
+                        </div> -->
                     </div>
                 </nav>
             </header>
