@@ -134,7 +134,7 @@ class CustomerController extends Controller
             })
             ->select(
                 DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.unit_price_ht ELSE 0 END) as total_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.unit_price_ht ELSE 0 END) as issued_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.unit_price_ht ELSE 0 END) as issued_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected")
             )
             ->first();
@@ -1152,8 +1152,8 @@ class CustomerController extends Controller
             'articles'                 => 'sometimes|array',
             'articles.*.designation'    => 'required_with:articles|string|max:255',
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
-            'articles.*.quantity'      => 'required_with:articles|integer|min:1',
-            'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.quantity'        => 'nullable|integer|min:1',
+            'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
             'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
         ]);
 
