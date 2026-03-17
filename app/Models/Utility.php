@@ -1506,29 +1506,29 @@ class Utility extends Model
     {
         $usr = \Auth::user();
         //Remove Current Login user Email don't send mail to them
-        if ($usr->user_type != 'super admin') {
+        if ($usr->type != 'super admin') {
             // unset($mailTo[$usr->id]);
 
             $mailTo = array_values($mailTo);
-            if ($usr->user_type != 'super admin') {
+            if ($usr->type != 'super admin') {
                 // find template is exist or not in our record
                 $template = EmailTemplate::where('slug', $emailTemplate)->first();
                 
                 if (isset($template) && !empty($template)) {
                     // check template is active or not by company
-                    $is_active = UserEmailTemplate::where('template_id', '=', $template->id)->first();
-                    if ($template->id == 1) {
+                    $is_active = UserEmailTemplate::where('template_id', '=', $template->id)->where('user_id', '=', $usr->creatorId())->first();
+                    if ($template->id == 1 && $is_active) {
                         $is_active->is_active = 1;
                     }
 
-                    if ($is_active->is_active == 1) {
+                    if (isset($is_active) && $is_active->is_active == 1) {
 
                         // get email content language base
                         $content = EmailTemplateLang::where('parent_id', '=', $template->id)->where('lang', 'LIKE', $usr->lang)->first();
                         $content->from = $template->from;
 
 
-                        if ($usr->user_type == 'super admin') {
+                        if ($usr->type == 'super admin') {
                             $settings = Utility::settings();
                         } else {
                             $setting = self::settings();
@@ -1553,7 +1553,7 @@ class Utility extends Model
                             $content->content = self::replaceVariable($content->content, $obj);
                             // send email
                             try {
-                                Mail::to($mailTo)->send(new CommonEmailTemplate($content, $settings, $mailTo[0]));
+                                Mail::to($mailTo)->send(new CommonEmailTemplate($content, $settings));
                             } catch (\Exception $e) {
                                 $error = __('E-Mail has been not sent due to SMTP configuration');
                             }
@@ -1602,14 +1602,14 @@ class Utility extends Model
 
             config(
                 [
-                    'mail.driver'       => isset($settings['mail_driver']) ? $settings['mail_driver'] : '',
-                    'mail.host'         => isset($settings['mail_host']) ? $settings['mail_host'] : '',
-                    'mail.port'         => isset($settings['mail_port']) ? $settings['mail_port'] : '',
-                    'mail.encryption'   => isset($settings['mail_encryption']) ? $settings['mail_encryption'] : '',
-                    'mail.username'     => isset($settings['mail_username']) ? $settings['mail_username'] : '',
-                    'mail.password'     => isset($settings['mail_password']) ? $settings['mail_password'] : '',
-                    'mail.from.address' => isset($settings['mail_from_address']) ? $settings['mail_from_address'] : '',
-                    'mail.from.name'    => isset($settings['mail_from_name']) ? $settings['mail_from_name'] : '',
+                    'mail.default'                   => isset($settings['mail_driver'])       ? $settings['mail_driver']       : '',
+                    'mail.mailers.smtp.host'         => isset($settings['mail_host'])         ? $settings['mail_host']         : '',
+                    'mail.mailers.smtp.port'         => isset($settings['mail_port'])         ? $settings['mail_port']         : '',
+                    'mail.mailers.smtp.encryption'   => isset($settings['mail_encryption'])   ? $settings['mail_encryption']   : '',
+                    'mail.mailers.smtp.username'     => isset($settings['mail_username'])     ? $settings['mail_username']     : '',
+                    'mail.mailers.smtp.password'     => isset($settings['mail_password'])     ? $settings['mail_password']     : '',
+                    'mail.from.address'              => isset($settings['mail_from_address']) ? $settings['mail_from_address'] : '',
+                    'mail.from.name'                 => isset($settings['mail_from_name'])    ? $settings['mail_from_name']    : '',
                 ]
             );
 
@@ -1618,7 +1618,7 @@ class Utility extends Model
                 $content->content = self::replaceVariable($content->content, $obj);
 
                 try {
-                    Mail::to($mailTo)->send(new CommonEmailTemplate($content, $settings, $mailTo[0]));
+                    Mail::to($mailTo)->send(new CommonEmailTemplate($content, $settings));
                 } catch (\Exception $e) {
 
 

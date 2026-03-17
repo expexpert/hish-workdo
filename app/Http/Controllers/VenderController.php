@@ -140,7 +140,7 @@ class VenderController extends Controller
 
             $uArr = [
                 'email' => $vender->email,
-                'password' => $request->password,
+                'password' => $userpassword,
             ];
             try {
                 $resp = Utility::sendEmailTemplate('user_created', [$vender->id => $vender->email], $uArr);
@@ -154,7 +154,7 @@ class VenderController extends Controller
                 $uArr = [
                     'vender_name' => $request->name,
                     'email' => $request->email,
-                    'password' => $request->password,
+                    'password' => $userpassword,
                 ];
                 Utility::send_twilio_msg($request->contact, 'new_vendor', $uArr);
             }
