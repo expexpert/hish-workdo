@@ -58,8 +58,8 @@ $route = (isset($canUpdate) && $canUpdate) ? 'workflow.index' : 'customer.workfl
                                 $month_year = str_pad($m, 2, '0', STR_PAD_LEFT) . '-' . $year;
                                 $bankStatement = $customer->clientBankStatements->where('month_year', $month_year)->first();
                                 @endphp
-                                <td class="p-1">
-                                    <div class="d-flex align-items-center gap-2">
+                                <td class="p-2">
+                                    <div class="d-flex align-items-center gap-1">
                                         <select
                                             onchange="saveStatus(this, {{ $customer->id }}, {{ $m }}, {{ $year }})"
                                             class="form-select form-select-sm fw-bold border-2 transition w-100 {{ \App\Models\CustomerMonthStatus::getStatusStyles($status) }}"

@@ -66,6 +66,7 @@
         @endif
     </div>
 
+    <div class="d-none">
     <h6 class="sub-title">{{ __('Billing Address') }}</h6>
     <div class="row">
         <div class="col-lg-6 col-md-6 col-sm-6">
@@ -185,6 +186,7 @@
             </div>
         </div>
 
+    </div>
     </div>
 </div>
 <div class="modal-footer">
