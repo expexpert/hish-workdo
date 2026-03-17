@@ -37,7 +37,7 @@
                 <div class="form-group">
                     {{ Form::label('accountant', __('Accountant'), ['class' => 'form-label']) }}<x-required></x-required>
                     <div class="form-icon-user">
-                        {{ Form::select('accountant', $accountant, null, ['class' => 'form-control', 'required' => 'required', 'placeholder' => __('Select Accountant')]) }}
+                        {{ Form::select('accountant', $accountant, $customer->created_by, ['class' => 'form-control', 'required' => 'required', 'placeholder' => __('Select Accountant')]) }}
                     </div>
                 </div>
             </div>
@@ -51,6 +51,7 @@
         @endif
     </div>
 
+    <div class="d-none">
     <h5 class="sub-title">{{__('Billing Address')}}</h5>
     <div class="row">
         <div class="col-lg-6 col-md-6 col-sm-6">
@@ -173,6 +174,7 @@
             </div>
         </div>
     @endif
+</div>
 
 </div>
 <div class="modal-footer">

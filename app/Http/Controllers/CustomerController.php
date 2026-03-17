@@ -958,6 +958,7 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
         $data = [];
+        $status = $request->input('status', '');
         $query = CustomerInvoice::with([
             'customer:id,name,created_by',
             'customer.accountant:id,name',
@@ -987,6 +988,11 @@ class CustomerController extends Controller
         $data['totalPendingInvoiceCount'] = $invoices->where('review_status', 'PENDING')->count();
         $data['totalApprovedInvoiceCount'] = $invoices->where('review_status', 'VALIDATED')->count();
         $data['totalRejectedInvoiceCount'] = $invoices->where('review_status', 'REJECTED')->count();
+
+        $query->when($status, function ($q) use ($status) {
+            $q->where('review_status', $status);
+        });
+        $invoices = $query->get();
 
 
 

@@ -63,7 +63,7 @@
                             <i class="ti ti-file"></i>
                         </div>
                         <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
-                        <h6 class="mb-3 "><span class="text-primary">{{__('Invoices')}}</span></h6>
+                        <h6 class="mb-3 "><a href="{{ route('customer.invoices') }}" class="text-primary">{{__('Invoices')}}</a></h6>
                         <h3 class="mb-0 text-primary" id="total-invoices">{{ $data['totalInvoiceCount'] }}</h3>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
                             <i class="ti ti-file"></i>
                         </div>
                         <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
-                        <h6 class="mb-3 "><span class="text-warning">{{__('Pending Invoices')}}</span></h6>
+                        <h6 class="mb-3 "><a href="{{ route('customer.invoices', ['status' => 'pending']) }}" class="text-warning">{{__('Pending Invoices')}}</a></h6>
                         <h3 class="mb-0 text-warning" id="pending-invoices">{{ $data['totalPendingInvoiceCount'] }}</h3>
                     </div>
                 </div>
@@ -89,7 +89,7 @@
                             <i class="ti ti-file"></i>
                         </div>
                         <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
-                        <h6 class="mb-3 "><span class="text-success">{{__('Validated Invoices')}}</span></h6>
+                        <h6 class="mb-3 "><a href="{{ route('customer.invoices', ['status' => 'validated']) }}" class="text-success">{{__('Validated Invoices')}}</a></h6>
                         <h3 class="mb-0 text-success" id="validated-invoices">{{ $data['totalApprovedInvoiceCount'] }}</h3>
                     </div>
                 </div>
@@ -102,7 +102,7 @@
                             <i class="ti ti-file"></i>
                         </div>
                         <p class="text-muted text-sm mt-4 mb-2 ">{{ __('Total') }}</p>
-                        <h6 class="mb-3 "><span class="text-danger">{{__('Rejected Invoices')}}</span></h6>
+                        <h6 class="mb-3 "><a href="{{ route('customer.invoices', ['status' => 'rejected']) }}" class="text-danger">{{__('Rejected Invoices')}}</a></h6>
                         <h3 class="mb-0 text-danger" id="rejected-invoices">{{ $data['totalRejectedInvoiceCount'] }}</h3>
                     </div>
                 </div>
