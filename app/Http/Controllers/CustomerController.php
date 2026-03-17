@@ -156,7 +156,7 @@ class CustomerController extends Controller
 
             $uArr = [
                 'email' => $customer->email,
-                'password' => $request->password,
+                'password' => $userpassword,
             ];
 
             try {
@@ -172,7 +172,7 @@ class CustomerController extends Controller
                 $uArr = [
                     'customer_name' => $request->name,
                     'email'  => $request->email,
-                    'password'  =>  $request->password,
+                    'password'  =>  $userpassword,
                 ];
                 Utility::send_twilio_msg($request->contact, 'new_customer', $uArr);
             }

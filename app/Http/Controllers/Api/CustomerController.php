@@ -133,9 +133,11 @@ class CustomerController extends Controller
                 $query->whereDate('customer_invoices.date', '<=', $dateTo);
             })
             ->select(
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.unit_price_ht ELSE 0 END) as total_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.unit_price_ht ELSE 0 END) as issued_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected")
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTE' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.total_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected")
             )
             ->first();
 
@@ -148,7 +150,7 @@ class CustomerController extends Controller
                 $query->whereDate('date', '<=', $dateTo);
             })
             ->select(
-                DB::raw("SUM(ttc) as total_sum")
+                DB::raw("SUM(total_ttc) as total_sum")
             )
             ->first();
 
@@ -158,9 +160,10 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Dashboard data retrieved successfully.',
             'data'    => [
-                'total_invoices_sum' => (float) ($invoiceStats->total_sum ?? 0),
-                'total_invoices_issued_sum' => (float) ($invoiceStats->issued_sum ?? 0),
-                'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
+                'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
+                'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0),
+                'total_issued_sum' => (float) ($expenseStats->total_issued_sum ?? 0),
+                'total_quote_sum' => (float) ($expenseStats->total_quote_sum ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
             ]
         ], 200);
@@ -183,7 +186,7 @@ class CustomerController extends Controller
             ->whereBetween('customer_invoices.date', [$startDate, $endDate])
             ->select(
                 DB::raw('MONTH(customer_invoices.date) as month'),
-                DB::raw('SUM(invoice_articles.unit_price_ht) as total')
+                DB::raw('SUM(invoice_articles.total_price_ht) as total')
             )
             ->groupBy('month')
             ->pluck('total', 'month');
