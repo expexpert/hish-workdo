@@ -323,6 +323,11 @@ class Customer extends Authenticatable
         return $this->hasMany(CustomerMonthStatus::class, 'customer_id');
     }
 
+    public function clientBankStatements(): HasMany
+    {
+        return $this->hasMany(ClientBankStatement::class, 'customer_id');
+    }
+
     public function accountant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
