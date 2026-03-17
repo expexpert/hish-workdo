@@ -68,6 +68,9 @@
                         <thead>
                             <tr>
                                 <th>{{__('Date')}}</th>
+                                @if (\Auth::user()->type == 'company')
+                                <th>{{__('Accountant')}}</th>
+                                @endif
                                 <th>{{__('Customer')}}</th>
                                 <th>{{__('Attachment')}}</th>
                             </tr>
@@ -79,6 +82,9 @@
                                 <td>
                                     {{ $bankStatement->month_year ? \Carbon\Carbon::createFromFormat('m-Y', $bankStatement->month_year)->format('M Y') : '-' }}
                                 </td>
+                                @if (\Auth::user()->type == 'company')
+                                <td>{{ $bankStatement->customer->accountant->name ?? '-' }}</td>
+                                @endif
                                 <td>{{ $bankStatement->customer->name ?? '-' }}</td>
                                 <td>
                                     @if($bankStatement->file_path)

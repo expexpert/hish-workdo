@@ -120,6 +120,9 @@
                         <thead>
                             <tr>
                                 <th>{{__('Date')}}</th>
+                                @if (\Auth::user()->type == 'company')
+                                <th>{{__('Accountant')}}</th>
+                                @endif
                                 <th>{{__('Customer')}}</th>
                                 <th>{{__('Client')}}</th>
                                 <th>{{__('Invoice No')}}</th>
@@ -137,6 +140,9 @@
                             @foreach ($invoices as $invoice)
                             <tr>
                                 <td>{{ \Auth::user()->dateFormat($invoice->date)}}</td>
+                                @if (\Auth::user()->type == 'company')
+                                <td>{{ $invoice->customer?->accountant->name ?? '-' }}</td>
+                                @endif
                                 <td>{{ $invoice->customer?->name ?? '-' }}</td>
                                 <td>{{ $invoice->client?->client_name ?? '-' }}</td>
                                 <td>{{ $invoice->invoice_number ?? '-' }}</td>

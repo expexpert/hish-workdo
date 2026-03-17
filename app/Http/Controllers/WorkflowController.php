@@ -21,7 +21,7 @@ class WorkflowController extends Controller
             $customers = Customer::where('id', $customer->id)
                 ->with(['monthStatuses' => function ($q) use ($year) {
                     $q->where('year', $year);
-                }])->get();
+                }, 'clientBankStatements'])->get();
             $canUpdate = false;
             return view('workflow.index', compact('customers', 'year', 'canUpdate'));
         }
@@ -48,7 +48,7 @@ class WorkflowController extends Controller
 
         $customers = $query->with(['monthStatuses' => function ($q) use ($year) {
             $q->where('year', $year);
-        }])->orderBy('name')->get();
+        }, 'clientBankStatements'])->orderBy('name')->get();
 
         if (isset($accountantNames)) {
             return view('workflow.index', compact('customers', 'year', 'canUpdate', 'accountantNames'));

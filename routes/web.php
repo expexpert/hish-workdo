@@ -323,6 +323,9 @@ Route::prefix('customer')->as('customer.')->group(
 
         Route::post('/invoice-pay-with-coingate', [CoingatePaymentController::class, 'invoicePayWithCoingate'])->name('invoice.pay.with.coingate')->middleware(['XSS', 'revalidate']);
         Route::get('/invoice/coingate/{invoice}/{amount}', [CoingatePaymentController::class, 'getInvoicePaymentStatus'])->name('invoice.coingate')->middleware(['XSS', 'revalidate']);
+
+        
+        Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])->name('bank-statements.view-file');
     }
 );
 

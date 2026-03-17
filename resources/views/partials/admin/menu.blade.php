@@ -679,7 +679,7 @@
                 <li class="dash-item {{ Request::route()->getName() == 'workflow.index' ? 'active' : '' }}">
                         <a href="{{ route('workflow.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-calendar"></i></span>
-                            <span class="dash-mtext">{{ __('Customer Status') }}</span>
+                            <span class="dash-mtext">{{ __('Workflow') }}</span>
                         </a>
                     </li>
                 @endif
@@ -695,7 +695,7 @@
                 <li class="dash-item {{ Request::route()->getName() == 'customer.workflow.index' ? 'active' : '' }}">
                         <a href="{{ route('customer.workflow.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-calendar"></i></span>
-                            <span class="dash-mtext">{{ __('Customer Status') }}</span>
+                            <span class="dash-mtext">{{ __('Workflow') }}</span>
                         </a>
                     </li>
                 @endif

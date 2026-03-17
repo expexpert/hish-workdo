@@ -62,6 +62,9 @@
                         <thead>
                             <tr>
                                 <th>{{__('Date')}}</th>
+                                @if (\Auth::user()->type == 'company')
+                                <th>{{__('Accountant')}}</th>
+                                @endif
                                 <th>{{__('Customer')}}</th>
                                 <th>{{__('Supplier')}}</th>
                                 <th>{{__('Category')}}</th>
@@ -79,6 +82,9 @@
                             @foreach ($expenses as $expense)
                             <tr>
                                 <td>{{ \Auth::user()->dateFormat($expense->date)}}</td>
+                                @if (\Auth::user()->type == 'company')
+                                <td>{{ $expense->customer?->accountant->name ?? '-' }}</td>
+                                @endif
                                 <td>{{ $expense->customer?->name ?? '-' }}</td>
                                 <td>{{ $expense->supplier?->supplier_name ?? '-' }}</td>
                                 <td>{{ $expense->category->name ?? '-' }}</td>
