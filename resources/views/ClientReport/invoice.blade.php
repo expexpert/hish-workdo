@@ -185,7 +185,7 @@
                                 <td>
                                     @if($invoice->document_path)
                                     <a href="{{ route('customer.invoices.view-file', $invoice->id) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="ti ti-download"></i>
+                                        <i class="fas fa-file-pdf"></i>
                                     </a>
                                     @else
                                     {{ __('No Document') }}
