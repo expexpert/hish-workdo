@@ -900,6 +900,16 @@ class CustomerController extends Controller
 
     public function showFile(ClientBankStatement $bankStatement)
     {
+        $user = \Auth::user();
+        if (
+            !in_array($user->type, ['company', 'accountant']) || 
+            \App\Services\AdminActivityLogger::isImpersonating() ||
+            !$bankStatement->customer ||
+            !$bankStatement->customer->accountant ||
+            $user->creatorId() != $bankStatement->customer->accountant->creatorId()
+        ) {
+            abort(403, 'Unauthorized access.');
+        }
 
         if (!Storage::disk('private')->exists($bankStatement->file_path)) {
             abort(404);
@@ -910,6 +920,17 @@ class CustomerController extends Controller
 
     public function showExpenseFile(CustomerExpense $expense)
     {
+        $user = \Auth::user();
+        if (
+            !in_array($user->type, ['company', 'accountant']) || 
+            \App\Services\AdminActivityLogger::isImpersonating() ||
+            !$expense->customer ||
+            !$expense->customer->accountant ||
+            $user->creatorId() != $expense->customer->accountant->creatorId()
+        ) {
+            abort(403, 'Unauthorized access.');
+        }
+
         if (!$expense->file || !Storage::disk('private')->exists($expense->file)) {
             abort(404);
         }
@@ -919,6 +940,17 @@ class CustomerController extends Controller
 
     public function showInvoiceFile(CustomerInvoice $invoice)
     {
+        $user = \Auth::user();
+        if (
+            !in_array($user->type, ['company', 'accountant']) || 
+            \App\Services\AdminActivityLogger::isImpersonating() ||
+            !$invoice->customer ||
+            !$invoice->customer->accountant ||
+            $user->creatorId() != $invoice->customer->accountant->creatorId()
+        ) {
+            abort(403, 'Unauthorized access.');
+        }
+
         if (!$invoice->document_path || !Storage::disk('private')->exists($invoice->document_path)) {
             abort(404);
         }
