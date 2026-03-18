@@ -109,7 +109,7 @@
                                 <td>
                                     @if($expense->file)
                                     <a href="{{ route('customer.expenses.view-file', $expense->id) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="ti ti-download"></i>
+                                        <i class="fas fa-file-pdf"></i>
                                     </a>
                                     @else
                                     {{ __('-') }}
