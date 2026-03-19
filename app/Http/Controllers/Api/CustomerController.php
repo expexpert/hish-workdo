@@ -137,7 +137,11 @@ class CustomerController extends Controller
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTE' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.total_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected")
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.total_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected"),
+
+
+                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
+                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTE' THEN customer_invoices.id END) as      total_quote_count")
             )
             ->first();
 
@@ -164,6 +168,8 @@ class CustomerController extends Controller
                 'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
+                'total_issued_count' => $invoiceStats->total_issued_count,
+                'total_quote_count' => $invoiceStats->total_quote_count,
                 'total_issued_sum' => (float) ($expenseStats->total_issued_sum ?? 0),
                 'total_quote_sum' => (float) ($expenseStats->total_quote_sum ?? 0),
             ]
@@ -458,7 +464,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'statement' => 'required|mimes:pdf,csv,xls,xlsx|max:10240',
+            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:10240',
             'month_year' => 'required|string',
         ]);
 
