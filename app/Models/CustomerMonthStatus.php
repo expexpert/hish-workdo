@@ -9,7 +9,8 @@ class CustomerMonthStatus extends Model
 {
     protected $fillable = ['customer_id', 'month', 'year', 'status', 'updated_by_user_id'];
 
-    public function customer() {
+    public function customer()
+    {
         return $this->belongsTo(Customer::class);
     }
 
@@ -18,11 +19,12 @@ class CustomerMonthStatus extends Model
      */
     public static function getStatusStyles($status): string
     {
-        return match($status) {
+        return match ($status) {
             'ON_TRACK'          => 'bg-light text-success border-success',
             'MISSING_DOCUMENTS' => 'bg-light text-danger border-danger',
             'IN_REVIEW'         => 'bg-light text-warning border-warning',
             'CLOSED'            => 'bg-light text-secondary border-secondary',
+            'REJECTED'          => 'bg-danger-subtle text-danger border-danger fw-bold',
             default             => 'bg-white text-muted border-secondary',
         };
     }

@@ -66,8 +66,8 @@ $route = (isset($canUpdate) && $canUpdate) ? 'workflow.index' : 'customer.workfl
                                             style="min-width:110px;"
                                             @if(!isset($canUpdate) || !$canUpdate) disabled @endif>
                                             <option value="MISSING_DOCUMENTS" {{ $status == 'MISSING_DOCUMENTS' ? 'selected' : '' }}>{{ __('MISSING') }}</option>
-                                            <option value="ON_TRACK" {{ $status == 'ON_TRACK' ? 'selected' : '' }}>{{ __('ON TRACK') }}</option>
                                             <option value="IN_REVIEW" {{ $status == 'IN_REVIEW' ? 'selected' : '' }}>{{ __('IN REVIEW') }}</option>
+                                            <option value="REJECTED" {{ $status == 'REJECTED' ? 'selected' : '' }}>{{ __('REJECTED') }}</option>
                                             <option value="CLOSED" {{ $status == 'CLOSED' ? 'selected' : '' }}>{{ __('CLOSED') }}</option>
                                         </select>
                                         @if ($bankStatement && $canUpdate)
@@ -122,7 +122,8 @@ $route = (isset($canUpdate) && $canUpdate) ? 'workflow.index' : 'customer.workfl
                     'ON_TRACK': 'bg-light text-success border-success',
                     'MISSING_DOCUMENTS': 'bg-light text-danger border-danger',
                     'IN_REVIEW': 'bg-light text-warning border-warning',
-                    'CLOSED': 'bg-light text-secondary border-secondary'
+                    'CLOSED': 'bg-light text-secondary border-secondary',
+                    'REJECTED': 'bg-danger-subtle text-danger border-danger fw-bold'
                 };
 
                 selectElement.className = `form-select form-select-sm fw-bold border-2 transition ${styleMap[status]}`;
