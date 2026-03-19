@@ -62,7 +62,7 @@ class WorkflowController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'month' => 'required|integer|between:1,12',
             'year' => 'required|integer',
-            'status' => 'required|in:ON_TRACK,MISSING_DOCUMENTS,IN_REVIEW,CLOSED'
+            'status' => 'required|in:REJECTED,MISSING_DOCUMENTS,IN_REVIEW,CLOSED'
         ]);
 
         if (Auth::guard('customer')->check()) {
