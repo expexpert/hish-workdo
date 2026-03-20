@@ -85,7 +85,7 @@
                                 @if (\Auth::user()->type == 'company')
                                 <td>{{ $expense->customer?->accountant->name ?? '-' }}</td>
                                 @endif
-                                <td>{{ $expense->customer?->name ?? '-' }}</td>
+                                <td><a href="{{ route('customer.show', \Crypt::encrypt($expense->customer_id)) }}" target="_blank">{{ $expense->customer?->name ?? '-' }}</a></td>
                                 <td>{{ $expense->supplier?->supplier_name ?? '-' }}</td>
                                 <td>{{ $expense->category->name ?? '-' }}</td>
                                 <td>{{ $expense->payment_method ?? '-' }}</td>

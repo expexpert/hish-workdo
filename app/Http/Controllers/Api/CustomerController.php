@@ -137,11 +137,10 @@ class CustomerController extends Controller
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTE' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN ROUND((invoice_articles.total_price_ht * invoice_articles.tva_percentage / 100), 2) ELSE 0 END) as vat_collected"),
-
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
 
                 DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTE' THEN customer_invoices.id END) as      total_quote_count")
+                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTE' THEN customer_invoices.id END) as total_quote_count")
             )
             ->first();
 
@@ -154,11 +153,12 @@ class CustomerController extends Controller
                 $query->whereDate('date', '<=', $dateTo);
             })
             ->select(
-                DB::raw("SUM(total_ttc) as total_sum")
+                DB::raw("SUM(total_ttc) as total_sum"),
+                DB::raw("SUM(tva) as tva")
             )
             ->first();
 
-        $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_sum ?? 0);
+        $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->tva ?? 0);
 
         return response()->json([
             'success' => true,
