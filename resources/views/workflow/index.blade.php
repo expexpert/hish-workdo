@@ -46,7 +46,7 @@ $route = (isset($canUpdate) && $canUpdate) ? 'workflow.index' : 'customer.workfl
                         <tbody>
                             @foreach($customers as $customer)
                             <tr>
-                                <td class="fw-bold text-secondary">{{ $customer->name }}</td>
+                                <td class="fw-bold text-secondary"><a href="{{ route('customer.show', \Crypt::encrypt($customer->id)) }}" target="_blank">{{ $customer->name }}</a></td>
                                 @isset($accountantNames)
                                 <td class="text-secondary">{{ $accountantNames[$customer->created_by] ?? '-' }}</td>
                                 @endisset

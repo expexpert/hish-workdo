@@ -18,3 +18,5 @@
 /database/*.sqlite-journal
 /storage/uploads/*
 /storage/installed
+/.postman
+/postman

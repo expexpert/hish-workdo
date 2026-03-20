@@ -85,7 +85,7 @@
                                 @if (\Auth::user()->type == 'company')
                                 <td>{{ $bankStatement->customer->accountant->name ?? '-' }}</td>
                                 @endif
-                                <td>{{ $bankStatement->customer->name ?? '-' }}</td>
+                                <td><a href="{{ route('customer.show', \Crypt::encrypt($bankStatement->customer_id)) }}" target="_blank">{{ $bankStatement->customer->name ?? '-' }}</a></td>
                                 <td>
                                     @if($bankStatement->file_path)
                                     <a href="{{ route('customer.bank-statements.view-file', $bankStatement->id) }}"

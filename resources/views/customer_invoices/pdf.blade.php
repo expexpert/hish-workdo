@@ -58,7 +58,7 @@ body{
 }
 
 .invoice-table th{
-    background:#000;
+    background:#4FA3D1;
     color:#fff;
     padding:8px;
     text-align:left;
@@ -84,7 +84,7 @@ body{
 }
 
 .total-final{
-    background:#000;
+    background:#4FA3D1;
     color:#fff;
     font-weight:bold;
 }
@@ -104,7 +104,7 @@ body{
 
 .footer{
     margin-top:80px;
-    background:#000;
+    background:#4FA3D1;
     color:#fff;
     text-align:center;
     padding:15px;
