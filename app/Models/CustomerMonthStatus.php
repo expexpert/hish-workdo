@@ -21,10 +21,10 @@ class CustomerMonthStatus extends Model
     {
         return match ($status) {
             'ON_TRACK'          => 'bg-light text-success border-success',
-            'MISSING_DOCUMENTS' => 'bg-light text-danger border-danger',
-            'IN_REVIEW'         => 'bg-light text-warning border-warning',
+            'MISSING_DOCUMENTS' => 'bg-light text-warning-emphasis border-warning',
+            'IN_REVIEW'         => 'bg-light text-primary border-primary',
             'CLOSED'            => 'bg-light text-secondary border-secondary',
-            'REJECTED'          => 'bg-danger-subtle text-danger border-danger fw-bold',
+            'REJECTED'          => 'bg-light text-danger border-danger fw-bold border-2',
             default             => 'bg-white text-muted border-secondary',
         };
     }
