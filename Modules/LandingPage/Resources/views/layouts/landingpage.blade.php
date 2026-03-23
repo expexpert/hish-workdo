@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simply Compta</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" type="image/png" href="{{ asset('/uploads/new-landing-page/header_logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('storage/uploads/new-landing-page/header_logo.png') }}">
     <link rel="stylesheet" href="{{ asset('/css/landingPage.css') }}" />
 </head>
 
@@ -17,7 +17,7 @@
         <header>
             <nav class="navbar navbar-expand-lg navbar-light">
                 <a class="navbar-brand" href="#">
-                    <img src="{{ asset('/uploads/new-landing-page/header_logo.svg')}}" alt="Simply Compta Logo">
+                    <img src="{{ asset('storage/uploads/new-landing-page/header_logo.svg')}}" alt="Simply Compta Logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <img src="{{ asset('/uploads/new-landing-page/hero_img.png')}}" alt="Simply Compta Main Image" class="img-fluid">
+                            <img src="{{ asset('storage/uploads/new-landing-page/hero_img.png')}}" alt="Simply Compta Main Image" class="img-fluid">
                         </div>
                     </div>
                 </div>
@@ -69,19 +69,19 @@
                 <div class="row_1">
                     <div class="col-md-4">
                         <div class="transformation-box first-tra-box">
-                            <img src="{{ asset('/uploads/new-landing-page/logo1.png')}}" alt="Icon 1" class="transformation-icon">
+                            <img src="{{ asset('storage/uploads/new-landing-page/logo1.png')}}" alt="Icon 1" class="transformation-icon">
                             <p class="transformation-text">Les attentes des entreprises<br> <strong>évoluent</strong></p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="transformation-box">
-                            <img src="{{ asset('/uploads/new-landing-page/logo2.png')}}" alt="Icon 2" class="transformation-icon">
+                            <img src="{{ asset('storage/uploads/new-landing-page/logo2.png')}}" alt="Icon 2" class="transformation-icon">
                             <p class="transformation-text">L'accès immédiat à l'information devient<strong><br> la norme</strong></p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="transformation-box">
-                            <img src="{{ asset('/uploads/new-landing-page/logo3.png')}}" alt="Icon 3" class="transformation-icon">
+                            <img src="{{ asset('storage/uploads/new-landing-page/logo3.png')}}" alt="Icon 3" class="transformation-icon">
                             <p class="transformation-text">La réactivité n'est plus un avantage :<strong><br> elle est
                                     attendue</strong>
                             </p>
@@ -104,28 +104,28 @@
                 <div class="row_1">
                     <div class="col-md-3">
                         <div class="transformation-box1">
-                            <img src="{{ asset('/uploads/new-landing-page/section_logo1.png')}}" alt="Icon 1" class="transformation-icon1">
+                            <img src="{{ asset('storage/uploads/new-landing-page/section_logo1.png')}}" alt="Icon 1" class="transformation-icon1">
                             <h3 class="application-heading">Factures et reçus centralisés</h3>
                             <p class="application-text">Importez facilement vos factures et reçus,tout est déjà groupé et classé</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="transformation-box1">
-                            <img src="{{ asset('/uploads/new-landing-page/section_logo2.png')}}" alt="Icon 2" class="transformation-icon1">
+                            <img src="{{ asset('storage/uploads/new-landing-page/section_logo2.png')}}" alt="Icon 2" class="transformation-icon1">
                             <h3 class="application-heading">Documents toujours à jour</h3>
                             <p class="application-text">Accédez à tous vos documents juridiques et comptable en un clic</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="transformation-box1">
-                            <img src="{{ asset('/uploads/new-landing-page/section_logo3.png')}}" alt="Icon 3" class="transformation-icon1">
+                            <img src="{{ asset('storage/uploads/new-landing-page/section_logo3.png')}}" alt="Icon 3" class="transformation-icon1">
                             <h3 class="application-heading">Suivi financier en temps réel</h3>
                             <p class="application-text">Visualisez vos revenus dépensés et déclarations en un clin d'oeil</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="transformation-box1">
-                            <img src="{{ asset('/uploads/new-landing-page/section_logo4.png')}}" alt="Icon 4" class="transformation-icon1">
+                            <img src="{{ asset('storage/uploads/new-landing-page/section_logo4.png')}}" alt="Icon 4" class="transformation-icon1">
                             <h3 class="application-heading">Notifications et rappels</h3>
                             <p class="application-text">Restez connecté et recevez des alertes pour vos échéances</p>
                         </div>
@@ -138,7 +138,7 @@
                 <div class="simplycompta-container">
                     <!-- Left side (Mobile Image) -->
                     <div class="simplycompta-phone">
-                        <img src="{{ asset('/uploads/new-landing-page/Mobile-new.png')}}" alt="SimplyCompta App Mockup" class="simplycompta-phone-img">
+                        <img src="{{ asset('storage/uploads/new-landing-page/Mobile-new.png')}}" alt="SimplyCompta App Mockup" class="simplycompta-phone-img">
                     </div>
 
                     <!-- Right side (Content) -->
@@ -161,16 +161,16 @@
                                 <strong>Faites entrer votre cabinet</strong> dans une nouvelle dimension
                             </h3>
 
-                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Moderniser
+                            <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Moderniser
                                 votre
                                 organisation</p>
-                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Renforcer votre
+                            <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Renforcer votre
                                 image professionnelle</p>
-                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Améliorer
+                            <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Améliorer
                                 l'expérience client</p>
-                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Optimiser vos
+                            <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Optimiser vos
                                 opérations</p>
-                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Créer un
+                            <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Créer un
                                 avantage
                                 concurrentiel durable</p>
                         </div>
@@ -200,7 +200,7 @@
                         <div class="client-feature feature-documents">
                             <div class="feature-icon">
                                 <!-- Replace with actual icon -->
-                                <img src="{{ asset('/uploads/new-landing-page/i1.svg')}}" alt="Documents essentiels">
+                                <img src="{{ asset('storage/uploads/new-landing-page/i1.svg')}}" alt="Documents essentiels">
                             </div>
                             <h3 class="feature-title">Documents essentiels</h3>
                             <p class="feature-desc">Retrouver instantanément leurs documents essentiels</p>
@@ -209,7 +209,7 @@
                         <!-- Feature 2 -->
                         <div class="client-feature feature-invoices">
                             <div class="feature-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/i2.svg')}}" alt="Factures et pièces">
+                                <img src="{{ asset('storage/uploads/new-landing-page/i2.svg')}}" alt="Factures et pièces">
                             </div>
                             <h3 class="feature-title">Factures et pièces</h3>
                             <p class="feature-desc">Déposer factures et pièces comptables sans contrainte</p>
@@ -218,7 +218,7 @@
                         <!-- Feature 3 -->
                         <div class="client-feature feature-bank">
                             <div class="feature-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/i3.svg')}}" alt="Relevés bancaires">
+                                <img src="{{ asset('storage/uploads/new-landing-page/i3.svg')}}" alt="Relevés bancaires">
                             </div>
                             <h3 class="feature-title">Relevés bancaires</h3>
                             <p class="feature-desc">Transmettre leurs relevés bancaires en quelques secondes</p>
@@ -227,7 +227,7 @@
                         <!-- Feature 4 -->
                         <div class="client-feature feature-update">
                             <div class="feature-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/i4.svg')}}" alt="Informations à jour">
+                                <img src="{{ asset('storage/uploads/new-landing-page/i4.svg')}}" alt="Informations à jour">
                             </div>
                             <h3 class="feature-title">Informations à jour</h3>
                             <p class="feature-desc">Mettre à jour leurs informations facilement</p>
@@ -236,7 +236,7 @@
                         <!-- Feature 5 -->
                         <div class="client-feature feature-notifications">
                             <div class="feature-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/i5.svg')}}" alt="Notifications">
+                                <img src="{{ asset('storage/uploads/new-landing-page/i5.svg')}}" alt="Notifications">
                             </div>
                             <h3 class="feature-title">Notifications</h3>
                             <p class="feature-desc">Recevoir vos notifications importantes</p>
@@ -245,7 +245,7 @@
                         <!-- Feature 6 -->
                         <div class="client-feature feature-security">
                             <div class="feature-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/i6.svg')}}" alt="Sécurité 24/7">
+                                <img src="{{ asset('storage/uploads/new-landing-page/i6.svg')}}" alt="Sécurité 24/7">
                             </div>
                             <h3 class="feature-title">Sécurité 24/7</h3>
                             <p class="feature-desc">Accès sécurisé disponible à tout moment</p>
@@ -260,20 +260,20 @@
                 <div class="columns-container">
                     <div class="column1 column-left">
                         <h3 class="value-title">Ce que vous subissez encore</h3>
-                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les documents
+                        <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les documents
                             égarés.</p>
-                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les relances
+                        <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les relances
                             répétées.</p>
-                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les échanges
+                        <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les échanges
                             dispersés.</p>
                     </div>
                     <div class="column2 column-right">
                         <h3 class="value-title2">Ce que vous gagnez avec SimplyCompta</h3>
-                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Votre cabinet gagne
+                        <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Votre cabinet gagne
                             en lisibilité</p>
-                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Fini les relances
+                        <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Fini les relances
                             répétées.</p>
-                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Votre posture gagne
+                        <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Votre posture gagne
                             en modernité</p>
                     </div>
                 </div>
@@ -306,20 +306,20 @@
             <!-- Solution Section -->
             <section class="solution-section" style="background-image: url(images/rectangle-8@3x.png);">
                 <div class="solution-image">
-                    <img src="{{ asset('/uploads/new-landing-page/Mobile2.png')}}" alt="Phone Mockup" class="solution-phone-img">
+                    <img src="{{ asset('storage/uploads/new-landing-page/Mobile2.png')}}" alt="Phone Mockup" class="solution-phone-img">
                 </div>
                 <div class="solution-content">
                     <h1><strong>La solution idéale </strong>entre vous et votre cabinet comptable</h1>
                     <p class="solution-text"><strong>SIMPLYCOMPTA</strong> simplifie les échanges et le partage de<br> documents
                         entre les entrepreneurs et leur cabinet<br> comptable.</p>
                     <ul class="solution-features">
-                        <p><img src="{{ asset('/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Connexion
+                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Connexion
                                 sécurisée</span> et partagée en temps réel</li>
                         </p>
-                        <p><img src="{{ asset('/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Transmission
+                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Transmission
                                 facile</span> de vos relevés et justificatifs</li>
                         </p>
-                        <p><img src="{{ asset('/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Accès
+                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Accès
                                 instantané</span> à vos bilans et déclarations</li>
                         </p>
                     </ul>
@@ -338,7 +338,7 @@
                     <!-- Feature 1 -->
                     <div class="modele-feature feature-documents">
                         <div class="modele-icon">
-                            <img src="{{ asset('/uploads/new-landing-page/modele1.svg')}}" alt="Documents essentiels">
+                            <img src="{{ asset('storage/uploads/new-landing-page/modele1.svg')}}" alt="Documents essentiels">
                         </div>
                         <p class="modele-desc">Aucune complexité</p>
                     </div>
@@ -346,7 +346,7 @@
                     <!-- Feature 2 -->
                     <div class="modele-feature2 feature-invoices">
                         <div class="modele-icon">
-                            <img src="{{ asset('/uploads/new-landing-page/modele2.svg')}}" alt="Factures et pièces">
+                            <img src="{{ asset('storage/uploads/new-landing-page/modele2.svg')}}" alt="Factures et pièces">
                         </div>
                         <p class="modele-desc">Aucun risque économique</p>
                     </div>
@@ -385,7 +385,7 @@
                             <div class="col-12">
                                 <div class="personnalisée-box">
                                     <div class="personnalisée-icon-box">
-                                        <img src="{{ asset('/uploads/new-landing-page/free.svg')}}" alt="Free Icon" class="free_icon">
+                                        <img src="{{ asset('storage/uploads/new-landing-page/free.svg')}}" alt="Free Icon" class="free_icon">
                                     </div>
                                     <h5 class="personnalisée-title1">Devis Gratuit</h5>
                                     <p class="personnalisée-dec">Construit selon vos besoins spécifiques</p>
@@ -395,7 +395,7 @@
                             <div class="col-12">
                                 <div class="personnalisée-box2">
                                     <div class="personnalisée-icon-box">
-                                        <img src="{{ asset('/uploads/new-landing-page/setting.svg')}}" alt="Settings Icon" class="free_icon">
+                                        <img src="{{ asset('storage/uploads/new-landing-page/setting.svg')}}" alt="Settings Icon" class="free_icon">
                                     </div>
                                     <h5 class="personnalisée-title1">Accompagnement</h5>
                                     <p class="personnalisée-dec">Dédié pour garantir une adoption rapide</p>
@@ -406,7 +406,7 @@
 
                     <!-- Right Column -->
                     <div class="col-md-4 text-center">
-                        <img src="{{ asset('/uploads/new-landing-page/Phone.png')}}" alt="Image" class="img-personnalisée">
+                        <img src="{{ asset('storage/uploads/new-landing-page/Phone.png')}}" alt="Image" class="img-personnalisée">
                     </div>
                 </div>
             </section>
@@ -422,7 +422,7 @@
             <section>
                 <div class="trail-containe-main">
                     <div class="trail-text-img">
-                        <div class="seven-img"><img src="{{ asset('/uploads/new-landing-page/image_7 (1).png')}}" alt="7 Days Trial" /></div>
+                        <div class="seven-img"><img src="{{ asset('storage/uploads/new-landing-page/image_7 (1).png')}}" alt="7 Days Trial" /></div>
                         <div class="sev-trail-sec">
                             <div class="sev-trail-text-wraper">
                                 <h4>7 jours d'essai inclus pour valider votre décision</h4>
@@ -449,7 +449,7 @@
             <section class="trial-section">
                 <!-- <div class="trial-container">
           <div class="trial-image">
-            <img src="{{ asset('/uploads/new-landing-page/image_7.png')}}" alt="7 Days Trial" />
+            <img src="{{ asset('storage/uploads/new-landing-page/image_7.png')}}" alt="7 Days Trial" />
           </div>
           <div class="trial-content">
             <h1 class="trial-text"><strong>7 jours d'essai inclus pour valider votre décision</strong></h1>
@@ -460,7 +460,7 @@
         </div> -->
                 <div class="conviction">
                     <div class="trial-logo">
-                        <img src="{{ asset('/uploads/new-landing-page/trial_logo.svg')}}" alt="Trial Logo" />
+                        <img src="{{ asset('storage/uploads/new-landing-page/trial_logo.svg')}}" alt="Trial Logo" />
                     </div>
                     <p>Notre conviction est simple : <strong>une solution performante doit convaincre par son
                             utilisation.</strong>
@@ -477,13 +477,13 @@
                         <p class="control-dec">Vous pilotez intégralement l'accès de vos clients. Si une collaboration s'arrête,
                             l'accès peut être suspendu immédiatement.</p>
                         <ul class="benefits">
-                            <p><img src="{{ asset('/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Aucune dépendance</p>
-                            <p><img src="{{ asset('/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Aucune contrainte</p>
-                            <p><img src="{{ asset('/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Contrôle total</p>
+                            <p><img src="{{ asset('storage/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Aucune dépendance</p>
+                            <p><img src="{{ asset('storage/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Aucune contrainte</p>
+                            <p><img src="{{ asset('storage/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Contrôle total</p>
                         </ul>
                     </div>
                     <div class="control-image">
-                        <img src="{{ asset('/uploads/new-landing-page/control_img.svg')}}" alt="Control Image" />
+                        <img src="{{ asset('storage/uploads/new-landing-page/control_img.svg')}}" alt="Control Image" />
                     </div>
                 </div>
             </section>
@@ -568,7 +568,7 @@
                         <!-- Feature 1 -->
                         <div class="contact-feature feature-documents">
                             <div class="contact-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/whatsapp.svg')}}" alt="Documents essentiels">
+                                <img src="{{ asset('storage/uploads/new-landing-page/whatsapp.svg')}}" alt="Documents essentiels">
                             </div>
                             <p class="contact-desc">+212 (0)655023474</p>
                         </div>
@@ -576,16 +576,16 @@
                         <!-- Feature 2 -->
                         <div class="contact-feature2 feature-invoices">
                             <div class="contact-icon">
-                                <img src="{{ asset('/uploads/new-landing-page/email.svg')}}" alt="Factures et pièces">
+                                <img src="{{ asset('storage/uploads/new-landing-page/email.svg')}}" alt="Factures et pièces">
                             </div>
                             <p class="contact-desc">contact@simply-compta.com</p>
                         </div>
                     </div>
                     <p class="contact-desc"><strong>Suivez-nous sur les réseaux sociaux</strong></p>
                     <div class="social-icons">
-                        <img src="{{ asset('/uploads/new-landing-page/facebook.svg')}}" alt="Facebook" class="social">
-                        <img src="{{ asset('/uploads/new-landing-page/linkedin.svg')}}" alt="Linkedin" class="social">
-                        <img src="{{ asset('/uploads/new-landing-page/instagram.svg')}}" alt="Instagram" class="social">
+                        <img src="{{ asset('storage/uploads/new-landing-page/facebook.svg')}}" alt="Facebook" class="social">
+                        <img src="{{ asset('storage/uploads/new-landing-page/linkedin.svg')}}" alt="Linkedin" class="social">
+                        <img src="{{ asset('storage/uploads/new-landing-page/instagram.svg')}}" alt="Instagram" class="social">
                     </div>
                 </div>
             </section>
