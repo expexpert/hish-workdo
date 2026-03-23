@@ -1383,48 +1383,7 @@ class Utility extends Model
     // used for replace email variable (parameter 'template_name','id(get particular record by id for data)')
     public static function replaceVariable($content, $obj)
     {
-        $arrVariable = [
-            '{payment_name}',
-            '{payment_bill}',
-            '{payment_amount}',
-            '{payment_date}',
-            '{payment_method}',
-            '{invoice_name}',
-            '{invoice_number}',
-            '{invoice_url}',
-            '{bill_name}',
-            '{bill_number}',
-            '{bill_url}',
-            '{payment_dueAmount}',
-            '{proposal_name}',
-            '{proposal_number}',
-            '{proposal_url}',
-            '{app_name}',
-            '{company_name}',
-            '{app_url}',
-            '{email}',
-            '{password}',
-            '{contract_customer}',
-            '{contract_subject}',
-            '{contract_start_date}',
-            '{contract_end_date}',
-            '{contract_type}',
-            '{contract_value}',
-            '{retainer_name}',
-            '{retainer_number}',
-            '{retainer_url}',
-            '{customer_name}',
-            '{due_amount}',
-            '{invoice_category}',
-            '{vender_name}',
-            '{user_name}',
-            '{type}',
-            '{company_email}'
-
-
-
-        ];
-        $arrValue    = [
+        $arrValue = [
             'payment_name' => '-',
             'payment_bill' => '-',
             'payment_amount' => '-',
@@ -1440,9 +1399,9 @@ class Utility extends Model
             'proposal_name' => '-',
             'proposal_number' => '-',
             'proposal_url' => '-',
-            'app_name' => '-',
-            'company_name' => '-',
-            'app_url' => '-',
+            'app_name' => env('APP_NAME'),
+            'company_name' => self::settings()['company_name'] ?? '',
+            'app_url' => '<a href="' . env('APP_URL') . '" target="_blank">' . env('APP_URL') . '</a>',
             'email' => '-',
             'password' => '-',
             'contract_customer' => '-',
@@ -1457,28 +1416,20 @@ class Utility extends Model
             'customer_name' => '-',
             'due_amount' => '-',
             'invoice_category' => '-',
-            'retainer_url' => '-',
             'vender_name' => '-',
             'user_name' => '-',
             'type' => '-',
             "company_email" => '-'
-
-
-
         ];
 
         foreach ($obj as $key => $val) {
             $arrValue[$key] = $val;
         }
 
-        $settings = Utility::settings();
-        $company_name = $settings['company_name'];
-
-        $arrValue['app_name']     =  env('APP_NAME');
-        $arrValue['company_name'] = self::settings()['company_name'];
-        $arrValue['app_url']      = '<a href="' . env('APP_URL') . '" target="_blank">' . env('APP_URL') . '</a>';
-
-        return str_replace($arrVariable, array_values($arrValue), $content);
+        return preg_replace_callback('/\{\s*([a-zA-Z0-9_]+)\s*\}/', function ($matches) use ($arrValue) {
+            $key = $matches[1];
+            return isset($arrValue[$key]) ? $arrValue[$key] : $matches[0];
+        }, $content);
     }
 
 
