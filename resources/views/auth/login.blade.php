@@ -94,11 +94,11 @@
 
         </div>
         @if ($settings['enable_signup'] == 'on')
-            <p class="my-4 text-center">{{ __("Don't have an account?") }} <a href="{{ route('register',$lang) }}"
+            <p class="my-4 text-center d-none">{{ __("Don't have an account?") }} <a href="{{ route('register',$lang) }}"
                     class="text-primary">{{ __('Register') }}</a></p>
         @endif
 
-        <div class="row">   
+        <div class="row d-none">   
             <div class="col-6 d-grid">
                 <a href="{{ route('customer.login') }}"
                     class="btn-login btn btn-secondary btn-block mt-2 text-white">{{ __('Customer Login') }}</a>

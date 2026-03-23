@@ -1,773 +1,634 @@
-@php
-    use App\Models\Utility;
-    // $setting = \App\Models\Utility::colorset();
-    $SITE_RTL = Utility::getValByName('SITE_RTL');
-    $settings = \Modules\LandingPage\Entities\LandingPageSetting::settings();
-
-    $logo = Utility::get_file('uploads/landing_page_image');
-
-    $sup_logo = Utility::get_file('uploads/logo/');
-    $adminSettings = Utility::getAdminPaymentSetting();
-    $getseo = App\Models\Utility::getSeoSetting();
-    $metatitle = isset($getseo['meta_title']) ? $getseo['meta_title'] : '';
-    $metsdesc = isset($getseo['meta_desc']) ? $getseo['meta_desc'] : '';
-    $meta_image = \App\Models\Utility::get_file('uploads/meta/');
-    $meta_logo = isset($getseo['meta_image']) ? $getseo['meta_image'] : '';
-    $get_cookie = Utility::cookies();
-
-    $setting = \App\Models\Utility::settings();
-    $color = !empty($setting['color']) ? $setting['color'] : 'theme-3';
-
-    if (isset($setting['color_flag']) && $setting['color_flag'] == 'true') {
-        $themeColor = 'custom-color';
-    } else {
-        $themeColor = $color;
-    }
-
-    $lang = Utility::getValByName('default_language') ?? 'en';
-    \App::setLocale($lang);
-
-@endphp
 <!DOCTYPE html>
-<html lang="{{$lang}}" dir="{{ $setting['SITE_RTL'] == 'on' ? 'rtl' : '' }}">
+<html lang="en">
 
 <head>
-    <title>{{ env('APP_NAME') }}</title>
-    <!-- Meta -->
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
-
-    <meta name="title" content="{{ $metatitle }}">
-    <meta name="description" content="{{ $metsdesc }}">
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ env('APP_URL') }}">
-    <meta property="og:title" content="{{ $metatitle }}">
-    <meta property="og:description" content="{{ $metsdesc }}">
-    <meta property="og:image" content="{{ $meta_image . $meta_logo }}">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ env('APP_URL') }}">
-    <meta property="twitter:title" content="{{ $metatitle }}">
-    <meta property="twitter:description" content="{{ $metsdesc }}">
-    <meta property="twitter:image" content="{{ $meta_image . $meta_logo }}">
-
-    <!-- Favicon icon -->
-    <link rel="icon" href="{{ $sup_logo . 'favicon.png' }}{{'?'.time()}}" type="image" sizes="16x16">
-
-    <!-- font css -->
-    <link rel="stylesheet" href=" {{ asset('assets/fonts/tabler-icons.min.css') }}" />
-    <link rel="stylesheet" href=" {{ asset('assets/fonts/feather.css') }}" />
-    <link rel="stylesheet" href=" {{ asset('assets/fonts/fontawesome.css') }}" />
-    <link rel="stylesheet" href=" {{ asset('assets/fonts/material.css') }}" />
-
-
-
-    <!-- vendor css -->
-    <link rel="stylesheet" href=" {{ asset('assets/css/style.css') }}" />
-    <link rel="stylesheet" href=" {{ asset('assets/css/customizer.css') }}" />
-    <link rel="stylesheet" href=" {{ asset('assets/landing-page/custom.css') }}" />
-
-    @if ($SITE_RTL == 'on')
-        <link rel="stylesheet" href="{{ asset('assets/landing-page/landing-page-rtl.css') }}">
-    @else
-        <link rel="stylesheet" href=" {{ asset('assets/landing-page/landing-page.css') }}" />
-    @endif
-
-    @if ($setting['cust_darklayout'] == 'on')
-        <link rel="stylesheet" href="{{ asset('assets/css/style-dark.css') }}">
-    @else
-        <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}"
-            id="main-style-link">
-    @endif
-
-    <style>
-        :root {
-            --color-customColor: <?= $color ?>;
-        }
-    </style>
-
-    <link rel="stylesheet" href="{{ asset('css/custom-color.css') }}">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simply Compta</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('/uploads/new-landing-page/header_logo.png') }}">
+    <link rel="stylesheet" href="{{ asset('/css/landingPage.css') }}" />
 </head>
 
-@if ($setting['cust_darklayout'] == 'on')
+<body>
 
-    <body class="{{ $themeColor }} landing-dark">
-    @else
-
-        <body class="{{ $themeColor }}">
-@endif
-<!-- [ Header ] start -->
-<header class="main-header">
-    @if ($settings['topbar_status'] == 'on')
-        <div class="announcement bg-dark text-center p-2">
-            <p class="mb-0">{!! $settings['topbar_notification_msg'] !!}</p>
-        </div>
-    @endif
-    @if ($settings['menubar_status'] == 'on')
-        <div class="container">
-            <nav class="navbar navbar-expand-md  default top-nav-collapse">
-                <div class="header-left">
-                    <a class="navbar-brand bg-transparent" href="">
-                        <img src="{{ $logo . '/' . $settings['site_logo'] }}" alt="logo">
-                    </a>
-                </div>
-                <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
-                    <ul class="navbar-nav">
+    <div class="sc-dash">
+        <!-- Header Section -->
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <a class="navbar-brand" href="#">
+                    <img src="{{ asset('/uploads/new-landing-page/header_logo.svg')}}" alt="Simply Compta Logo">
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
                         <li class="nav-item">
-                            <a class="nav-link active" href="#home">{{ $settings['home_title'] }}</a>
+                            <a class="nav-link" href="#">Fonctionnalités</a>
                         </li>
-                        @if (isset($settings['is_feature_cards_on']) &&  $settings['is_feature_cards_on'] == 'on')
-                            <li class="nav-item">
-                                <a class="nav-link" href="#features">{{ $settings['feature_title'] }}</a>
-                            </li>
-                        @endif
-                        @if (isset($settings['is_pricing_plan_section_on']) &&  $settings['is_pricing_plan_section_on'] == 'on')
-                            <li class="nav-item">
-                                <a class="nav-link" href="#plan">{{ $settings['plan_title'] }}</a>
-                            </li>
-                        @endif
-                        @if (isset($settings['is_faq_section_on']) &&  $settings['is_faq_section_on'] == 'on')
-                            <li class="nav-item">
-                                <a class="nav-link" href="#faq">{{ $settings['faq_title'] }}</a>
-                            </li>
-                        @endif
-                        @if (is_array(json_decode($settings['menubar_page'])) || is_object(json_decode($settings['menubar_page'])))
-                            @foreach (json_decode($settings['menubar_page']) as $key => $value)
-                                @if ($value->header == 'on')
-                                    <li class="nav-item">
-                                        <a class="nav-link"
-                                            href="{{ route('custom.page', $value->page_slug) }}">{{ $value->menubar_page_name }}</a>
-                                    </li>
-                                @endif
-                            @endforeach
-                        @endif
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Mission</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Contact</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-success" href="/login">Essai gratuit</a>
+                        </li>
                     </ul>
-                    <button class="navbar-toggler bg-primary" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false"
-                        aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                </div>
-                <div class="ms-auto d-flex justify-content-end gap-2">
-                    <a href="{{ route('login') }}" class="btn btn-outline-dark"><span
-                            class="hide-mob me-2">{{ __('Login') }}</span> <i data-feather="log-in"></i></a>
-                    <a href="{{ route('register') }}" class="btn btn-outline-dark"><span
-                            class="hide-mob me-2">{{ __('Register') }}</span> <i data-feather="user-check"></i></a>
-                    <button class="navbar-toggler " type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
                 </div>
             </nav>
-        </div>
-    @endif
-</header>
-<!-- [ Header ] End -->
-<!-- [ Banner ] start -->
-@if ($settings['home_status'] == 'on')
-    <section class="main-banner bg-primary" id="home">
-        <div class="container-offset">
-            <div class="row gy-3 g-0 align-items-center">
-                <div class="col-xxl-4 col-md-6">
-                    <span class="badge py-2 px-3 bg-white text-dark  fw-bold mb-3">
-                        {{ $settings['home_offer_text'] }}</span>
-                    <h1 class="mb-3">
-                        {{-- <b class="fw-bold">{{ env('APP_NAME') }}</b> <br> --}}
-                        {{ $settings['home_heading'] }}
-                    </h1>
-                    <h6 class="mb-0">{{ $settings['home_description'] }}</h6>
-                    <div class="d-flex gap-3 mt-4 banner-btn">
-                        @if ($settings['home_live_demo_link'])
-                            <a href="{{ $settings['home_live_demo_link'] }}" class="btn btn-outline-dark">{{ __('Live Demo') }}
-                                 <i data-feather="play-circle" class="ms-2"></i></a>
-                        @endif
-                        @if ($settings['home_buy_now_link'])
-                            <a href="{{ $settings['home_buy_now_link'] }}" class="btn btn-outline-dark">{{ __('Buy Now') }}
-                                <i data-feather="lock" class="ms-2"></i></a>
-                        @endif
-                    </div>
-                </div>
-                <div class="col-xxl-8 col-md-6">
-                    <div class="dash-preview">
-                        <img class="img-fluid preview-img" src="{{ $logo . '/' . $settings['home_banner'] }}"
-                            alt="">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row g-0 gy-2 mt-4 align-items-center">
-                <div class="col-xxl-3">
-                    <p class="mb-0">{{ __('Trusted by') }} <b class="fw-bold">{{ $settings['home_trusted_by'] }}</b></p>
-                </div>
-                <div class="col-xxl-9">
-                    <div class="row gy-3 row-cols-9">
-                        @foreach (explode(',', $settings['home_logo']) as $k => $home_logo)
-                            <div class="col-auto">
-                                <img src="{{ $logo . '/' . $home_logo }}" alt="" class="img-fluid"
-                                    style="width: 130px;">
+        </header>
+
+        <!-- Main Content Section -->
+        <main class="Simply">
+            <div class="hero-outer">
+                <div class="hero-container">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h1 class="main-heading">La <strong>nouvelle interface</strong> qui <strong>redéfinit la relation</strong>
+                                entre le <strong>cabinet comptable</strong> et ses clients</h1>
+                            <p class="hero-text">Simplifiez la gestion. Valorisez votre expertise.</p>
+                            <p class="hero-text">La digitalisation de la relation client devient un standard</p>
+                            <div class="btn-container mt-4">
+                                <a href="#" class="btn btn-primary">Demandez une démo</a>
                             </div>
-                        @endforeach
+                        </div>
+                        <div class="col-md-6">
+                            <img src="{{ asset('/uploads/new-landing-page/hero_img.png')}}" alt="Simply Compta Main Image" class="img-fluid">
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-@endif
-<!-- [ Banner ] start -->
-<!-- [ features ] start -->
-@if (isset($settings['is_feature_cards_on']) &&  $settings['is_feature_cards_on'] == 'on')
-    <section class="features-section section-gap bg-dark" id="features">
-        <div class="container">
-            <div class="row gy-3">
-                <div class="col-xxl-4">
-                    <span class="d-block mb-2 text-uppercase">{{ $settings['feature_title'] }}</span>
-                    <div class="title mb-4">
-                        <h2><b class="fw-bold">{!! $settings['feature_heading'] !!}</b></h2>
+
+            <!-- Transformation Section -->
+            <section class="transformation-section">
+                <h2 class="section-title">La profession comptable connaît<br> une <strong>transformation profonde</strong></h2>
+                <div class="row_1">
+                    <div class="col-md-4">
+                        <div class="transformation-box first-tra-box">
+                            <img src="{{ asset('/uploads/new-landing-page/logo1.png')}}" alt="Icon 1" class="transformation-icon">
+                            <p class="transformation-text">Les attentes des entreprises<br> <strong>évoluent</strong></p>
+                        </div>
                     </div>
-                    <p class="mb-3">{!! $settings['feature_description'] !!}</p>
-                    @if ($settings['feature_buy_now_link'])
-                        <a href="{{ $settings['feature_buy_now_link'] }}"
-                            class="btn btn-primary  d-inline-flex align-items-center">{{ __('Buy Now') }} <i
-                                data-feather="lock" class="ms-2"></i></a>
-                    @endif
+                    <div class="col-md-4">
+                        <div class="transformation-box">
+                            <img src="{{ asset('/uploads/new-landing-page/logo2.png')}}" alt="Icon 2" class="transformation-icon">
+                            <p class="transformation-text">L'accès immédiat à l'information devient<strong><br> la norme</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="transformation-box">
+                            <img src="{{ asset('/uploads/new-landing-page/logo3.png')}}" alt="Icon 3" class="transformation-icon">
+                            <p class="transformation-text">La réactivité n'est plus un avantage :<strong><br> elle est
+                                    attendue</strong>
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-xxl-8">
-                    <div class="row">
-                        @if (is_array(json_decode($settings['feature_of_features'], true)) ||
-                                is_object(json_decode($settings['feature_of_features'], true)))
-                            @foreach (json_decode($settings['feature_of_features'], true) as $key => $value)
-                                <div class="col-lg-4 col-sm-6 d-flex">
-                                    <div class="card {{ $key == 0 ? 'bg-primary' : '' }}">
-                                        <div class="card-body">
-                                            <span class="theme-avtar avtar avtar-xl mb-4">
-                                                <img src="{{ $logo . '/' . $value['feature_logo'] }}" alt="" width="70" height="70">
-                                            </span>
-                                            <h3 class="mb-3 {{ $key == 0 ? '' : 'text-white' }}">
-                                                {!! $value['feature_heading'] !!}</h3>
-                                            <p class=" f-w-600 mb-0 {{ $key == 0 ? 'text-body' : '' }}">
-                                                {!! $value['feature_description'] !!}</p>
-                                        </div>
+                <p class="transformation-info">Aujourd'hui, les cabinets les plus performants ne cherchent plus seulement à
+                    gérer
+                    leurs flux administratifs.</p>
+                <p class="p-text">Ils créent un environnement digital capable de valoriser pleinement leur expertise.</p>
+                <p class="transformation-highlight">SIMPLYCOMPTA S'INSCRIT DANS CETTE ÉVOLUTION.</p>
+                <a href="#" class="btn btn-success">Demandez une démo</a>
+            </section>
+
+            <!-- Application Section -->
+            <section class="application-section">
+                <h2 class="application-title">Une <strong>application tout-en-un </strong>pour piloter votre
+                    <strong>comptabilité</strong>
+                </h2>
+                <div class="row_1">
+                    <div class="col-md-3">
+                        <div class="transformation-box1">
+                            <img src="{{ asset('/uploads/new-landing-page/section_logo1.png')}}" alt="Icon 1" class="transformation-icon1">
+                            <h3 class="application-heading">Factures et reçus centralisés</h3>
+                            <p class="application-text">Importez facilement vos factures et reçus,tout est déjà groupé et classé</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="transformation-box1">
+                            <img src="{{ asset('/uploads/new-landing-page/section_logo2.png')}}" alt="Icon 2" class="transformation-icon1">
+                            <h3 class="application-heading">Documents toujours à jour</h3>
+                            <p class="application-text">Accédez à tous vos documents juridiques et comptable en un clic</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="transformation-box1">
+                            <img src="{{ asset('/uploads/new-landing-page/section_logo3.png')}}" alt="Icon 3" class="transformation-icon1">
+                            <h3 class="application-heading">Suivi financier en temps réel</h3>
+                            <p class="application-text">Visualisez vos revenus dépensés et déclarations en un clin d'oeil</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="transformation-box1">
+                            <img src="{{ asset('/uploads/new-landing-page/section_logo4.png')}}" alt="Icon 4" class="transformation-icon1">
+                            <h3 class="application-heading">Notifications et rappels</h3>
+                            <p class="application-text">Restez connecté et recevez des alertes pour vos échéances</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simplycompta Section -->
+            <section class="simplycompta-section">
+                <div class="simplycompta-container">
+                    <!-- Left side (Mobile Image) -->
+                    <div class="simplycompta-phone">
+                        <img src="{{ asset('/uploads/new-landing-page/Mobile-new.png')}}" alt="SimplyCompta App Mockup" class="simplycompta-phone-img">
+                    </div>
+
+                    <!-- Right side (Content) -->
+                    <div class="simplycompta-content">
+                        <h1 class="simplycompta-title"><strong>Une plateforme pensée</strong> <br> pour le cabinet moderne</h1>
+                        <p class="simplycompta-description">
+                            SimplyCompta est la plateforme qui
+                            <span class="highlight-blue">simplifie la gestion administrative</span>
+                            et permet aux cabinets comptables de recentrer leur énergie sur leur véritable valeur :
+                            <span class="highlight-green">le conseil et l'expertise.</span>
+                        </p>
+                        <p class="simplycompta-description">
+                            Plus qu'un outil, SimplyCompta constitue une
+                            <span class="highlight-blue">véritable infrastructure digitale</span>,
+                            conçue pour structurer, fluidifier et moderniser la relation entre le cabinet et ses clients.
+                        </p>
+
+                        <div class="simplycompta-box">
+                            <h3 class="simplycompta-box-title">
+                                <strong>Faites entrer votre cabinet</strong> dans une nouvelle dimension
+                            </h3>
+
+                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Moderniser
+                                votre
+                                organisation</p>
+                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Renforcer votre
+                                image professionnelle</p>
+                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Améliorer
+                                l'expérience client</p>
+                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Optimiser vos
+                                opérations</p>
+                            <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Benefit Icon" class="check-icon">Créer un
+                                avantage
+                                concurrentiel durable</p>
+                        </div>
+
+                        <!-- Button -->
+                        <div class="simplycompta-btn">
+                            <button class="simplycompta-button">Demandez une démo</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Client Experience Section -->
+            <section class="client-experience-section">
+                <div class="client-experience-container">
+                    <!-- Heading -->
+                    <div class="client-experience-header">
+                        <h1>Une <strong>expérience client</strong> enfin alignée avec <strong>votre niveau d'exigence</strong></h1>
+                        <p class="client-experience-subtitle">
+                            Vos clients accèdent à un espace sécurisé, disponible à <br>tout moment, depuis n’importe où.
+                        </p>
+                    </div>
+
+                    <!-- Features grid -->
+                    <div class="client-experience-grid">
+                        <!-- Feature 1 -->
+                        <div class="client-feature feature-documents">
+                            <div class="feature-icon">
+                                <!-- Replace with actual icon -->
+                                <img src="{{ asset('/uploads/new-landing-page/i1.svg')}}" alt="Documents essentiels">
+                            </div>
+                            <h3 class="feature-title">Documents essentiels</h3>
+                            <p class="feature-desc">Retrouver instantanément leurs documents essentiels</p>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="client-feature feature-invoices">
+                            <div class="feature-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/i2.svg')}}" alt="Factures et pièces">
+                            </div>
+                            <h3 class="feature-title">Factures et pièces</h3>
+                            <p class="feature-desc">Déposer factures et pièces comptables sans contrainte</p>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="client-feature feature-bank">
+                            <div class="feature-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/i3.svg')}}" alt="Relevés bancaires">
+                            </div>
+                            <h3 class="feature-title">Relevés bancaires</h3>
+                            <p class="feature-desc">Transmettre leurs relevés bancaires en quelques secondes</p>
+                        </div>
+
+                        <!-- Feature 4 -->
+                        <div class="client-feature feature-update">
+                            <div class="feature-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/i4.svg')}}" alt="Informations à jour">
+                            </div>
+                            <h3 class="feature-title">Informations à jour</h3>
+                            <p class="feature-desc">Mettre à jour leurs informations facilement</p>
+                        </div>
+
+                        <!-- Feature 5 -->
+                        <div class="client-feature feature-notifications">
+                            <div class="feature-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/i5.svg')}}" alt="Notifications">
+                            </div>
+                            <h3 class="feature-title">Notifications</h3>
+                            <p class="feature-desc">Recevoir vos notifications importantes</p>
+                        </div>
+
+                        <!-- Feature 6 -->
+                        <div class="client-feature feature-security">
+                            <div class="feature-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/i6.svg')}}" alt="Sécurité 24/7">
+                            </div>
+                            <h3 class="feature-title">Sécurité 24/7</h3>
+                            <p class="feature-desc">Accès sécurisé disponible à tout moment</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Value Section -->
+            <section class="value-section">
+                <h1><strong>Libérez vos équipes</strong> pour ce qui crée<br> réellement de la valeur</h1>
+                <div class="columns-container">
+                    <div class="column1 column-left">
+                        <h3 class="value-title">Ce que vous subissez encore</h3>
+                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les documents
+                            égarés.</p>
+                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les relances
+                            répétées.</p>
+                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/pink_icon.svg')}}" alt="Pink Icon" class="check-icon">Fini les échanges
+                            dispersés.</p>
+                    </div>
+                    <div class="column2 column-right">
+                        <h3 class="value-title2">Ce que vous gagnez avec SimplyCompta</h3>
+                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Votre cabinet gagne
+                            en lisibilité</p>
+                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Fini les relances
+                            répétées.</p>
+                        <p class="box-text"><img src="{{ asset('/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">Votre posture gagne
+                            en modernité</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Business Section -->
+            <section class="business-section" style="background-image: url('images/banner_image.png');">
+                <div class="bussiness-container">
+                    <div class="business-overlay">
+                        <div class="business-content">
+                            <h1><strong>SIMPLYCOMPTA</strong> réduit les frictions opérationnelles et centralise les flux.</h1>
+                            <p>Vos collaborateurs peuvent ainsi se concentrer sur des missions à plus forte valeur :</p>
+                            <ul>
+                                <li>
+                                    <p>l'analyse</p>
+                                </li>
+                                <li>
+                                    <p>l'accompagnement</p>
+                                </li>
+                                <li>
+                                    <p>le conseil.</p>
+                                </li>
+                            </ul>
+                            <a href="#" class="cta-btn">Demandez un rdv</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Solution Section -->
+            <section class="solution-section" style="background-image: url(images/rectangle-8@3x.png);">
+                <div class="solution-image">
+                    <img src="{{ asset('/uploads/new-landing-page/Mobile2.png')}}" alt="Phone Mockup" class="solution-phone-img">
+                </div>
+                <div class="solution-content">
+                    <h1><strong>La solution idéale </strong>entre vous et votre cabinet comptable</h1>
+                    <p class="solution-text"><strong>SIMPLYCOMPTA</strong> simplifie les échanges et le partage de<br> documents
+                        entre les entrepreneurs et leur cabinet<br> comptable.</p>
+                    <ul class="solution-features">
+                        <p><img src="{{ asset('/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Connexion
+                                sécurisée</span> et partagée en temps réel</li>
+                        </p>
+                        <p><img src="{{ asset('/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Transmission
+                                facile</span> de vos relevés et justificatifs</li>
+                        </p>
+                        <p><img src="{{ asset('/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Accès
+                                instantané</span> à vos bilans et déclarations</li>
+                        </p>
+                    </ul>
+                </div>
+            </section>
+
+
+            <!-- Modele Section -->
+            <section class="modele-section">
+                <div class="modele-content">
+                    <h1>Un modèle économique <strong>simple</strong> et <strong>immédiatement rentable</strong></h1>
+                    <p>La solution s'autofinance naturellement grâce au temps opérationnel qu'elle permet de récupérer</p>
+                </div>
+
+                <div class="modele-grid">
+                    <!-- Feature 1 -->
+                    <div class="modele-feature feature-documents">
+                        <div class="modele-icon">
+                            <img src="{{ asset('/uploads/new-landing-page/modele1.svg')}}" alt="Documents essentiels">
+                        </div>
+                        <p class="modele-desc">Aucune complexité</p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="modele-feature2 feature-invoices">
+                        <div class="modele-icon">
+                            <img src="{{ asset('/uploads/new-landing-page/modele2.svg')}}" alt="Factures et pièces">
+                        </div>
+                        <p class="modele-desc">Aucun risque économique</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cta Section -->
+            <section class="cta-sectios">
+                <div class="cta-container">
+                    <div class="cta-text">
+                        <p class="cta-heading">Vous enrichissez votre offre sans alourdir votre organisation.</p>
+                        <p class="cta-subheading">C'EST UNE MONTÉE EN VALEUR NETTE POUR VOTRE CABINET.</p>
+                    </div>
+                    <button class="cta-button">Demandez une démo</button>
+                </div>
+            </section>
+
+            <!-- personnalisée Section -->
+            <section class="personnalisée-container">
+                <div class="row align-items-center">
+                    <!-- Left Column -->
+                    <div class="col-md-4 text-center text-md-start">
+                        <h2 class="personnalisée-title"><strong>Une mise en place personnalisée,</strong> fluide et sécurisée</h2>
+                        <p class="personnalisée-description">Chaque cabinet possède ses méthodes, son identité et son organisation.
+                            <strong>SimplyCompta s’y adapte pleinement.</strong>
+                        </p>
+                        <div class="btn-container mt-4">
+                            <button class="btn btn-primary">Demandez une démo</button>
+                        </div>
+                    </div>
+
+                    <!-- Middle Column -->
+                    <div class="col-md-4">
+                        <div class="row">
+                            <!-- First Box -->
+                            <div class="col-12">
+                                <div class="personnalisée-box">
+                                    <div class="personnalisée-icon-box">
+                                        <img src="{{ asset('/uploads/new-landing-page/free.svg')}}" alt="Free Icon" class="free_icon">
                                     </div>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
-                <div class="mt-5">
-                    <div class="title text-center mb-4">
-                        <span class="d-block mb-2 text-uppercase">{{ $settings['feature_title'] }}</span>
-                        <h2 class="mb-4">{!! $settings['highlight_feature_heading'] !!}</h2>
-                        <p>{!! $settings['highlight_feature_description'] !!}</p>
-                    </div>
-                    <div class="features-preview">
-                        <img class="img-fluid m-auto d-block"
-                            src="{{ $logo . '/' . $settings['highlight_feature_image'] }}" alt="" >
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-@endif
-<!-- [ features ] start -->
-<!-- [ element ] start -->
-@if (isset($settings['is_feature_section_on']) &&  $settings['is_feature_section_on'] == 'on')
-    <section class="element-section  section-gap ">
-        <div class="container">
-            @if (is_array(json_decode($settings['other_features'], true)) ||
-                    is_object(json_decode($settings['other_features'], true)))
-                @foreach (json_decode($settings['other_features'], true) as $key => $value)
-                    @if ($key % 2 == 0)
-                        <div class="row align-items-center justify-content-center mb-4">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="title mb-4">
-                                    <span class="d-block fw-bold mb-2 text-uppercase">{{ __('Features') }}</span>
-                                    <h2>
-                                        {!! $value['other_features_heading'] !!}
-                                    </h2>
-                                </div>
-                                <p class="mb-3">{!! $value['other_featured_description'] !!}</p>
-                                <a href="{{ $value['other_feature_buy_now_link'] }}"
-                                    class="btn btn-primary  d-inline-flex align-items-center">{{ __('Buy Now') }}
-                                    <i data-feather="lock" class="ms-2"></i></a>
-                            </div>
-                            <div class="col-lg-7 col-md-6 res-img">
-                                <div class="img-wrapper">
-                                    <img src="{{ $logo . '/' . $value['other_features_image'] }}" alt=""
-                                        class="img-fluid header-img">
+                                    <h5 class="personnalisée-title1">Devis Gratuit</h5>
+                                    <p class="personnalisée-dec">Construit selon vos besoins spécifiques</p>
                                 </div>
                             </div>
-                        </div>
-                    @else
-                        <div class="row align-items-center justify-content-center mb-4">
-                            <div class="col-lg-7 col-md-6">
-                                <div class="img-wrapper">
-                                    <img src="{{ $logo . '/' . $value['other_features_image'] }}" alt=""
-                                        class="img-fluid header-img">
-                                </div>
-                            </div>
-                            <div class="col-lg-4  col-md-6">
-                                <div class="title mb-4">
-                                    <span class="d-block fw-bold mb-2 text-uppercase">{{ __('Features') }}</span>
-                                    <h2>
-                                        {!! $value['other_features_heading'] !!}
-                                    </h2>
-                                </div>
-                                <p class="mb-3">{!! $value['other_featured_description'] !!}</p>
-                                <a href="{{ $value['other_feature_buy_now_link'] }}"
-                                    class="btn btn-primary  d-inline-flex align-items-center">{{ __('Buy Now') }}
-                                    <i data-feather="lock" class="ms-2"></i></a>
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
-            @endif
-
-        </div>
-    </section>
-@endif
-<!-- [ element ] end -->
-<!-- [ element ] start -->
-@if (isset($settings['is_discover_section_on']) &&  $settings['is_discover_section_on'] == 'on')
-    <section class="bg-dark section-gap">
-        <div class="container">
-            <div class="row mb-2 justify-content-center">
-                <div class="col-xxl-6">
-                    <div class="title text-center mb-4">
-                        <span class="d-block mb-2 text-uppercase">{{ __('DISCOVER') }}</span>
-                        <h2 class="mb-4">{!! $settings['discover_heading'] !!}</h2>
-                        <p>{!! $settings['discover_description'] !!}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                @if (is_array(json_decode($settings['discover_of_features'], true)) ||
-                        is_object(json_decode($settings['discover_of_features'], true)))
-                    @foreach (json_decode($settings['discover_of_features'], true) as $key => $value)
-                        <div class="col-xxl-3 col-sm-6 col-lg-4 ">
-                            <div class="card   border {{ $key == 1 ? 'bg-primary' : 'bg-transparent' }}">
-                                <div class="card-body text-center">
-                                    <span class="theme-avtar avtar avtar-xl mx-auto mb-4">
-                                        <img src="{{ $logo . '/' . $value['discover_logo'] }}" alt="">
-                                    </span>
-                                    <h3 class="mb-3 {{ $key == 1 ? '' : 'text-white' }} ">{!! $value['discover_heading'] !!}
-                                    </h3>
-                                    <p class="{{ $key == 1 ? 'text-body' : '' }}">
-                                        {!! $value['discover_description'] !!}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-
-            </div>
-            <div class="d-flex flex-column justify-content-center flex-sm-row gap-3 mt-3">
-                @if ($settings['discover_live_demo_link'])
-                    <a href="{{ $settings['discover_live_demo_link'] }}"
-                        class="btn btn-outline-light ">{{ __('Live Demo') }}
-                         <i data-feather="play-circle" class="ms-2"></i> </a>
-                @endif
-
-                @if ($settings['discover_buy_now_link'])
-                    <a href="{{ $settings['discover_buy_now_link'] }}" class="btn btn-primary ">{{ __('Buy Now') }} <i data-feather="lock" class="ms-2"></i> </a>
-                @endif
-            </div>
-        </div>
-    </section>
-@endif
-<!-- [ element ] end -->
-<!-- [ Screenshots ] start -->
-@if (isset($settings['is_screenshots_section_on']) &&  $settings['is_screenshots_section_on'] == 'on')
-
-    <section class="screenshots section-gap">
-        <div class="container">
-            <div class="row mb-2 justify-content-center">
-                <div class="col-xxl-6">
-                    <div class="title text-center mb-4">
-                        <span class="d-block mb-2 fw-bold text-uppercase">{{ __('SCREENSHOTS') }}</span>
-                        <h2 class="mb-4">{!! $settings['screenshots_heading'] !!}</h2>
-                        <p>{!! $settings['screenshots_description'] !!}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row gy-4 gx-4">
-                @if (is_array(json_decode($settings['screenshots'], true)) || is_object(json_decode($settings['screenshots'], true)))
-                    @foreach (json_decode($settings['screenshots'], true) as $value)
-                        <div class="col-md-4 col-sm-6">
-                            <div class="screenshot-card">
-                                <div class="img-wrapper">
-                                    <img src="{{ $logo . '/' . $value['screenshots'] }}"
-                                        class="img-fluid header-img mb-4 shadow-sm" alt="">
-                                </div>
-                                <h5 class="mb-0">{!! $value['screenshots_heading'] !!}</h5>
-                                {{-- <a href="#" class="btn btn-primary pr-btn"> <i data-feather="search"></i> </a> --}}
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-        </div>
-    </section>
-@endif
-<!-- [ Screenshots ] start -->
-<!-- [ subscription ] start -->
-
-@if (isset($settings['is_pricing_plan_section_on']) &&  $settings['is_pricing_plan_section_on'] == 'on')
-
-    <section class="subscription bg-primary section-gap" id="plan">
-        <div class="container">
-            <div class="row mb-2 justify-content-center">
-                <div class="col-xxl-6">
-                    <div class="title text-center mb-4">
-                        <span class="d-block mb-2 fw-bold text-uppercase">{{ __('PLAN') }}</span>
-                        <h2 class="mb-4">{!! $settings['plan_heading'] !!}</h2>
-                        <p>{!! $settings['plan_description'] !!}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-
-                @php
-                    $collection = \App\Models\Plan::take(3)
-                        ->orderBy('price', 'ASC')
-                        ->where('is_disable','=','1')
-                        ->get();
-                @endphp
-                    @foreach ($collection as $key => $value)
-                    <div class="col-xxl-3 col-lg-4 col-md-6 d-flex">
-                        <div
-                            class="card w-100 price-card shadow-none {{ $key == 1 ? 'bg-light-primary' : '' }} {{ $key == 2 ? 'bg-dark' : '' }}">
-                            <div class="card-body">
-                                <span class="price-badge bg-dark">{{ $value->name }}</span>
-                                <span class="mb-4 f-w-600 p-price">{{isset( $adminSettings['currency_symbol']) ? $adminSettings['currency_symbol'].$value->price : '$'.$value->price }}<small
-                                    class="text-sm">/{{ $value->duration }}</small></span>
-                                <p>
-                                    {!! $value->description !!}
-                                </p>
-                                <ul class="list-unstyled my-3">
-                                    <li>
-                                        <div class="form-check text-start">
-                                            <label class="form-check-label"
-                                                for="customCheckc1">{{ $value->max_users == '-1' ? 'Unlimited' : $value->max_users }}{{ __('User') }}
-                                                </label>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="form-check text-start">
-                                            <label class="form-check-label"
-                                                for="customCheckc1">{{ $value->max_customers == '-1' ? 'Unlimited' : $value->max_customers }}{{__('Customer')}}</label>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="form-check text-start">
-                                            <label class="form-check-label"
-                                                for="customCheckc1">{{ $value->max_venders == '-1' ? 'Unlimited' : $value->max_venders }}{{ __('Vendors') }}
-                                                </label>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="form-check text-start">
-                                            <label class="form-check-label"
-                                                for="customCheckc1">{{ $value->storage_limit }}
-                                                </label>{{ __('Storage Limit') }}
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="form-check text-start">
-                                            <label class="form-check-label"
-                                                for="customCheckc1">{{ $value->enable_chatgpt == 'on' ? __('Enable') : __('Disable') }}{{ __('Chat GPT') }}
-                                                </label>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <div class="d-grid">
-                                        <a href="{{ route('register', ['value' => Crypt::encrypt($value->id), 'trial' => true]) }}" class="btn btn-primary ">{{__("Start With ").$value->name}}<i data-feather="log-in" class="ms-2"></i> </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-
-            </div>
-        </div>
-    </section>
-@endif
-<!-- [ subscription ] end -->
-<!-- [ FAqs ] start -->
-
-@if (isset($settings['is_faq_section_on']) && $settings['is_faq_section_on'] == 'on')
-    <section class="faqs section-gap bg-gray-100" id="faq">
-        <div class="container">
-            <div class="row mb-2">
-                <div class="col-xxl-6">
-                    <div class="title mb-4">
-                        <span class="d-block mb-2 fw-bold text-uppercase">{{ $settings['faq_title'] }}</span>
-                        <h2 class="mb-4">{!! $settings['faq_heading'] !!}</h2>
-                        <p>{!! $settings['faq_description'] !!}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="accordion accordion-flush" id="accordionFlushExample">
-                        @if (is_array(json_decode($settings['faqs'], true)) || is_object(json_decode($settings['faqs'], true)))
-                            @foreach (json_decode($settings['faqs'], true) as $key => $value)
-                                @if ($key % 2 == 0)
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="{{ 'flush-heading' . $key }}">
-                                            <button class="accordion-button collapsed fw-bold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="{{ '#flush-' . $key }}"
-                                                aria-expanded="false" aria-controls="{{ 'flush-collapse' . $key }}">
-                                                {!! $value['faq_questions'] !!}
-                                            </button>
-                                        </h2>
-                                        <div id="{{ 'flush-' . $key }}" class="accordion-collapse collapse"
-                                            aria-labelledby="{{ 'flush-heading' . $key }}"
-                                            data-bs-parent="#accordionFlushExample">
-                                            <div class="accordion-body">
-                                                {!! $value['faq_answer'] !!}
-                                            </div>
-                                        </div>
+                            <!-- Second Box -->
+                            <div class="col-12">
+                                <div class="personnalisée-box2">
+                                    <div class="personnalisée-icon-box">
+                                        <img src="{{ asset('/uploads/new-landing-page/setting.svg')}}" alt="Settings Icon" class="free_icon">
                                     </div>
-                                @endif
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="accordion accordion-flush" id="accordionFlushExample2">
-                        @if (is_array(json_decode($settings['faqs'], true)) || is_object(json_decode($settings['faqs'], true)))
-                            @foreach (json_decode($settings['faqs'], true) as $key => $value)
-                                @if ($key % 2 != 0)
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="{{ 'flush-heading' . $key }}">
-                                            <button class="accordion-button collapsed fw-bold" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="{{ '#flush-' . $key }}"
-                                                aria-expanded="false" aria-controls="{{ 'flush-collapse' . $key }}">
-                                                {!! $value['faq_questions'] !!}
-                                            </button>
-                                        </h2>
-                                        <div id="{{ 'flush-' . $key }}" class="accordion-collapse collapse"
-                                            aria-labelledby="{{ 'flush-heading' . $key }}"
-                                            data-bs-parent="#accordionFlushExample2">
-                                            <div class="accordion-body">
-                                                {!! $value['faq_answer'] !!}
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-                        @endif
-
-
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-@endif
-<!-- [ FAqs ] end -->
-<!-- [ testimonial ] start -->
-@if (isset($settings['is_testimonials_section_on']) && $settings['is_testimonials_section_on'] == 'on')
-    <section class="testimonial section-gap">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-lg-4">
-                    <div class="title mb-4">
-                        <span class="d-block mb-2 fw-bold text-uppercase">{{ __('TESTIMONIALS') }}</span>
-                        <h2 class="mb-2">{!! $settings['testimonials_heading'] !!}</h2>
-                        <p>{!! $settings['testimonials_description'] !!}</p>
-                    </div>
-                </div>
-                <div class="col-lg-8">
-                    <div class="row justify-content-center gy-3">
-
-
-                        @if (is_array(json_decode($settings['testimonials'])) || is_object(json_decode($settings['testimonials'])))
-                            @foreach (json_decode($settings['testimonials']) as $key => $value)
-                                <div class="col-xxl-4 col-sm-6 col-lg-6 col-md-4">
-                                    <div class="card bg-dark shadow-none mb-0">
-                                        <div class="card-body p-3">
-                                            <div class="d-flex mb-3 align-items-center justify-content-between">
-                                                <span class="theme-avtar avtar avtar-sm bg-light-dark rounded-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36"
-                                                        height="23" viewBox="0 0 36 23" fill="none">
-                                                        <path
-                                                            d="M12.4728 22.6171H0.770508L10.6797 0.15625H18.2296L12.4728 22.6171ZM29.46 22.6171H17.7577L27.6669 0.15625H35.2168L29.46 22.6171Z"
-                                                            fill="white" />
-                                                    </svg>
-                                                </span>
-                                                <span>
-                                                    @for ($i = 1; $i <= (int) $value->testimonials_star; $i++)
-                                                        <i data-feather="star"></i>
-                                                    @endfor
-                                                </span>
-                                            </div>
-                                            <h3 class="text-white">{{ $value->testimonials_title }}</h3>
-                                            <p class="hljs-comment">
-                                                {{ $value->testimonials_description }}
-                                            </p>
-                                            <div class="d-flex  align-items-center ">
-                                                @if (!empty($value->testimonials_user_avtar))
-                                                    <img src="{{ $logo . '/' . $value->testimonials_user_avtar }}"
-                                                        class="wid-40 me-3" alt="">
-                                                @else
-                                                    <img src="{{ !empty(\Auth::user()->avatar) ? \App\Models\Utility::get_file(\Auth::user()->avatar) : asset(Storage::url('uploads/avatar/avatar.png')) }}"
-                                                        class="wid-40 me-3" alt="">
-                                                @endif
-                                                <span>
-                                                    <b class="fw-bold d-block">{{ $value->testimonials_user }}</b>
-                                                    {{ $value->testimonials_designation }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <h5 class="personnalisée-title1">Accompagnement</h5>
+                                    <p class="personnalisée-dec">Dédié pour garantir une adoption rapide</p>
                                 </div>
-                            @endforeach
-                        @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-4 text-center">
+                        <img src="{{ asset('/uploads/new-landing-page/Phone.png')}}" alt="Image" class="img-personnalisée">
                     </div>
                 </div>
-                <div class="col-12">
-                    <p class="mb-0 f-w-600">
-                        {!! $settings['testimonials_long_description'] !!}
+            </section>
+
+
+
+
+
+
+
+            <!------ 7 DAYS TRAIL NEW SECTION DESIGN START HERE   ------>
+
+            <section>
+                <div class="trail-containe-main">
+                    <div class="trail-text-img">
+                        <div class="seven-img"><img src="{{ asset('/uploads/new-landing-page/image_7 (1).png')}}" alt="7 Days Trial" /></div>
+                        <div class="sev-trail-sec">
+                            <div class="sev-trail-text-wraper">
+                                <h4>7 jours d'essai inclus pour valider votre décision</h4>
+                                <p>Testez SimplyCompta en conditions réelles, avec vos équipes et vos clients.<br><br>
+
+                                    Cette phase vous permet de confirmer concrètement la valeur apportée par la solution</p>
+                                <p class="engagement-text"><b>Sans engagement :</b> Vous restez libre durant cette période</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!------ 7 DAYS TRAIL NEW SECTION DESIGN START END   ------>
+
+
+
+
+
+
+
+
+            <!-- Trial Section -->
+            <section class="trial-section">
+                <!-- <div class="trial-container">
+          <div class="trial-image">
+            <img src="{{ asset('/uploads/new-landing-page/image_7.png')}}" alt="7 Days Trial" />
+          </div>
+          <div class="trial-content">
+            <h1 class="trial-text"><strong>7 jours d'essai inclus pour valider votre décision</strong></h1>
+            <p class="trial-dec">Testez SimplyCompta en conditions réelles, avec vos équipes et vos clients.</p>
+            <p class="trial-dec">Cet phase vous permet de confirmer concrètement la valeur apportée par la solution.</p>
+            <p class="trial-dec"><strong>Sans engagement :</strong> Vous restez libre durant cette période.</p>
+          </div>
+        </div> -->
+                <div class="conviction">
+                    <div class="trial-logo">
+                        <img src="{{ asset('/uploads/new-landing-page/trial_logo.svg')}}" alt="Trial Logo" />
+                    </div>
+                    <p>Notre conviction est simple : <strong>une solution performante doit convaincre par son
+                            utilisation.</strong>
                     </p>
+                    <p>L'adoption se fait naturellement dès les premiers jours.</p>
                 </div>
-            </div>
-        </div>
-    </section>
-@endif
-<!-- [ testimonial ] end -->
-<!-- [ Footer ] start -->
-<footer class="site-footer bg-gray-100">
-    <div class="container">
-        <div class="footer-row">
-            <div class="ftr-col cmp-detail">
-                <div class="footer-logo mb-3">
-                    <a href="#">
-                        <img src="{{ $logo . '/' . $settings['site_logo'] }}" alt="logo"
-                            style="filter: drop-shadow(2px 3px 7px #011C4B);">
-                    </a>
-                </div>
-                <p>
-                    {!! $settings['site_description'] !!}
-                </p>
-            </div>
-            <div class="ftr-col">
-                <ul class="list-unstyled">
+            </section>
 
-                    @if (is_array(json_decode($settings['menubar_page'])) || is_object(json_decode($settings['menubar_page'])))
-                        @foreach (json_decode($settings['menubar_page']) as $key => $value)
-                            @if ($value->footer == 'on' && $value->header == 'off')
-                                <li><a
-                                        href="{{ route('custom.page', $value->page_slug) }}">{!! $value->menubar_page_name !!}</a>
-                                </li>
-                            @endif
-                            @if ($value->footer == 'on' && $value->header == 'on')
-                                <li><a
-                                        href="{{ route('custom.page', $value->page_slug) }}">{!! $value->menubar_page_name !!}</a>
-                                </li>
-                            @endif
-                        @endforeach
-                    @endif
-                </ul>
-            </div>
-            <div class="ftr-col">
-                <ul class="list-unstyled">
-                    @if (is_array(json_decode($settings['menubar_page'])) || is_object(json_decode($settings['menubar_page'])))
-                        @foreach (json_decode($settings['menubar_page']) as $key => $value)
-                            @if ($value->header == 'on' && $value->footer == 'off')
-                                <li class="nav-item">
-                                    <a class="nav-link"
-                                        href="{{ route('custom.page', $value->page_slug) }}">{{ $value->menubar_page_name }}</a>
-                                </li>
-                            @endif
-                        @endforeach
-                    @endif
-                </ul>
-            </div>
-            @if (isset($settings['is_joinus_section_on']) &&  $settings['is_joinus_section_on'] == 'on')
-                <div class="ftr-col ftr-subscribe">
-                    <h2>{!! $settings['joinus_heading'] !!}</h2>
-                    <p>{!! $settings['joinus_description'] !!}</p>
-                    <form method="post" action="{{ route('join_us_store') }}">
-                        @csrf
-                        <div class="input-wrapper border border-dark">
-                            <input type="text" name="email" placeholder="Type your email address...">
-                            <button type="submit" class="btn btn-dark ">Join Us!</button>
+            <!-- Control Section -->
+            <section class="control-section">
+                <div class="container">
+                    <div class="control-content">
+                        <h1 class="business-content"><strong>Gardez le contrôle</strong>, en toute circonstance</h1>
+                        <p class="control-dec">Vous pilotez intégralement l'accès de vos clients. Si une collaboration s'arrête,
+                            l'accès peut être suspendu immédiatement.</p>
+                        <ul class="benefits">
+                            <p><img src="{{ asset('/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Aucune dépendance</p>
+                            <p><img src="{{ asset('/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Aucune contrainte</p>
+                            <p><img src="{{ asset('/uploads/new-landing-page/green_logo.png')}}" alt="Green Icon" class="check-icon">Contrôle total</p>
+                        </ul>
+                    </div>
+                    <div class="control-image">
+                        <img src="{{ asset('/uploads/new-landing-page/control_img.svg')}}" alt="Control Image" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Section -->
+            <section class="main-container">
+                <h2 class="form-section-title text-center">Prêt à moderniser votre cabinet ?</h2>
+                <p class="text-center">Demandez votre devis gratuit ou planifiez une démonstration</p>
+                <div class="form-container">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="cabinet-name" class="form-label">Nom du cabinet</label>
+                                <input type="text" class="form-control" id="cabinet-name" placeholder="Nom de votre cabinet" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contact-name" class="form-label">Nom du contact</label>
+                                <input type="text" class="form-control" id="contact-name" placeholder="Votre nom" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" placeholder="Votre email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="phone" placeholder="+212" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type de demande</label>
+                            <div class="checkbox-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="demo" id="demo" name="request-type">
+                                    <label class="form-check-label" for="demo">
+                                        Démonstration
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="devis" id="devis" name="request-type">
+                                    <label class="form-check-label" for="devis">
+                                        Devis
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="info" id="info" name="request-type">
+                                    <label class="form-check-label" for="info">
+                                        Informations complémentaires
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="trial" id="trial" name="request-type">
+                                    <label class="form-check-label" for="trial">
+                                        Essai de 7 jours
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" rows="4" placeholder="Votre message" required></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="data-usage">
+                            <label class="form-check-label" for="data-usage">
+                                J'accepte que mes données soient utilisées pour traiter ma demande.
+                            </label>
+                        </div>
+                        <div class="form-btn">
+                            <button type="submit" class="btn btn-primary w-20">Demandez un rdv</button>
                         </div>
                     </form>
                 </div>
-            @endif
-        </div>
-    </div>
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 99999">
-        <div id="liveToast" class="toast text-white  fade" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body"></div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                    aria-label="Close"></button>
+            </section>
+
+            <!-- Contact Section -->
+            <section class="contact_container">
+                <div class="contact-section text-center">
+                    <h3 class="contact-text">Contactez-nous dès maintenant :</h3>
+                    <div class="contact-grid">
+                        <!-- Feature 1 -->
+                        <div class="contact-feature feature-documents">
+                            <div class="contact-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/whatsapp.svg')}}" alt="Documents essentiels">
+                            </div>
+                            <p class="contact-desc">+212 (0)655023474</p>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="contact-feature2 feature-invoices">
+                            <div class="contact-icon">
+                                <img src="{{ asset('/uploads/new-landing-page/email.svg')}}" alt="Factures et pièces">
+                            </div>
+                            <p class="contact-desc">contact@simply-compta.com</p>
+                        </div>
+                    </div>
+                    <p class="contact-desc"><strong>Suivez-nous sur les réseaux sociaux</strong></p>
+                    <div class="social-icons">
+                        <img src="{{ asset('/uploads/new-landing-page/facebook.svg')}}" alt="Facebook" class="social">
+                        <img src="{{ asset('/uploads/new-landing-page/linkedin.svg')}}" alt="Linkedin" class="social">
+                        <img src="{{ asset('/uploads/new-landing-page/instagram.svg')}}" alt="Instagram" class="social">
+                    </div>
+                </div>
+            </section>
+
+
+        </main>
+
+        <!-- Footer Section -->
+        <footer>
+            <div class="container">
+                <div class="row d-flex justify-content-between align-items-center SimplyCompta-footer">
+                    <div class="col-auto">
+                        <p>© 2026 SimplyCompta. Tous droits réservés.</p>
+                    </div>
+                    <div class="col-auto">
+                        <ul class="footer-links">
+                            <li><a href="#">Mentions légales</a></li>
+                            <li><a href="#">Confidentialité</a></li>
+                            <li><a href="#">CGU</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-        </div>
+        </footer>
     </div>
-    <div class="border-top border-dark text-center p-2">
-        <p class="mb-0">
-            {{ __('©') }} {{ date('Y') }}
-            {{ Utility::getValByName('footer_text') ? Utility::getValByName('footer_text') : config('app.name', 'WorkGo') }}
-        </p>
-    </div>
-</footer>
-<!-- [ Footer ] end -->
-<!-- Required Js -->
 
-<script src="{{ asset('assets/js/plugins/popper.min.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/bootstrap.min.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
+    <!-- Bootstrap JS Link -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-<script>
-    // Start [ Menu hide/show on scroll ]
-    let ost = 0;
-    document.addEventListener("scroll", function() {
-        let cOst = document.documentElement.scrollTop;
-        if (cOst == 0) {
-            document.querySelector(".navbar").classList.add("top-nav-collapse");
-        } else if (cOst > ost) {
-            document.querySelector(".navbar").classList.add("top-nav-collapse");
-            document.querySelector(".navbar").classList.remove("default");
-        } else {
-            document.querySelector(".navbar").classList.add("default");
-            document
-                .querySelector(".navbar")
-                .classList.remove("top-nav-collapse");
-        }
-        ost = cOst;
-    });
-    // End [ Menu hide/show on scroll ]
 
-    var scrollSpy = new bootstrap.ScrollSpy(document.body, {
-        target: "#navbar-example",
-    });
-    feather.replace();
-</script>
-<script src="{{ asset('js/jquery.min.js') }}"></script>
-<script src="{{ asset('js/custom.js') }}"></script>
-@if ($message = Session::get('success'))
-<script>
-    show_toastr('success', '{!!$message!!}');
-</script>
-@endif
-@if ($message = Session::get('error'))
-<script>
-    show_toastr('error', '{!!$message!!}');
-</script>
-@endif
-@if ($get_cookie['enable_cookie'] == 'on')
-    @include('layouts.cookie_consent')
-@endif
+    <script>
+        window.addEventListener("scroll", function() {
+            const header = document.querySelector("header");
+
+            if (window.scrollY > 0) {
+                header.classList.add("sticky");
+            } else {
+                header.classList.remove("sticky");
+            }
+        });
+    </script>
 </body>
+
 </html>

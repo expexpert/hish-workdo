@@ -125,23 +125,17 @@ class CustomerController extends Controller
         $dateTo = $request->query('date_to');
 
         // Combined Invoice Stats - only one query for all sums
-        $invoiceStats = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+        $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('customer_invoices.date', '<=', $dateTo);
-            })
             ->select(
                 DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTE' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status IN ('PAID') THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
 
                 DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTE' THEN customer_invoices.id END) as total_quote_count")
+                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
             )
             ->first();
 
@@ -171,8 +165,8 @@ class CustomerController extends Controller
                 'total_vat_payable' => (float) $totalVatPayable,
                 'total_issued_count' => $invoiceStats->total_issued_count,
                 'total_quote_count' => $invoiceStats->total_quote_count,
-                'total_issued_sum' => (float) ($expenseStats->total_issued_sum ?? 0),
-                'total_quote_sum' => (float) ($expenseStats->total_quote_sum ?? 0),
+                'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
+                'total_quote_sum' => (float) ($invoiceStats->total_quote_sum ?? 0),
             ]
         ], 200);
     }
