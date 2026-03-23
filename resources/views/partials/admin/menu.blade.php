@@ -507,37 +507,37 @@
                 @endif
 
                 {{-- -------  Plan Request---------- --}}
-                <!-- @if (\Auth::user()->type == 'super admin')
+                @if (\Auth::user()->type == 'super admin')
                     <li class="dash-item  {{ request()->is('plan_request*') ? 'active' : '' }}">
                         <a href="{{ route('plan_request.index') }}" class="dash-link">
                             <span class="dash-micon"><i class="ti ti-arrow-up-right-circle"></i></span>
                             <span class="dash-mtext">{{ __('Plan Request') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Coupon ---------- --}}
-                <!-- @if (Gate::check('manage coupon'))
+                @if (Gate::check('manage coupon'))
                     <li class="dash-item {{ Request::segment(1) == 'coupons' ? 'active' : '' }}">
                         <a href="{{ route('coupons.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-gift"></i></span>
                             <span class="dash-mtext">{{ __('Coupon') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Order ---------- --}}
-                <!-- @if (Gate::check('manage order'))
+                @if (Gate::check('manage order'))
                     <li class="dash-item {{ Request::segment(1) == 'order' ? 'active' : '' }}">
                         <a href="{{ route('order.index') }}" class="dash-link ">
                             <span class="dash-micon"><i class="ti ti-shopping-cart-plus"></i></span>
                             <span class="dash-mtext">{{ __('Order') }}</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
 
 
-                <!-- {{-- -------  Email Notification ---------- --}}
+                {{-- -------  Email Notification ---------- --}}
 
                 @if (\Auth::user()->type == 'super admin')
                     <li class="dash-item {{ Request::segment(1) == 'email_template_lang' ? 'active' : '' }}">
@@ -555,7 +555,7 @@
                     </li>
                 @endif
 
-                {{-- -------  Report ---------- --}}
+                <!-- {{-- -------  Report ---------- --}}
                 @if (Gate::check('income report') ||
                         Gate::check('expense report') ||
                         Gate::check('income vs expense report') ||
