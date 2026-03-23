@@ -18,7 +18,7 @@ class LookupController extends Controller
             'data' => [
                 'accounts' => BankAccount::select('id', 'holder_name as name')->get(),
                 // 'categories' => ProductServiceCategory::select('id', 'name')->where('type', '=', 'income')->get(),
-                'categories' => CustomerCategory::where('is_active', '=', 1)->select('id', 'name')->get(),
+                'categories' => CustomerCategory::where('is_active', '=', 1)->select('id', 'name')->orderBy('name', 'asc')->get(),
                 'suppliers' => CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name')->get(),
             ]
         ]);

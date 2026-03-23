@@ -137,7 +137,7 @@ class CustomerController extends Controller
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTE' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
+                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('PAID') THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
 
                 DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
                 DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTE' THEN customer_invoices.id END) as total_quote_count")
@@ -154,11 +154,11 @@ class CustomerController extends Controller
             })
             ->select(
                 DB::raw("SUM(total_ttc) as total_sum"),
-                DB::raw("SUM(tva) as tva")
+                DB::raw("SUM(total_tva) as total_tva")
             )
             ->first();
 
-        $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->tva ?? 0);
+        $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_tva ?? 0);
 
         return response()->json([
             'success' => true,
@@ -470,13 +470,20 @@ class CustomerController extends Controller
 
         $path = $request->file('statement')->store('bank_statements', 'private');
 
-        $statement = ClientBankStatement::create([
-            'customer_id' => $request->customer_id,
-            'file_path' => $path,
-            'month_year' => $request->month_year,
-        ]);
+        $statement = ClientBankStatement::updateOrCreate(
+            [
+                'customer_id' => $request->customer_id,
+                'month_year'  => $request->month_year,
+            ],
+            [
+                'file_path'   => $path,
+            ]
+        );
 
-        return response()->json(['message' => 'Statement uploaded successfully', 'data' => $statement], 201);
+        $status = $statement->wasRecentlyCreated ? 201 : 200;
+        $message = $statement->wasRecentlyCreated ? 'Statement uploaded successfully' : 'Statement updated successfully';
+
+        return response()->json(['message' => $message, 'data' => $statement], $status);
     }
 
 
