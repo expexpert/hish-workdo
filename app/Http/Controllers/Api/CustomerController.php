@@ -21,6 +21,7 @@ use App\Models\InvoiceArticle;
 use Illuminate\Validation\ValidationException;
 use App\Models\CustomerProduct;
 use App\Models\CustomerSupplier;
+use App\Models\CustomerMonthStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Cache;
 
@@ -479,6 +480,18 @@ class CustomerController extends Controller
                 'file_path'   => $path,
             ]
         );
+
+        $date = Carbon::createFromFormat('m-Y', $request->month_year);
+
+        $statusRecord = CustomerMonthStatus::where([
+            'customer_id' => $request->customer_id,
+            'month'       => $date->month,
+            'year'        => $date->year,
+        ])->first();
+
+        if ($statusRecord) {
+            $statusRecord->delete();
+        }
 
         $status = $statement->wasRecentlyCreated ? 201 : 200;
         $message = $statement->wasRecentlyCreated ? 'Statement uploaded successfully' : 'Statement updated successfully';
