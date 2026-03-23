@@ -14,6 +14,7 @@
 /storage/framework/sessions/*
 /storage/logs/*
 /storage/app/public/*
+!/storage/app/public/uploads/new-landing-page/
 /database/*.sqlite
 /database/*.sqlite-journal
 /storage/uploads/*
