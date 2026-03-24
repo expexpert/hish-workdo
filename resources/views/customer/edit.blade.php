@@ -89,9 +89,9 @@
 
         <div class="col-lg-6 col-md-6 col-sm-6">
             <div class="form-group">
-                {{Form::label('address',__('Address'),array('class'=>'form-label')) }}
+                {{Form::label('billing_address',__('Address'),array('class'=>'form-label')) }}
                 <div class="input-group">
-                    {{Form::text('address',null,array('class'=>'form-control', 'placeholder'=>__('Enter Address') ))}}
+                    {{Form::text('billing_address',null,array('class'=>'form-control', 'placeholder'=>__('Enter Address') ))}}
                 </div>
             </div>
         </div>
@@ -186,15 +186,6 @@
         <div class="row">
 
             <x-mobile div-class="col-md-6" name="billing_phone" label="{{ __('Phone') }}" placeholder="{{ __('Enter Phone') }}"></x-mobile>
-
-            <div class="col-md-12">
-                <div class="form-group">
-                    {{Form::label('billing_address',__('Address'),array('class'=>'form-label')) }}
-                    <div class="input-group">
-                        {{Form::textarea('billing_address',null,array('class'=>'form-control','rows'=>3, 'placeholder'=>__('Enter Address') ))}}
-                    </div>
-                </div>
-            </div>
 
             <div class="col-lg-6 col-md-6 col-sm-6">
                 <div class="form-group">
