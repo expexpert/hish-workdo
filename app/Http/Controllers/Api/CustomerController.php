@@ -269,10 +269,16 @@ class CustomerController extends Controller
             ], 404);
         }
 
+        $settings = Utility::settingsById($accountant->creatorId());
+        $company_logo = isset($settings['company_logo_dark']) && !empty($settings['company_logo_dark']) ? $settings['company_logo_dark'] : 'logo-dark.png';
+        
+        $accountantData = $accountant->toArray();
+        $accountantData['company_logo'] = Utility::get_file('uploads/logo/') . $company_logo;
+
         return response()->json([
             'success' => true,
             'message' => 'Accountant information retrieved successfully.',
-            'data'    => $accountant
+            'data'    => $accountantData
         ], 200);
     }
 
