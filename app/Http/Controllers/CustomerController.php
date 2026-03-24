@@ -277,6 +277,17 @@ class CustomerController extends Controller
             $customer->shipping_phone   = $request->shipping_phone;
             $customer->shipping_zip     = $request->shipping_zip;
             $customer->shipping_address = $request->shipping_address;
+            $customer->company_type     = $request->company_type;
+            $customer->bio              = $request->bio;
+            $customer->address          = $request->address;
+            $customer->website          = $request->website;
+            $customer->vat_number       = $request->vat_number;
+            $customer->ice_number       = $request->ice_number;
+            $customer->rc_number        = $request->rc_number;
+            $customer->patent_number    = $request->patent_number;
+            $customer->if_number        = $request->if_number;
+            $customer->cnss      = $request->cnss;
+
             $customer->save();
 
             CustomField::saveData($customer, $request->customField);
@@ -902,7 +913,7 @@ class CustomerController extends Controller
     {
         $user = \Auth::user();
         if (
-            !in_array($user->type, ['company', 'accountant']) || 
+            !in_array($user->type, ['company', 'accountant']) ||
             \App\Services\AdminActivityLogger::isImpersonating() ||
             !$bankStatement->customer ||
             !$bankStatement->customer->accountant ||
@@ -922,7 +933,7 @@ class CustomerController extends Controller
     {
         $user = \Auth::user();
         if (
-            !in_array($user->type, ['company', 'accountant']) || 
+            !in_array($user->type, ['company', 'accountant']) ||
             \App\Services\AdminActivityLogger::isImpersonating() ||
             !$expense->customer ||
             !$expense->customer->accountant ||
@@ -942,7 +953,7 @@ class CustomerController extends Controller
     {
         $user = \Auth::user();
         if (
-            !in_array($user->type, ['company', 'accountant']) || 
+            !in_array($user->type, ['company', 'accountant']) ||
             \App\Services\AdminActivityLogger::isImpersonating() ||
             !$invoice->customer ||
             !$invoice->customer->accountant ||

@@ -73,7 +73,7 @@ class AuthenticatedSessionController extends Controller
 
         if($user != null && $user->is_enable_login == 0 && $user->type != 'super admin')
         {
-            return redirect()->back()->with('status', __('Your Account is disable from company.'));
+            return redirect()->back()->with('status', __('Your Account is disable from Admin.'));
         }
 
         // ReCpatcha

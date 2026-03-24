@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\User;
 use App\Models\Utility;
 use App\Models\AdminActivityLog;
+use App\Models\Customer;
 use App\Services\AdminActivityLogger;
 use Auth;
 use Illuminate\Http\Request;
@@ -642,20 +643,24 @@ class UserController extends Controller
 
     public function LoginManage($id)
     {
-        $eId        = \Crypt::decrypt($id);
-        $user = User::find($eId);
-        if($user->is_enable_login == 1)
-        {
-            $user->is_enable_login = 0;
-            $user->save();
-            return redirect()->back()->with('success', __('User login disable successfully.'));
-        }
-        else
-        {
-            $user->is_enable_login = 1;
-            $user->save();
-            return redirect()->back()->with('success', __('User login enable successfully.'));
-        }
+        $eId = \Crypt::decrypt($id);
+        $user = User::findOrFail($eId);
+    
+        // 1. Determine the new status (the opposite of the current one)
+        $newStatus = ($user->is_enable_login == 1) ? 0 : 1;
+        $message = ($newStatus == 0) ? __('User login disable successfully.') : __('User login enable successfully.');
+    
+        // 2. Update the main user
+        $user->update(['is_enable_login' => $newStatus]);
+    
+        // 3. Update all related users and their IDs
+        $otherUserIds = User::where('created_by', $eId)->pluck('id');
+        
+        // Perform mass updates (Super fast!)
+        User::whereIn('id', $otherUserIds)->update(['is_enable_login' => $newStatus]);
+        Customer::whereIn('created_by', $otherUserIds)->update(['is_enable_login' => $newStatus]);
+    
+        return redirect()->back()->with('success', $message);
     }
 
     public function updateSuperAdminLogin(Request $request)

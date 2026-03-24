@@ -120,6 +120,7 @@ class CustomerController extends Controller
     public function getDashboardData(Request $request): JsonResponse
     {
         $user = $request->user();
+        $is_enable_login = $user->is_enable_login;
 
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
@@ -167,6 +168,7 @@ class CustomerController extends Controller
                 'total_quote_count' => $invoiceStats->total_quote_count,
                 'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
                 'total_quote_sum' => (float) ($invoiceStats->total_quote_sum ?? 0),
+                'is_enable_login' => $is_enable_login,
             ]
         ], 200);
     }
