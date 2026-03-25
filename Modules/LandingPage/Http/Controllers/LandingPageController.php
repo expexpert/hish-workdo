@@ -5,6 +5,9 @@ namespace Modules\LandingPage\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Models\Utility;
 use Modules\LandingPage\Entities\LandingPageSetting;
 
 
@@ -90,5 +93,38 @@ class LandingPageController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function sendEmail(Request $request)
+    {
+        $request->validate([
+            'cabinet-name' => 'required|string|max:255',
+            'contact-name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'request-type' => 'required|array',
+            'message' => 'required|string',
+            'data-usage' => 'required',
+        ]);
+
+        try {
+            $settings = Utility::settings();
+            config([
+                'mail.default' => $settings['mail_driver'],
+                'mail.mailers.smtp.host' => $settings['mail_host'],
+                'mail.mailers.smtp.port' => $settings['mail_port'],
+                'mail.mailers.smtp.encryption' => $settings['mail_encryption'],
+                'mail.mailers.smtp.username' => $settings['mail_username'],
+                'mail.mailers.smtp.password' => $settings['mail_password'],
+                'mail.from.address' => $settings['mail_from_address'],
+                'mail.from.name' => $settings['mail_from_name'],
+            ]);
+
+            Mail::to('contact@hish-workdo.com')->send(new \App\Mail\ContactFormMail($request->all()));
+            return redirect()->back()->with('success', 'Votre demande a été envoyée avec succès !');
+        } catch (\Exception $e) {
+            Log::error('Mail sending failed: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['mail_error' => 'Une erreur est survenue lors de l\'envoi de l\'email : ' . $e->getMessage()]);
+        }
     }
 }

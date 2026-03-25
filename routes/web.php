@@ -149,6 +149,8 @@ Route::post('user-unable', [UserController::class, 'UserUnable'])->name('user.un
 
 Route::get('user-login/{id}', [UserController::class, 'LoginManage'])->name('users.login');
 
+Route::post('landingpage/send-email', [\Modules\LandingPage\Http\Controllers\LandingPageController::class, 'sendEmail'])->name('landingpage.sendmail');
+
 
 //================================= Notification  ====================================//
 

@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simply Compta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('storage/uploads/new-landing-page/header_logo.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('/css/landingPage.css') }}" />
 </head>
 
@@ -26,13 +28,13 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Fonctionnalités</a>
+                            <a class="nav-link" href="#features">Fonctionnalités</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Mission</a>
+                            <a class="nav-link" href="#assignments">Mission</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Contact</a>
+                            <a class="nav-link" href="#contact-us">Contact</a>
                         </li>
                         <li class="nav-item">
                             <a class="btn btn-success" href="/login">Essai gratuit</a>
@@ -44,20 +46,22 @@
 
         <!-- Main Content Section -->
         <main class="Simply">
-            <div class="hero-outer">
-                <div class="hero-container">
+            <div class="hero-outer" style="background-image: url('{{ asset('storage/uploads/new-landing-page/hero_bg.png') }}')">
+                <div class="hero-container" style="background-image: url('{{ asset('storage/uploads/new-landing-page/hero_bg.png') }}')">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
+                        <div class="col-md-7">
                             <h1 class="main-heading">La <strong>nouvelle interface</strong> qui <strong>redéfinit la relation</strong>
                                 entre le <strong>cabinet comptable</strong> et ses clients</h1>
                             <p class="hero-text">Simplifiez la gestion. Valorisez votre expertise.</p>
                             <p class="hero-text">La digitalisation de la relation client devient un standard</p>
                             <div class="btn-container mt-4">
-                                <a href="#" class="btn btn-primary">Demandez une démo</a>
+                                <a href="https://wa.me/212655023474" class="btn btn-primary">Demandez une démo</a>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <img src="{{ asset('storage/uploads/new-landing-page/hero_img.png')}}" alt="Simply Compta Main Image" class="img-fluid">
+                        <div class="col-md-5">
+                            <div class="banner-mobile-img"> <img src="{{ asset('storage/uploads/new-landing-page/hero_img.png')}}" alt="Simply Compta Main Image"
+                                    class="img-fluid">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -93,12 +97,12 @@
                     leurs flux administratifs.</p>
                 <p class="p-text">Ils créent un environnement digital capable de valoriser pleinement leur expertise.</p>
                 <p class="transformation-highlight">SIMPLYCOMPTA S'INSCRIT DANS CETTE ÉVOLUTION.</p>
-                <a href="#" class="btn btn-success">Demandez une démo</a>
+                <a href="https://wa.me/212655023474" class="btn btn-primary">Demandez une démo</a>
             </section>
 
             <!-- Application Section -->
             <section class="application-section">
-                <h2 class="application-title">Une <strong>application tout-en-un </strong>pour piloter votre
+                <h2 id="features" class="application-title">Une <strong>application tout-en-un </strong>pour piloter votre
                     <strong>comptabilité</strong>
                 </h2>
                 <div class="row_1">
@@ -177,7 +181,7 @@
 
                         <!-- Button -->
                         <div class="simplycompta-btn">
-                            <button class="simplycompta-button">Demandez une démo</button>
+                            <button class="simplycompta-button" onclick="window.location.href='https://wa.me/212655023474'">Demandez une démo</button>
                         </div>
                     </div>
                 </div>
@@ -188,7 +192,8 @@
                 <div class="client-experience-container">
                     <!-- Heading -->
                     <div class="client-experience-header">
-                        <h1>Une <strong>expérience client</strong> enfin alignée avec <strong>votre niveau d'exigence</strong></h1>
+                        <h1 id="assignments">Une <strong>expérience client</strong> enfin alignée avec <strong>votre niveau
+                                d'exigence</strong></h1>
                         <p class="client-experience-subtitle">
                             Vos clients accèdent à un espace sécurisé, disponible à <br>tout moment, depuis n’importe où.
                         </p>
@@ -280,24 +285,19 @@
             </section>
 
             <!-- Business Section -->
-            <section class="business-section" style="background-image: url('images/banner_image.png');">
+            <section class="business-section" style="background-image: url('{{ asset('storage/uploads/new-landing-page/banner_image.png') }}')">
                 <div class="bussiness-container">
                     <div class="business-overlay">
                         <div class="business-content">
                             <h1><strong>SIMPLYCOMPTA</strong> réduit les frictions opérationnelles et centralise les flux.</h1>
                             <p>Vos collaborateurs peuvent ainsi se concentrer sur des missions à plus forte valeur :</p>
-                            <ul>
-                                <li>
-                                    <p>l'analyse</p>
-                                </li>
-                                <li>
-                                    <p>l'accompagnement</p>
-                                </li>
-                                <li>
-                                    <p>le conseil.</p>
-                                </li>
-                            </ul>
-                            <a href="#" class="cta-btn">Demandez un rdv</a>
+                            <div class="img-boxes">
+                                <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">l'analyse</p>
+                                <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon"
+                                        class="check-icon">l'accompagnement</p>
+                                <p class="box-text"><img src="{{ asset('storage/uploads/new-landing-page/check_icon.svg')}}" alt="Cross Icon" class="check-icon">le conseil.</p>
+                            </div>
+                            <a href="https://wa.me/212655023474" class="cta-btn">Demandez un rdv</a>
                         </div>
                     </div>
                 </div>
@@ -313,13 +313,13 @@
                     <p class="solution-text"><strong>SIMPLYCOMPTA</strong> simplifie les échanges et le partage de<br> documents
                         entre les entrepreneurs et leur cabinet<br> comptable.</p>
                     <ul class="solution-features">
-                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Connexion
+                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo .png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Connexion
                                 sécurisée</span> et partagée en temps réel</li>
                         </p>
-                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Transmission
+                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo .png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Transmission
                                 facile</span> de vos relevés et justificatifs</li>
                         </p>
-                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo.png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Accès
+                        <p><img src="{{ asset('storage/uploads/new-landing-page/blue_logo .png')}}" alt="Blue Icon" class="check-icon"><span class="blue-text">Accès
                                 instantané</span> à vos bilans et déclarations</li>
                         </p>
                     </ul>
@@ -340,7 +340,7 @@
                         <div class="modele-icon">
                             <img src="{{ asset('storage/uploads/new-landing-page/modele1.svg')}}" alt="Documents essentiels">
                         </div>
-                        <p class="modele-desc">Aucune complexité</p>
+                        <p class="modele-desc">Aucune<br> complexité</p>
                     </div>
 
                     <!-- Feature 2 -->
@@ -348,7 +348,7 @@
                         <div class="modele-icon">
                             <img src="{{ asset('storage/uploads/new-landing-page/modele2.svg')}}" alt="Factures et pièces">
                         </div>
-                        <p class="modele-desc">Aucun risque économique</p>
+                        <p class="modele-desc">Aucun risque<br> économique</p>
                     </div>
                 </div>
             </section>
@@ -360,7 +360,7 @@
                         <p class="cta-heading">Vous enrichissez votre offre sans alourdir votre organisation.</p>
                         <p class="cta-subheading">C'EST UNE MONTÉE EN VALEUR NETTE POUR VOTRE CABINET.</p>
                     </div>
-                    <button class="cta-button">Demandez une démo</button>
+                    <button class="cta-button" onclick="window.location.href='https://wa.me/212655023474'">Demandez une démo</button>
                 </div>
             </section>
 
@@ -368,18 +368,18 @@
             <section class="personnalisée-container">
                 <div class="row align-items-center">
                     <!-- Left Column -->
-                    <div class="col-md-4 text-center text-md-start">
+                    <div class="col-md-5 text-center text-md-start">
                         <h2 class="personnalisée-title"><strong>Une mise en place personnalisée,</strong> fluide et sécurisée</h2>
                         <p class="personnalisée-description">Chaque cabinet possède ses méthodes, son identité et son organisation.
                             <strong>SimplyCompta s’y adapte pleinement.</strong>
                         </p>
                         <div class="btn-container mt-4">
-                            <button class="btn btn-primary">Demandez une démo</button>
+                            <button class="btn btn-primary" onclick="window.location.href='https://wa.me/212655023474'">Demandez une démo</button>
                         </div>
                     </div>
 
                     <!-- Middle Column -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="row">
                             <!-- First Box -->
                             <div class="col-12">
@@ -483,7 +483,7 @@
                         </ul>
                     </div>
                     <div class="control-image">
-                        <img src="{{ asset('storage/uploads/new-landing-page/control_img.svg')}}" alt="Control Image" />
+                        <img src="{{ asset('storage/uploads/new-landing-page/control_img.jpg')}}" alt="Control Image" />
                     </div>
                 </div>
             </section>
@@ -492,51 +492,67 @@
             <section class="main-container">
                 <h2 class="form-section-title text-center">Prêt à moderniser votre cabinet ?</h2>
                 <p class="text-center">Demandez votre devis gratuit ou planifiez une démonstration</p>
-                <div class="form-container">
-                    <form>
+                <div id="contact-us" class="form-container">
+                    @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                    @endif
+                    @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+                    <form action="{{ route('landingpage.sendmail') }}" method="POST">
+                        @csrf
                         <div class="row">
-                            <div class="col-md-6">
-                                <label for="cabinet-name" class="form-label">Nom du cabinet</label>
-                                <input type="text" class="form-control" id="cabinet-name" placeholder="Nom de votre cabinet" required>
+                            <div class="col-md-6 top-row-form">
+                                <label for="cabinet-name" class="form-label">Nom du cabinet <span class="requires">*</span></label>
+                                <input type="text" class="form-control" id="cabinet-name" name="cabinet-name" placeholder="Nom de votre cabinet" required>
                             </div>
-                            <div class="col-md-6">
-                                <label for="contact-name" class="form-label">Nom du contact</label>
-                                <input type="text" class="form-control" id="contact-name" placeholder="Votre nom" required>
+                            <div class="col-md-6 sec-row-form">
+                                <label for="contact-name" class="form-label">Nom du contact <span class="requires">*</span></label>
+                                <input type="text" class="form-control" id="contact-name" name="contact-name" placeholder="Votre nom" required>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" placeholder="Votre email" required>
+                            <div class="col-md-6 top-row-form">
+                                <label for="email" class="form-label">Email <span class="requires">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="Votre email" required>
                             </div>
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label">Téléphone</label>
-                                <input type="tel" class="form-control" id="phone" placeholder="+212" required>
+                            <div class="col-md-6 sec-row-form">
+                                <label for="phone" class="form-label">Téléphone <span class="requires">*</span></label>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+212" required>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Type de demande</label>
+                        <div class="mb-3 form-check-boxes">
+                            <label class="form-label">Type de demande <span class="requires">*</span></label>
                             <div class="checkbox-group">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="demo" id="demo" name="request-type">
+                                    <input class="form-check-input" type="checkbox" value="demo" id="demo" name="request-type[]">
                                     <label class="form-check-label" for="demo">
                                         Démonstration
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="devis" id="devis" name="request-type">
-                                    <label class="form-check-label" for="devis">
-                                        Devis
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="info" id="info" name="request-type">
+                                    <input class="form-check-input" type="checkbox" value="info" id="info" name="request-type[]">
                                     <label class="form-check-label" for="info">
                                         Informations complémentaires
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="trial" id="trial" name="request-type">
+                                    <input class="form-check-input" type="checkbox" value="devis" id="devis" name="request-type[]">
+                                    <label class="form-check-label" for="devis">
+                                        Devis
+                                    </label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="trial" id="trial" name="request-type[]">
                                     <label class="form-check-label" for="trial">
                                         Essai de 7 jours
                                     </label>
@@ -544,11 +560,11 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="message" class="form-label">Message</label>
-                            <textarea class="form-control" id="message" rows="4" placeholder="Votre message" required></textarea>
+                            <label for="message" class="form-label">Message <span class="requires">*</span></label>
+                            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
                         </div>
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="data-usage">
+                            <input class="form-check-input" type="checkbox" id="data-usage" name="data-usage" required>
                             <label class="form-check-label" for="data-usage">
                                 J'accepte que mes données soient utilisées pour traiter ma demande.
                             </label>
@@ -561,33 +577,39 @@
             </section>
 
             <!-- Contact Section -->
-            <section class="contact_container">
-                <div class="contact-section text-center">
-                    <h3 class="contact-text">Contactez-nous dès maintenant :</h3>
-                    <div class="contact-grid">
-                        <!-- Feature 1 -->
-                        <div class="contact-feature feature-documents">
-                            <div class="contact-icon">
-                                <img src="{{ asset('storage/uploads/new-landing-page/whatsapp.svg')}}" alt="Documents essentiels">
+            <section class="new-cont">
+                <section class="contact_container">
+                    <div class="contact-section text-center">
+                        <h3 class="contact-text">Contactez-nous dès maintenant :</h3>
+                        <div class="contact-grid">
+                            <!-- Feature 1 -->
+                            <div class="contact-feature feature-documents">
+                                <div class="contact-icon">
+                                    <img src="{{ asset('storage/uploads/new-landing-page/whatsapp.svg')}}" alt="Documents essentiels">
+                                </div>
+                                <p class="contact-desc"> <a href="https://wa.me/212655023474">
+                                        +212 (0)655023474
+                                    </a></p>
                             </div>
-                            <p class="contact-desc">+212 (0)655023474</p>
-                        </div>
 
-                        <!-- Feature 2 -->
-                        <div class="contact-feature2 feature-invoices">
-                            <div class="contact-icon">
-                                <img src="{{ asset('storage/uploads/new-landing-page/email.svg')}}" alt="Factures et pièces">
+                            <!-- Feature 2 -->
+                            <div class="contact-feature2 feature-invoices">
+                                <div class="contact-icon">
+                                    <img src="{{ asset('storage/uploads/new-landing-page/email.svg')}}" alt="Factures et pièces">
+                                </div>
+                                <p class="contact-desc"><a href="mailto:contact@simply-compta.com">
+                                        contact@simply-compta.com
+                                    </a></p>
                             </div>
-                            <p class="contact-desc">contact@simply-compta.com</p>
+                        </div>
+                        <p class="contact-desc"><strong>Suivez-nous sur les réseaux sociaux</strong></p>
+                        <div class="social-icons">
+                            <a href=""> <img src="{{ asset('storage/uploads/new-landing-page/facebook.svg')}}" alt="Facebook" class="social"></a>
+                            <a href=""> <img src="{{ asset('storage/uploads/new-landing-page/linkedin.svg')}}" alt="Linkedin" class="social"></a>
+                            <a href=""> <img src="{{ asset('storage/uploads/new-landing-page/instagram.svg')}}" alt="Instagram" class="social"></a>
                         </div>
                     </div>
-                    <p class="contact-desc"><strong>Suivez-nous sur les réseaux sociaux</strong></p>
-                    <div class="social-icons">
-                        <img src="{{ asset('storage/uploads/new-landing-page/facebook.svg')}}" alt="Facebook" class="social">
-                        <img src="{{ asset('storage/uploads/new-landing-page/linkedin.svg')}}" alt="Linkedin" class="social">
-                        <img src="{{ asset('storage/uploads/new-landing-page/instagram.svg')}}" alt="Instagram" class="social">
-                    </div>
-                </div>
+                </section>
             </section>
 
 
@@ -612,6 +634,10 @@
         </footer>
     </div>
 
+    <a href="https://api.whatsapp.com/send/?phone=212655023474&text&type=phone_number&app_absent=0" class="whatsapp-float"
+        target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
     <!-- Bootstrap JS Link -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
