@@ -16177,7 +16177,7 @@ body.theme-3 {
     background: linear-gradient(141.55deg, rgba(240, 244, 243, 0) 3.46%, #f0f4f3 99.86%);
 }
 
-body.theme-3 .bg-primary {
+body.theme-3:not(:has(.custom-login)) .bg-primary {
     background: linear-gradient(141.55deg, #6FD943 3.46%, #6FD943 99.86%), #6FD943 !important;
 }
 
