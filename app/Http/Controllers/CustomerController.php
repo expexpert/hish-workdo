@@ -903,9 +903,50 @@ class CustomerController extends Controller
             });
         }
 
+        // Filtering
+        if (!empty($request->start_date) || !empty($request->end_date)) {
+            $startDate = !empty($request->start_date) ? \Carbon\Carbon::parse($request->start_date)->startOfMonth() : null;
+            $endDate = !empty($request->end_date) ? \Carbon\Carbon::parse($request->end_date)->endOfMonth() : null;
+
+            if ($startDate && $endDate) {
+                $months = [];
+                $currentDate = clone $startDate;
+                while ($currentDate->lte($endDate)) {
+                    $months[] = $currentDate->format('m-Y');
+                    $currentDate->addMonth();
+                }
+                $query->whereIn('month_year', $months);
+            } elseif ($startDate) {
+                // If only start date, filter for all months after start date
+                // Since month_year is a string, we might need a more complex query or filter in collection
+                // But typically for reports we want a range. If we have to filter strings like '01-2024', 
+                // it's tricky in SQL. Let's just handle it as a range if both are present for now, 
+                // or just convert start_date to its month.
+                $query->where('month_year', $startDate->format('m-Y'));
+            } elseif ($endDate) {
+                $query->where('month_year', $endDate->format('m-Y'));
+            }
+        }
+
+        if (!empty($request->customer)) {
+            $query->where('customer_id', $request->customer);
+        }
+
         $bankStatements = $query->get();
 
-        return view('ClientReport.statement', compact('bankStatements'));
+        // Get customers for filter dropdown
+        $customers = Customer::query();
+        if ($user->type == 'accountant') {
+            $customers->where('created_by', $user->id);
+        } else if ($user->type == 'company') {
+            $customers->whereIn('created_by', function ($subQ) use ($user) {
+                $subQ->select('id')->from('users')->where('created_by', $user->id);
+            });
+        }
+        $customer = $customers->pluck('name', 'id')->toArray();
+        $customer = ['' => __('Select Customer')] + $customer;
+
+        return view('ClientReport.statement', compact('bankStatements', 'customer'));
     }
 
 
@@ -991,9 +1032,34 @@ class CustomerController extends Controller
             });
         }
 
+        // Filtering
+        if (!empty($request->start_date) && !empty($request->end_date)) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        } elseif (!empty($request->start_date)) {
+            $query->where('date', '>=', $request->start_date);
+        } elseif (!empty($request->end_date)) {
+            $query->where('date', '<=', $request->end_date);
+        }
+
+        if (!empty($request->customer)) {
+            $query->where('customer_id', $request->customer);
+        }
+
         $expenses = $query->get();
 
-        return view('ClientReport.expense', compact('expenses'));
+        // Get customers for filter dropdown
+        $customers = Customer::query();
+        if ($user->type == 'accountant') {
+            $customers->where('created_by', $user->id);
+        } else if ($user->type == 'company') {
+            $customers->whereIn('created_by', function ($subQ) use ($user) {
+                $subQ->select('id')->from('users')->where('created_by', $user->id);
+            });
+        }
+        $customer = $customers->pluck('name', 'id')->toArray();
+        $customer = ['' => __('Select Customer')] + $customer;
+
+        return view('ClientReport.expense', compact('expenses', 'customer'));
     }
 
 
@@ -1025,6 +1091,19 @@ class CustomerController extends Controller
             });
         }
 
+        // Filtering
+        if (!empty($request->start_date) && !empty($request->end_date)) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        } elseif (!empty($request->start_date)) {
+            $query->where('date', '>=', $request->start_date);
+        } elseif (!empty($request->end_date)) {
+            $query->where('date', '<=', $request->end_date);
+        }
+
+        if (!empty($request->customer)) {
+            $query->where('customer_id', $request->customer);
+        }
+
         $invoices = $query->get();
 
         $data['totalInvoiceCount'] = $invoices->count();
@@ -1037,9 +1116,19 @@ class CustomerController extends Controller
         });
         $invoices = $query->get();
 
+        // Get customers for filter dropdown
+        $customers = \App\Models\Customer::query();
+        if ($user->type == 'accountant') {
+            $customers->where('created_by', $user->id);
+        } else if ($user->type == 'company') {
+            $customers->whereIn('created_by', function ($subQ) use ($user) {
+                $subQ->select('id')->from('users')->where('created_by', $user->id);
+            });
+        }
+        $customer = $customers->pluck('name', 'id')->toArray();
+        $customer = ['' => __('Select Customer')] + $customer;
 
-
-        return view('ClientReport.invoice', compact('invoices', 'data'));
+        return view('ClientReport.invoice', compact('invoices', 'data', 'customer'));
     }
 
 

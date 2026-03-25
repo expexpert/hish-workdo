@@ -52,6 +52,54 @@
 
 @section('content')
 
+<div class="row">
+    <div class="col-sm-12">
+        <div class=" multi-collapse mt-2 " id="multiCollapseExample1">
+            <div class="card">
+                <div class="card-body">
+                    {{ Form::open(['route' => ['customer.expenses'], 'method' => 'GET', 'id' => 'customer_submit']) }}
+                    <div class="row d-flex align-items-center justify-content-end">
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12 mr-2">
+                            <div class="btn-box">
+                                {{ Form::label('start_date', __('Start Date'), ['class' => 'text-type']) }}
+                                {{ Form::date('start_date', isset($_GET['start_date']) ? $_GET['start_date'] : '', ['class' => 'form-control', 'placeholder' => __('YYYY-MM-DD')]) }}
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12 mr-2">
+                            <div class="btn-box">
+                                {{ Form::label('end_date', __('End Date'), ['class' => 'text-type']) }}
+                                {{ Form::date('end_date', isset($_GET['end_date']) ? $_GET['end_date'] : '', ['class' => 'form-control', 'placeholder' => __('YYYY-MM-DD')]) }}
+                            </div>
+                        </div>
+                        @if (!\Auth::guard('customer')->check())
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12 mr-2">
+                            <div class="btn-box">
+                                {{ Form::label('customer', __('Customer'), ['class' => 'text-type']) }}
+                                {{ Form::select('customer', $customer, isset($_GET['customer']) ? $_GET['customer'] : '', ['class' => 'form-control']) }}
+                            </div>
+                        </div>
+                        @endif
+                        <div class="col-auto d-flex mt-4">
+
+                            <a href="#" class="btn btn-sm btn-primary me-2"
+                                onclick="document.getElementById('customer_submit').submit(); return false;"
+                                data-bs-toggle="tooltip" title="{{ __('Search') }}"
+                                data-original-title="{{ __('Apply') }}">
+                                <span class="btn-inner--icon"><i class="ti ti-search"></i></span>
+                            </a>
+                            <a href="{{ route('customer.expenses') }}" class="btn btn-sm btn-danger"
+                                data-bs-toggle="tooltip" title="{{ __('Reset') }}">
+                                <span class="btn-inner--icon"><i class="ti ti-refresh text-white-off"></i></span>
+                            </a>
+                        </div>
+
+                    </div>
+                    {{ Form::close() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row">
     <div class="col-md-12">
