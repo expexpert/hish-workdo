@@ -59,13 +59,13 @@ $languages = App\Models\Utility::languages();
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Fonctionnalités</a>
+                        <a class="nav-link" href="/#features">Fonctionnalités</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Mission</a>
+                        <a class="nav-link" href="/#assignments">Mission</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Contact</a>
+                        <a class="nav-link" href="/#contact-us">Contact</a>
                     </li>
                     <li class="nav-item">
                         <a class="btn btn-success" href="/login">Essai gratuit</a>
