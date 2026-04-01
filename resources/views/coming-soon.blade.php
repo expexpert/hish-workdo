@@ -4,673 +4,886 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SimplyCompta - Coming Soon</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg: #0F172A;
-      --bg-soft: #111C34;
-      --card: rgba(30, 41, 59, 0.78);
-      --card-border: rgba(148, 163, 184, 0.14);
-      --text: #F8FAFC;
-      --muted: #94A3B8;
-      --green: #22C55E;
-      --green-dark: #16A34A;
-      --white-soft: rgba(248, 250, 252, 0.08);
-      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-      --radius-xl: 28px;
-      --radius-lg: 20px;
-      --radius-md: 14px;
-      --max: 1200px;
+    :root{
+      --blue-1:#2f7ef7;
+      --blue-2:#66b6ff;
+      --blue-3:#8fd1ff;
+      --blue-4:#d7f1ff;
+      --blue-5:#1b57c9;
+      --green-1:#b8f11e;
+      --green-2:#87d80f;
+      --green-3:#5fb400;
+      --white:#ffffff;
+      --text:#11408b;
+      --shadow:0 14px 30px rgba(13,67,153,.22);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    *{
+      box-sizing:border-box;
     }
 
-    html, body {
-      height: 100%;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Arial, Helvetica, sans-serif;
+      color:#fff;
       background:
-        radial-gradient(circle at 15% 20%, rgba(34, 197, 94, 0.12), transparent 22%),
-        radial-gradient(circle at 85% 15%, rgba(34, 197, 94, 0.08), transparent 18%),
-        radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.08), transparent 25%),
-        linear-gradient(180deg, #0B1220 0%, #0F172A 100%);
-      color: var(--text);
-      overflow-x: hidden;
+        radial-gradient(circle at 50% 38%, #bfe9ff 0%, #90d3ff 24%, #5daefc 52%, #3d86ed 74%, #2f6fe0 100%);
+      overflow-x:hidden;
     }
 
-    body::before,
-    body::after {
-      content: "";
-      position: fixed;
-      width: 420px;
-      height: 420px;
-      border-radius: 50%;
-      filter: blur(120px);
-      z-index: 0;
-      pointer-events: none;
+    .page{
+      width:100%;
+      min-height:100vh;
+      position:relative;
+      overflow:hidden;
+      padding:34px 20px 44px;
     }
 
-    body::before {
-      top: -100px;
-      left: -100px;
-      background: rgba(34, 197, 94, 0.10);
+    /* clouds */
+    .cloud{
+      position:absolute;
+      background:rgba(255,255,255,.28);
+      border-radius:60px;
+      filter:blur(.2px);
+      z-index:0;
     }
 
-    body::after {
-      right: -120px;
-      bottom: -120px;
-      background: rgba(34, 197, 94, 0.08);
+    .cloud:before,
+    .cloud:after{
+      content:"";
+      position:absolute;
+      background:inherit;
+      border-radius:50%;
     }
 
-    .page {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    .cloud.c1{width:130px;height:40px;top:130px;left:-20px;}
+    .cloud.c1:before{width:48px;height:48px;left:10px;top:-18px;}
+    .cloud.c1:after{width:58px;height:58px;left:48px;top:-28px;}
+
+    .cloud.c2{width:148px;height:44px;top:128px;right:-18px;}
+    .cloud.c2:before{width:48px;height:48px;right:18px;top:-15px;}
+    .cloud.c2:after{width:62px;height:62px;right:56px;top:-27px;}
+
+    .cloud.c3{width:96px;height:32px;top:307px;right:26px;opacity:.24;}
+    .cloud.c3:before{width:34px;height:34px;left:12px;top:-12px;}
+    .cloud.c3:after{width:44px;height:44px;left:40px;top:-18px;}
+
+    .cloud.c4{width:110px;height:36px;bottom:80px;left:-10px;opacity:.22;}
+    .cloud.c4:before{width:38px;height:38px;left:10px;top:-14px;}
+    .cloud.c4:after{width:52px;height:52px;left:42px;top:-22px;}
+
+    .cloud.c5{width:122px;height:36px;bottom:40px;right:12px;opacity:.24;}
+    .cloud.c5:before{width:42px;height:42px;left:14px;top:-14px;}
+    .cloud.c5:after{width:58px;height:58px;left:44px;top:-24px;}
+
+    .container{
+      position:relative;
+      z-index:2;
+      max-width:920px;
+      margin:0 auto;
+      text-align:center;
     }
 
-    .container {
-      width: min(100% - 32px, var(--max));
-      margin: 0 auto;
+    /* logo */
+    .logo{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:18px;
+      margin-bottom:18px;
     }
 
-    .nav {
-      padding: 24px 0;
+    .logo-mark{
+      position:relative;
+      width:86px;
+      height:86px;
+      border-radius:50%;
+      background:linear-gradient(180deg, #ffffff 0%, #ebf6ff 100%);
+      box-shadow:0 10px 18px rgba(0,0,0,.14);
+      flex-shrink:0;
     }
 
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      color: var(--text);
+    .logo-mark:before{
+      content:"";
+      position:absolute;
+      width:44px;
+      height:20px;
+      border-left:11px solid transparent;
+      border-bottom:11px solid transparent;
+      transform:rotate(-45deg);
+      left:15px;
+      top:32px;
+      box-shadow:none;
+      background:transparent;
+      border-right:0;
     }
 
-    .brand-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-      display: grid;
-      place-items: center;
-      box-shadow: 0 10px 28px rgba(34, 197, 94, 0.28);
-      font-weight: 800;
-      color: white;
-      letter-spacing: -0.04em;
+    .logo-mark:after{
+      content:"";
+      position:absolute;
+      left:18px;
+      top:20px;
+      width:46px;
+      height:28px;
+      border-left:12px solid #4b8ef5;
+      border-bottom:12px solid #4b8ef5;
+      transform:rotate(-45deg);
+      border-radius:3px;
     }
 
-    .brand span {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .logo-text{
+      font-family:"Baloo 2", system-ui, sans-serif;
+      font-size:66px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-1px;
+      color:#ffffff;
+      text-shadow:0 4px 10px rgba(0,0,0,.14);
     }
 
-    .hero {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      align-items: center;
-      gap: 48px;
-      padding: 24px 0 64px;
+    .logo-text span{
+      color:#104fbf;
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.10);
-      border: 1px solid rgba(34, 197, 94, 0.24);
-      color: #BBF7D0;
-      font-size: 0.92rem;
-      margin-bottom: 22px;
-      backdrop-filter: blur(10px);
+    /* title */
+    .coming-wrap{
+      margin-top:10px;
+      line-height:.9;
     }
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--green);
-      box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.12);
-      animation: pulse 1.8s infinite;
+    .big-title{
+      margin:0;
+      font-family:"Baloo 2", system-ui, sans-serif;
+      font-size:160px;
+      font-weight:800;
+      letter-spacing:-4px;
+      color:#f5f8ff;
+      text-shadow:
+        0 2px 0 #dfe8f7,
+        0 4px 0 #c8d5eb,
+        0 7px 0 #b4c5df,
+        0 18px 26px rgba(30,75,155,.35);
     }
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.75; }
+    .big-title.green{
+      color:var(--green-1);
+      text-shadow:
+        0 2px 0 #90d80c,
+        0 5px 0 #78c30a,
+        0 9px 0 #5faa05,
+        0 16px 22px rgba(69,126,0,.35);
+      margin-top:-10px;
     }
 
-    .title {
-      font-size: clamp(2.4rem, 5vw, 4.8rem);
-      line-height: 0.95;
-      letter-spacing: -0.05em;
-      font-weight: 800;
-      max-width: 760px;
+    .sub-script{
+      margin-top:18px;
+      font-family:"Pacifico", cursive;
+      font-size:54px;
+      color:#f7fbff;
+      text-shadow:0 4px 10px rgba(35,73,148,.25);
+      position:relative;
+      display:inline-block;
     }
 
-    .title .highlight {
-      color: var(--green);
-      text-shadow: 0 0 24px rgba(34, 197, 94, 0.22);
+    .sub-script:after{
+      content:"";
+      position:absolute;
+      left:12%;
+      right:12%;
+      bottom:-14px;
+      height:6px;
+      border-radius:99px;
+      background:rgba(255,255,255,.92);
+      box-shadow:0 2px 8px rgba(27,87,201,.2);
     }
 
-    .subtitle {
-      margin-top: 22px;
-      max-width: 620px;
-      color: var(--muted);
-      font-size: 1.08rem;
-      line-height: 1.7;
+    /* middle section */
+    .middle{
+      margin-top:58px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:60px;
+      flex-wrap:wrap;
     }
 
-    .cta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 30px;
+    .illus-left,
+    .illus-right{
+      position:relative;
     }
 
-    .btn {
-      appearance: none;
-      border: none;
-      text-decoration: none;
-      cursor: pointer;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-weight: 700;
-      font-size: 0.98rem;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    /* laptop block */
+    .leaf{
+      position:absolute;
+      width:78px;
+      height:40px;
+      background:linear-gradient(135deg,#8add1d,#5abb0e);
+      border-radius:0 40px 0 40px;
+      z-index:0;
+      transform:rotate(-18deg);
+      left:-14px;
+      bottom:14px;
+      box-shadow:0 10px 20px rgba(67,153,0,.15);
     }
 
-    .btn:hover {
-      transform: translateY(-1px);
+    .leaf:after{
+      content:"";
+      position:absolute;
+      width:2px;
+      height:28px;
+      background:#4a9409;
+      left:34px;
+      top:6px;
+      transform:rotate(42deg);
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
-      color: white;
-      box-shadow: 0 16px 36px rgba(34, 197, 94, 0.24);
+    .laptop{
+      width:300px;
+      position:relative;
+      z-index:1;
     }
 
-    .btn-secondary {
-      background: rgba(248, 250, 252, 0.04);
-      color: var(--text);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      backdrop-filter: blur(10px);
+    .screen{
+      height:168px;
+      border-radius:10px 10px 0 0;
+      background:linear-gradient(180deg,#2e73de 0%, #1d53b7 100%);
+      border:4px solid #cfe3ff;
+      box-shadow:var(--shadow);
+      padding:12px;
+      position:relative;
+      overflow:hidden;
     }
 
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      margin-top: 26px;
-      color: var(--muted);
-      font-size: 0.94rem;
+    .screen-ui{
+      width:100%;
+      height:100%;
+      background:#f4f9ff;
+      border-radius:6px;
+      display:flex;
+      overflow:hidden;
     }
 
-    .meta div {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .sidebar{
+      width:58px;
+      background:#285bc5;
+      padding:8px 6px;
+      display:flex;
+      flex-direction:column;
+      gap:7px;
     }
 
-    .visual {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 560px;
+    .side-line{
+      height:8px;
+      border-radius:99px;
+      background:rgba(255,255,255,.65);
     }
 
-    .glow {
-      position: absolute;
-      width: 360px;
-      height: 360px;
-      border-radius: 50%;
-      background: rgba(34, 197, 94, 0.12);
-      filter: blur(90px);
-      z-index: 0;
+    .dashboard{
+      flex:1;
+      padding:12px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
 
-    .phone {
-      position: relative;
-      z-index: 1;
-      width: 320px;
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(13, 20, 36, 0.92) 100%);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      border-radius: 36px;
-      padding: 18px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
+    .chart{
+      height:48px;
+      border-radius:8px;
+      background:linear-gradient(180deg,#eef6ff,#dcecff);
+      position:relative;
+      overflow:hidden;
     }
 
-    .phone::before {
-      content: "";
-      display: block;
-      width: 110px;
-      height: 26px;
-      border-radius: 999px;
-      background: #0A1020;
-      margin: 0 auto 18px;
-    }
-
-    .screen {
-      border-radius: 24px;
-      overflow: hidden;
+    .chart:after{
+      content:"";
+      position:absolute;
+      left:10px;
+      right:10px;
+      top:14px;
+      height:22px;
       background:
-        radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 28%),
-        linear-gradient(180deg, #081120 0%, #0D172B 100%);
-      padding: 18px;
-      min-height: 590px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+        linear-gradient(90deg,
+          #68aef7 0 10%,
+          transparent 10% 12%,
+          #8dd64a 12% 26%,
+          transparent 26% 28%,
+          #68aef7 28% 42%,
+          transparent 42% 44%,
+          #2f7ef7 44% 56%,
+          transparent 56% 58%,
+          #8dd64a 58% 74%,
+          transparent 74% 76%,
+          #68aef7 76% 88%);
+      border-radius:4px;
+      opacity:.9;
     }
 
-    .screen-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
+    .list-line{
+      height:10px;
+      border-radius:99px;
+      background:#d6e7ff;
     }
 
-    .screen-app {
-      font-size: 0.9rem;
-      color: var(--muted);
+    .base{
+      height:20px;
+      background:linear-gradient(180deg,#e6efff 0%, #c9d9f5 100%);
+      border-radius:0 0 18px 18px;
+      position:relative;
+      box-shadow:0 12px 22px rgba(39,92,189,.18);
     }
 
-    .screen-chip {
-      background: rgba(34, 197, 94, 0.12);
-      color: #BBF7D0;
-      border: 1px solid rgba(34, 197, 94, 0.2);
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
+    .base:after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:4px;
+      width:74px;
+      height:8px;
+      transform:translateX(-50%);
+      border-radius:999px;
+      background:#b7caec;
     }
 
-    .screen h3 {
-      font-size: 1.35rem;
-      line-height: 1.2;
-      letter-spacing: -0.03em;
-      margin-top: 4px;
+    .calendar{
+      position:absolute;
+      right:-12px;
+      bottom:-14px;
+      width:116px;
+      height:104px;
+      background:#fdfefe;
+      border-radius:12px;
+      box-shadow:0 12px 22px rgba(38,88,173,.22);
+      overflow:hidden;
+      border:3px solid #d7e6ff;
     }
 
-    .screen p {
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.55;
+    .calendar .head{
+      height:22px;
+      background:linear-gradient(90deg,#84d919,#c9f14a);
     }
 
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 4px;
+    .calendar .grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:7px;
+      padding:12px 10px 8px;
     }
 
-    .stat-card {
-      background: rgba(30, 41, 59, 0.72);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 14px;
-      backdrop-filter: blur(8px);
+    .calendar .cell{
+      height:8px;
+      background:#b5d97c;
+      border-radius:99px;
+      opacity:.8;
     }
 
-    .stat-card.large {
-      grid-column: 1 / -1;
-      background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(30, 41, 59, 0.82));
+    .rings{
+      position:absolute;
+      top:-10px;
+      left:18px;
+      display:flex;
+      gap:18px;
     }
 
-    .label {
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-bottom: 8px;
+    .rings span{
+      width:10px;
+      height:20px;
+      border:4px solid #b4c7e3;
+      border-bottom:none;
+      border-radius:10px 10px 0 0;
+      background:transparent;
     }
 
-    .value {
-      font-size: 1.35rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
+    .clock{
+      position:absolute;
+      left:126px;
+      bottom:-20px;
+      width:78px;
+      height:78px;
+      background:radial-gradient(circle at 35% 30%, #ffffff 0%, #f3f8ff 75%);
+      border-radius:50%;
+      border:8px solid #3f8af1;
+      box-shadow:0 10px 16px rgba(39,92,189,.2);
     }
 
-    .trend {
-      margin-top: 8px;
-      font-size: 0.78rem;
-      color: #86EFAC;
+    .clock:before,
+    .clock:after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform-origin:bottom center;
+      background:#79bc12;
+      border-radius:99px;
     }
 
-    .invoice-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 4px;
+    .clock:before{
+      width:4px;
+      height:18px;
+      transform:translate(-50%,-100%) rotate(42deg);
     }
 
-    .invoice {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      background: rgba(30, 41, 59, 0.72);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 13px 14px;
+    .clock:after{
+      width:4px;
+      height:24px;
+      transform:translate(-50%,-100%) rotate(-44deg);
+      background:#2f7ef7;
     }
 
-    .invoice strong {
-      display: block;
-      font-size: 0.92rem;
+    .clock .pin{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#6ab311;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
     }
 
-    .invoice small {
-      color: var(--muted);
-      display: block;
-      margin-top: 5px;
+    .calc{
+      position:absolute;
+      right:8px;
+      bottom:-12px;
+      width:72px;
+      height:86px;
+      border-radius:10px;
+      background:linear-gradient(180deg,#3e6288,#1d3552);
+      box-shadow:0 10px 16px rgba(26,56,104,.25);
+      padding:10px 8px;
     }
 
-    .amount {
-      text-align: right;
-      font-weight: 800;
-      font-size: 0.95rem;
-      white-space: nowrap;
+    .calc .screen-small{
+      height:16px;
+      border-radius:4px;
+      background:#a7f06f;
+      margin-bottom:8px;
     }
 
-    .status {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
+    .calc .keys{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:5px;
     }
 
-    .status.pending {
-      background: rgba(245, 158, 11, 0.12);
-      color: #FCD34D;
-      border: 1px solid rgba(245, 158, 11, 0.22);
+    .calc .key{
+      height:11px;
+      border-radius:3px;
+      background:#d6e3f7;
     }
 
-    .status.paid {
-      background: rgba(34, 197, 94, 0.12);
-      color: #86EFAC;
-      border: 1px solid rgba(34, 197, 94, 0.22);
+    /* megaphone */
+    .megaphone{
+      width:230px;
+      height:180px;
+      position:relative;
+      transform:rotate(22deg);
     }
 
-    .status.quote {
-      background: rgba(59, 130, 246, 0.12);
-      color: #93C5FD;
-      border: 1px solid rgba(59, 130, 246, 0.22);
+    .cone{
+      position:absolute;
+      right:34px;
+      top:18px;
+      width:130px;
+      height:100px;
+      background:linear-gradient(90deg,#ffffff 0%, #eaf5ff 60%, #cfe3ff 100%);
+      clip-path:polygon(0 20%, 100% 0, 100% 100%, 0 80%);
+      border-radius:10px;
+      box-shadow:0 14px 24px rgba(39,92,189,.2);
+      border:4px solid #d7e8ff;
     }
 
-    .waitlist {
-      margin-top: 24px;
-      display: flex;
-      gap: 10px;
-      padding: 8px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      backdrop-filter: blur(10px);
+    .cone-inner{
+      position:absolute;
+      right:98px;
+      top:40px;
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #2f7ef7 0%, #144cad 58%, #0d3d97 100%);
+      border:6px solid #d9ebff;
+      z-index:2;
     }
 
-    .waitlist input,
-    .waitlist select {
-      flex: 1;
-      min-width: 0;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--text);
-      padding: 14px 14px;
-      font-size: 0.96rem;
+    .green-band{
+      position:absolute;
+      right:8px;
+      top:48px;
+      width:44px;
+      height:54px;
+      background:linear-gradient(180deg,#baf01f,#6fc108);
+      border-radius:6px;
+      z-index:3;
+      box-shadow:0 10px 16px rgba(83,152,0,.18);
     }
 
-    .waitlist input::placeholder {
-      color: #7C8CA5;
+    .blue-band{
+      position:absolute;
+      right:-16px;
+      top:52px;
+      width:36px;
+      height:48px;
+      background:linear-gradient(180deg,#458ef4,#225fda);
+      border-radius:0 10px 10px 0;
+      z-index:2;
     }
 
-    .mini-note {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.82rem;
+    .handle{
+      position:absolute;
+      right:22px;
+      top:102px;
+      width:48px;
+      height:76px;
+      background:linear-gradient(180deg,#3b86ef,#184eb9);
+      border-radius:10px;
+      transform:rotate(18deg);
+      box-shadow:0 10px 18px rgba(39,92,189,.2);
     }
 
-    .footer {
-      padding: 0 0 36px;
-      color: var(--muted);
-      font-size: 0.9rem;
+    .handle:before{
+      content:"";
+      position:absolute;
+      inset:8px 10px 14px;
+      border-radius:8px;
+      background:linear-gradient(180deg,#6aaaf8,#2f73e1);
     }
 
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      background: #101A30;
-      color: var(--text);
-      border: 1px solid rgba(34, 197, 94, 0.24);
-      padding: 14px 16px;
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-      transition: all 0.25s ease;
-      z-index: 50;
+    .burst{
+      position:absolute;
+      width:14px;
+      height:44px;
+      background:#ffffff;
+      border-radius:999px;
+      opacity:.95;
+      box-shadow:0 4px 10px rgba(39,92,189,.12);
     }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    .burst.b1{right:178px;top:18px;transform:rotate(-64deg);}
+    .burst.b2{right:163px;top:42px;transform:rotate(-94deg);height:34px;}
+    .burst.b3{right:146px;top:14px;transform:rotate(-35deg);height:24px;background:#78d110;}
+
+    /* loading */
+    .loading-wrap{
+      margin-top:44px;
     }
 
-    @media (max-width: 980px) {
-      .hero {
-        grid-template-columns: 1fr;
-        gap: 36px;
-        padding-top: 8px;
-      }
-
-      .visual {
-        min-height: auto;
-      }
-
-      .phone {
-        width: min(100%, 380px);
-      }
+    .loading-label{
+      font-family:"Baloo 2", system-ui, sans-serif;
+      font-weight:700;
+      font-size:42px;
+      text-shadow:0 4px 10px rgba(35,73,148,.22);
+      margin-bottom:16px;
     }
 
-    @media (max-width: 640px) {
-      .title {
-        font-size: 2.5rem;
-      }
+    .progress-shell{
+      width:min(760px, 88%);
+      height:40px;
+      margin:0 auto;
+      background:linear-gradient(180deg,#7fc3ff 0%, #4d95ef 100%);
+      border-radius:999px;
+      box-shadow:inset 0 0 0 5px rgba(220,239,255,.65), 0 8px 18px rgba(30,75,155,.16);
+      padding:6px;
+    }
 
-      .waitlist {
-        flex-direction: column;
-      }
+    .progress-track{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(180deg,#a3d9ff 0%, #5a9cf2 100%);
+      position:relative;
+      overflow:hidden;
+    }
 
-      .cta-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
+    .progress-fill{
+      width:62%;
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--green-2) 0%, #a7ed2c 82%, #2f7ef7 82%, #2f7ef7 100%);
+      box-shadow:inset 0 -3px 0 rgba(0,0,0,.08);
+      position:relative;
+      animation:moveBar 2.6s ease-in-out infinite alternate;
+    }
 
-      .btn {
-        width: 100%;
-        text-align: center;
-      }
+    @keyframes moveBar{
+      from{width:58%}
+      to{width:68%}
+    }
 
-      .meta {
-        gap: 12px;
-        flex-direction: column;
-      }
+    /* lower content */
+    .divider{
+      width:min(840px, 92%);
+      height:3px;
+      margin:42px auto 24px;
+      background:rgba(255,255,255,.35);
+      border-radius:999px;
+    }
+
+    .info{
+      max-width:720px;
+      margin:0 auto;
+      text-align:left;
+      padding:0 10px;
+    }
+
+    .script-title{
+      font-family:"Pacifico", cursive;
+      font-size:42px;
+      color:#fff;
+      text-shadow:0 4px 10px rgba(35,73,148,.22);
+      margin-bottom:16px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      margin:16px 0;
+      font-family:"Baloo 2", system-ui, sans-serif;
+      font-size:32px;
+      font-weight:700;
+      text-shadow:0 4px 10px rgba(35,73,148,.18);
+      flex-wrap:wrap;
+    }
+
+    .icon-mail,
+    .icon-fb,
+    .icon-in{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      box-shadow:0 8px 15px rgba(39,92,189,.18);
+    }
+
+    .icon-mail{
+      width:58px;
+      height:42px;
+      border:3px solid #f4fbff;
+      border-radius:6px;
+      position:relative;
+    }
+
+    .icon-mail:before,
+    .icon-mail:after{
+      content:"";
+      position:absolute;
+      width:30px;
+      height:3px;
+      background:#f4fbff;
+      top:16px;
+    }
+
+    .icon-mail:before{
+      left:3px;
+      transform:rotate(35deg);
+    }
+
+    .icon-mail:after{
+      right:3px;
+      transform:rotate(-35deg);
+    }
+
+    .socials{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .icon-fb,
+    .icon-in{
+      width:46px;
+      height:46px;
+      border-radius:8px;
+      background:linear-gradient(180deg,#ffffff 0%, #eaf5ff 100%);
+      color:#2462d9;
+      font-family:"Baloo 2", system-ui, sans-serif;
+      font-size:32px;
+      font-weight:800;
+    }
+
+    .icon-in{
+      font-size:24px;
+      font-weight:700;
+    }
+
+    .bottom-script{
+      margin-top:26px;
+      font-family:"Pacifico", cursive;
+      font-size:42px;
+      color:#fff;
+      text-shadow:0 4px 10px rgba(35,73,148,.22);
+      text-align:center;
+      position:relative;
+      display:inline-block;
+    }
+
+    .bottom-script:after{
+      content:"";
+      position:absolute;
+      left:26%;
+      right:26%;
+      bottom:-14px;
+      height:6px;
+      border-radius:999px;
+      background:rgba(255,255,255,.92);
+    }
+
+    .footer-center{
+      text-align:center;
+    }
+
+    @media (max-width: 900px){
+      .logo-text{font-size:50px;}
+      .big-title{font-size:120px;}
+      .sub-script{font-size:42px;}
+    }
+
+    @media (max-width: 640px){
+      .page{padding-top:22px;}
+      .logo{gap:12px;}
+      .logo-mark{width:62px;height:62px;}
+      .logo-text{font-size:38px;}
+      .big-title{font-size:78px;letter-spacing:-2px;}
+      .big-title.green{margin-top:0;}
+      .sub-script{font-size:28px;}
+      .middle{gap:26px;margin-top:36px;}
+      .laptop{width:250px;}
+      .megaphone{width:180px;height:140px;}
+      .loading-label{font-size:28px;}
+      .progress-shell{height:30px;}
+      .script-title{font-size:30px;}
+      .row{font-size:22px;}
+      .bottom-script{font-size:28px;}
+      .info{text-align:center;}
+      .row{justify-content:center;}
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <header class="nav">
-      <div class="container">
-        <a href="#" class="brand">
-          <div class="brand-mark">SC</div>
-          <span>SimplyCompta</span>
-        </a>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+    <div class="cloud c4"></div>
+    <div class="cloud c5"></div>
+
+    <div class="container">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-text">Simply<span>Compta</span></div>
       </div>
-    </header>
 
-    <main class="container hero">
-      <section>
-        <div class="badge">
-          <span class="dot"></span>
-          Lancement prochainement
-        </div>
+      <div class="coming-wrap">
+        <h1 class="big-title">COMING</h1>
+        <h1 class="big-title green">SOON!</h1>
+      </div>
 
-        <h1 class="title">
-          La comptabilité devient enfin
-          <span class="highlight">simple</span>.
-        </h1>
+      <div class="sub-script">Notre nouveau site arrive bientôt !</div>
 
-        <p class="subtitle">
-          SimplyCompta arrive bientôt avec une expérience moderne pour gérer
-          vos factures, vos dépenses, vos documents et votre relation avec votre comptable,
-          le tout dans une interface claire, premium et pensée pour le Maroc.
-        </p>
+      <div class="middle">
+        <div class="illus-left">
+          <div class="leaf"></div>
 
-        <div class="cta-row">
-          <a href="#waitlist" class="btn btn-primary">Rejoindre la liste d’attente</a>
-          <a href="#preview" class="btn btn-secondary">Voir l’aperçu</a>
-        </div>
-
-        <div class="meta">
-          <div>✅ Facturation intelligente</div>
-          <div>✅ Dépenses & TVA</div>
-          <div>✅ Mobile-first</div>
-          <div>✅ WhatsApp intégré</div>
-        </div>
-
-        <form class="waitlist" id="waitlist">
-          <input type="email" id="email" placeholder="Votre adresse email" required />
-          <select id="profile">
-            <option value="Entrepreneur">Entrepreneur</option>
-            <option value="Comptable">Comptable</option>
-            <option value="Cabinet">Cabinet</option>
-          </select>
-          <button type="submit" class="btn btn-primary">Accès anticipé</button>
-        </form>
-
-        <p class="mini-note">
-          Aucun spam. Juste les nouveautés, l’accès anticipé et les avantages de lancement.
-        </p>
-      </section>
-
-      <section class="visual" id="preview">
-        <div class="glow"></div>
-
-        <div class="phone">
-          <div class="screen">
-            <div class="screen-top">
-              <div class="screen-app">SimplyCompta</div>
-              <div class="screen-chip">Coming Soon</div>
-            </div>
-
-            <div>
-              <h3>Bonjour Yassine 👋</h3>
-              <p>Voici votre résumé financier de mars.</p>
-            </div>
-
-            <div class="stat-grid">
-              <div class="stat-card">
-                <div class="label">Chiffre d’affaires</div>
-                <div class="value">12 450 DH</div>
-                <div class="trend">+12% vs février</div>
-              </div>
-
-              <div class="stat-card">
-                <div class="label">Dépenses</div>
-                <div class="value">4 200 DH</div>
-                <div class="trend">-5% vs février</div>
-              </div>
-
-              <div class="stat-card large">
-                <div class="label">Résultat</div>
-                <div class="value">8 250 DH</div>
-                <div class="trend">TVA estimée : 2 150 DH</div>
+          <div class="laptop">
+            <div class="screen">
+              <div class="screen-ui">
+                <div class="sidebar">
+                  <div class="side-line"></div>
+                  <div class="side-line"></div>
+                  <div class="side-line"></div>
+                  <div class="side-line"></div>
+                  <div class="side-line"></div>
+                  <div class="side-line"></div>
+                </div>
+                <div class="dashboard">
+                  <div class="chart"></div>
+                  <div class="list-line"></div>
+                  <div class="list-line"></div>
+                  <div class="list-line"></div>
+                  <div class="chart"></div>
+                </div>
               </div>
             </div>
 
-            <div class="invoice-list">
-              <div class="invoice">
-                <div>
-                  <strong>Client Alpha</strong>
-                  <small>Facture #2024-015</small>
-                </div>
-                <div class="amount">
-                  2 500 DH
-                  <div class="status pending">En attente</div>
-                </div>
-              </div>
+            <div class="base"></div>
 
-              <div class="invoice">
-                <div>
-                  <strong>Société BETA</strong>
-                  <small>Facture #2024-012</small>
-                </div>
-                <div class="amount">
-                  1 200 DH
-                  <div class="status quote">Émise</div>
-                </div>
+            <div class="calendar">
+              <div class="rings"><span></span><span></span></div>
+              <div class="head"></div>
+              <div class="grid">
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+                <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
               </div>
+            </div>
 
-              <div class="invoice">
-                <div>
-                  <strong>SARL Gamma</strong>
-                  <small>Facture #2024-009</small>
-                </div>
-                <div class="amount">
-                  3 800 DH
-                  <div class="status paid">Payée</div>
-                </div>
+            <div class="clock"><div class="pin"></div></div>
+
+            <div class="calc">
+              <div class="screen-small"></div>
+              <div class="keys">
+                <div class="key"></div><div class="key"></div><div class="key"></div>
+                <div class="key"></div><div class="key"></div><div class="key"></div>
+                <div class="key"></div><div class="key"></div><div class="key"></div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-    </main>
 
-    <footer class="container footer">
-      © <span id="year"></span> SimplyCompta — Site en préparation
-    </footer>
+        <div class="illus-right">
+          <div class="megaphone">
+            <div class="burst b1"></div>
+            <div class="burst b2"></div>
+            <div class="burst b3"></div>
+            <div class="cone"></div>
+            <div class="cone-inner"></div>
+            <div class="green-band"></div>
+            <div class="blue-band"></div>
+            <div class="handle"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="loading-wrap">
+        <div class="loading-label">Chargement en cours...</div>
+        <div class="progress-shell">
+          <div class="progress-track">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="info">
+        <div class="script-title">Restez informé !</div>
+
+        <div class="row">
+          <span class="icon-mail"></span>
+          <span>Inscrivez-vous à notre newsletter</span>
+        </div>
+
+        <div class="row">
+          <span>Suivez-nous :</span>
+          <span class="socials">
+            <span class="icon-fb">f</span>
+            <span class="icon-in">in</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="footer-center">
+        <div class="bottom-script">Patience, de belles surprises vous attendent !</div>
+      </div>
+    </div>
   </div>
-
-  <div class="toast" id="toast">Merci, vous êtes bien inscrit à la liste d’attente.</div>
-
-  <script>
-    const form = document.getElementById("waitlist");
-    const toast = document.getElementById("toast");
-    const year = document.getElementById("year");
-
-    year.textContent = new Date().getFullYear();
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const email = document.getElementById("email").value.trim();
-      const profile = document.getElementById("profile").value;
-
-      if (!email) return;
-
-      console.log("Waitlist signup:", { email, profile });
-
-      toast.classList.add("show");
-      form.reset();
-
-      setTimeout(() => {
-        toast.classList.remove("show");
-      }, 2600);
-    });
-  </script>
 </body>
 </html>
