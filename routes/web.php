@@ -121,7 +121,11 @@ Route::get('/login/{lang?}', [AuthenticatedSessionController::class, 'showLoginF
 
 Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, 'showLinkRequestForm'])->name('langPass');
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
+// Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
+Route::get('/', function () {
+    return view('coming-soon');
+});
+
 Route::get('/dashboard/income-expense-chart', [DashboardController::class, 'getIncomeExpenseChartData'])->name('dashboard.income-expense-chart')->middleware(['auth', 'XSS']);
 Route::get('/dashboard/summary-metrics', [DashboardController::class, 'getSummaryMetrics'])->name('dashboard.summary-metrics')->middleware(['auth', 'XSS']);
 
