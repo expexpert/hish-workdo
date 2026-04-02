@@ -785,7 +785,7 @@
         <h1 class="big-title green">SOON!</h1>
       </div>
 
-      <div class="sub-script">Qu'est ce que tu penses de mettre : "SimplyCompta arrive. Respirez. Votre cabinet va rentré dans une nouvelle dimension"</div>
+      <div class="sub-script">SimplyCompta arrive. Respirez. Votre cabinet va rentré dans une nouvelle dimension</div>
 
       <div class="middle">
         <div class="illus-left">
