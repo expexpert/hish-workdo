@@ -132,7 +132,6 @@ class CustomerController extends Controller
 
         $unpaidInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
             ->where('status', 'ISSUED')
-            ->whereBetween('date', [$monthStart, $monthEnd])
             ->count();
          
         $unreadDocumentsCount = ClientNotification::where('customer_id', $user->id)
