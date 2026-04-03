@@ -131,6 +131,12 @@ class CustomerController extends Controller
         // Combined Invoice Stats - only one query for all sums
         $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('customer_invoices.date', '<=', $dateTo);
+            })
             ->select(
                 DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
                 DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
@@ -159,10 +165,31 @@ class CustomerController extends Controller
 
         $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_tva ?? 0);
 
-        // Added metrics for WhatsApp Bot
-        $expensesCount = CustomerExpense::where('customer_id', $user->id)->count();
-        $statementsCount = ClientBankStatement::where('customer_id', $user->id)->count();
-        $pendingReviewCount = CustomerInvoice::where('customer_id', $user->id)->where('status', 'ISSUED')->count();
+        // Added metrics for WhatsApp Bot (Filtered by date if provided)
+        $expensesCount = CustomerExpense::where('customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('date', '<=', $dateTo);
+            })
+            ->count();
+
+        $statementsCount = ClientBankStatement::where('customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->where('month_year', Carbon::parse($dateFrom)->format('m-Y'));
+            })
+            ->count();
+
+        $pendingReviewCount = CustomerInvoice::where('customer_id', $user->id)
+            ->where('review_status', 'PENDING')
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('date', '<=', $dateTo);
+            })
+            ->count();
 
         return response()->json([
             'success' => true,
