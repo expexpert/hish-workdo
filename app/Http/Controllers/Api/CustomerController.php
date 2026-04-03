@@ -133,16 +133,16 @@ class CustomerController extends Controller
         $unpaidInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
             ->where('status', 'ISSUED')
             ->count();
-         
+
         $unreadDocumentsCount = ClientNotification::where('customer_id', $user->id)
             ->where('is_read', false)
             ->where('data', 'like', '%"document_notification"%')
             ->count();
-            
+
         $hasStatement = ClientBankStatement::where('customer_id', $user->id)
             ->where('month_year', now()->format('m-Y'))
             ->exists();
-            
+
         $missingBankStatementCount = $hasStatement ? 0 : 1;
 
         $currentMonthInvoice = CustomerInvoice::where('customer_id', $user->id)
@@ -251,7 +251,7 @@ class CustomerController extends Controller
                 'unpaidInvoiceSum' => (float) ($unpaidInvoiceSum->total_unpaid_sum ?? 0),
                 'unreadDocumentsCount' => $unreadDocumentsCount,
                 'total_pending_actions'  => $missingBankStatementCount + $unpaidInvoicesCount + $unreadDocumentsCount,
-                'total_progress_score' => $statementScore + $invoiceExpenseScore + $notificationScore,            
+                'total_progress_score' => $statementScore + $invoiceExpenseScore + $notificationScore,
 
                 'is_enable_login' => $is_enable_login,
             ]
@@ -699,11 +699,17 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $like = $request->query('like');
-        $clients = CustomerClient::where('customer_id', $user->id);
+        $query = CustomerClient::where('customer_id', $user->id);
         if ($like) {
-            $clients = $clients->where('company_name', 'like', "%$like%")->OrWhere('client_name', 'like', "%$like%");
+            $query->where(function ($q) use ($like) {
+                $q->where('company_name', 'like', "%$like%")
+                    ->orWhere('client_name', 'like', "%$like%");
+            });
         }
-        $clients = $clients->orderBy('created_at', 'desc')->get();
+        $clients = $query->orderBy('created_at', 'desc')
+            ->with('invoices.articles')
+            ->withSum('articles as total_revenue_ht', 'total_price_ht')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -855,9 +861,12 @@ class CustomerController extends Controller
         $like = $request->query('like');
         $suppliers = CustomerSupplier::where('customer_id', $user->id);
         if ($like) {
-            $suppliers = $suppliers->where('company_name', 'like', "%$like%")->OrWhere('supplier_name', 'like', "%$like%");
+            $suppliers = $suppliers->where(function ($q) use ($like) {
+                $q->where('company_name', 'like', "%$like%")
+                    ->orWhere('supplier_name', 'like', "%$like%");
+            });
         }
-        $suppliers = $suppliers->orderBy('created_at', 'desc')->get();
+        $suppliers = $suppliers->orderBy('created_at', 'desc')->with('expenses')->withSum('expenses as total_ttc', 'total_ttc')->get();
 
         return response()->json([
             'success' => true,
