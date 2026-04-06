@@ -24,6 +24,7 @@ use App\Models\CustomerProduct;
 use App\Models\CustomerSupplier;
 use App\Models\CustomerMonthStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use App\Traits\HandlesBotInputs;
 
@@ -123,45 +124,74 @@ class CustomerController extends Controller
     public function getDashboardData(Request $request): JsonResponse
     {
         $user = $request->user();
+        $userName = $user->name;
         $is_enable_login = $user->is_enable_login;
 
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
 
-        // Combined Invoice Stats - only one query for all sums
+        $monthStart = now()->copy()->startOfMonth();
+        $monthEnd = now()->copy()->endOfMonth();
+
+        $unpaidInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
+            ->where('status', 'ISSUED')
+            ->count();
+
+        $unreadDocumentsCount = ClientNotification::where('customer_id', $user->id)
+            ->where('is_read', false)
+            ->where('data', 'like', '%"document_notification"%')
+            ->count();
+
+        $hasStatement = ClientBankStatement::where('customer_id', $user->id)
+            ->where('month_year', now()->format('m-Y'))
+            ->exists();
+
+        $missingBankStatementCount = $hasStatement ? 0 : 1;
+
+        $currentMonthInvoice = CustomerInvoice::where('customer_id', $user->id)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->count();
+
+        $currentMonthExpense = CustomerExpense::where('customer_id', $user->id)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->count();
+
+        $unreadNotificationsCount = ClientNotification::where('customer_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+
+        $statementScore = $hasStatement ? 40 : 0;
+        $invoiceExpenseScore = ($currentMonthInvoice + $currentMonthExpense) > 0 ? 30 : 0;
+        $notificationScore = $unreadNotificationsCount > 0 ? 30 : 0;
+
+        $unpaidInvoiceSum = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->select(
+                DB::raw("SUM(CASE WHEN status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_unpaid_sum")
+            )->first();
+
+        // 1. Global Stats (Based on Filter)
         $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('customer_invoices.date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('customer_invoices.date', '<=', $dateTo);
-            })
+            ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_invoices.date', '>=', $df))
+            ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_invoices.date', '<=', $dt))
             ->select(
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
-                DB::raw("SUM(CASE WHEN customer_invoices.status IN ('PAID') THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
+                DB::raw("SUM(CASE WHEN status IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
+                DB::raw("SUM(CASE WHEN status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
+                DB::raw("SUM(CASE WHEN status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
+                DB::raw("SUM(CASE WHEN status = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
+                DB::raw("SUM(CASE WHEN status = 'PAID' THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
+                DB::raw("COUNT(DISTINCT CASE WHEN status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
+                DB::raw("COUNT(DISTINCT CASE WHEN status = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
+            )->first();
 
-                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN customer_invoices.status = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
-            )
-            ->first();
-
-        // Combined Expense Stats - only one query for both sums
         $expenseStats = CustomerExpense::where('customer_id', $user->id)
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('date', '<=', $dateTo);
-            })
+            ->when($dateFrom, fn($q, $df) => $q->whereDate('date', '>=', $df))
+            ->when($dateTo, fn($q, $dt) => $q->whereDate('date', '<=', $dt))
             ->select(
                 DB::raw("SUM(total_ttc) as total_sum"),
                 DB::raw("SUM(total_tva) as total_tva")
-            )
-            ->first();
+            )->first();
 
         $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_tva ?? 0);
 
@@ -190,11 +220,46 @@ class CustomerController extends Controller
                 $query->whereDate('date', '<=', $dateTo);
             })
             ->count();
+        // 2. Month-over-Month Comparison Logic
+        $currentRange = [now()->startOfMonth(), now()->endOfMonth()];
+        $previousRange = [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()];
+
+        // Helper to get periodic stats
+        $getPeriodicStats = function ($range) use ($user) {
+            $inv = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                ->where('customer_invoices.customer_id', $user->id)
+                ->whereBetween('customer_invoices.date', $range)
+                ->select(
+                    DB::raw("SUM(CASE WHEN status = 'PAID' THEN total_price_ht ELSE 0 END) as paid"),
+                    DB::raw("SUM(CASE WHEN status = 'PAID' THEN tva_percentage ELSE 0 END) as vat")
+                )->first();
+
+            $exp = CustomerExpense::where('customer_id', $user->id)
+                ->whereBetween('date', $range)
+                ->selectRaw("SUM(total_ttc) as total, SUM(total_tva) as tva")
+                ->first();
+
+            return (object)[
+                'paid' => (float)($inv->paid ?? 0),
+                'expense' => (float)($exp->total ?? 0),
+                'vat' => (float)($inv->vat ?? 0) - (float)($exp->tva ?? 0)
+            ];
+        };
+
+        $current = $getPeriodicStats($currentRange);
+        $previous = $getPeriodicStats($previousRange);
+
+        // 3. Percentage Calculation Logic
+        $calcTrend = function ($cur, $prev) {
+            if ($prev == 0) return $cur > 0 ? 100 : 0;
+            return round((($cur - $prev) / $prev) * 100, 2);
+        };
 
         return response()->json([
             'success' => true,
             'message' => 'Dashboard data retrieved successfully.',
-            'data'    => [
+            'data' => [
+                'userName'            => $userName,
                 'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
                 'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
@@ -206,6 +271,19 @@ class CustomerController extends Controller
                 'total_pending_review_count' => $pendingReviewCount,
                 'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
                 'total_quote_sum' => (float) ($invoiceStats->total_quote_sum ?? 0),
+
+                // Trends
+                'total_paid_percentage_change'        => $calcTrend($current->paid, $previous->paid),
+                'total_expenses_percentage_change'    => $calcTrend($current->expense, $previous->expense),
+                'total_vat_payable_percentage_change' => $calcTrend($current->vat, $previous->vat),
+
+                'hasStatement' => $hasStatement,
+                'unpaidInvoicesCount' => $unpaidInvoicesCount,
+                'unpaidInvoiceSum' => (float) ($unpaidInvoiceSum->total_unpaid_sum ?? 0),
+                'unreadDocumentsCount' => $unreadDocumentsCount,
+                'total_pending_actions'  => $missingBankStatementCount + $unpaidInvoicesCount + $unreadDocumentsCount,
+                'total_progress_score' => $statementScore + $invoiceExpenseScore + $notificationScore,
+
                 'is_enable_login' => $is_enable_login,
             ]
         ], 200);
@@ -309,7 +387,7 @@ class CustomerController extends Controller
 
         $settings = Utility::settingsById($accountant->creatorId());
         $company_logo = isset($settings['company_logo_dark']) && !empty($settings['company_logo_dark']) ? $settings['company_logo_dark'] : 'logo-dark.png';
-        
+
         $accountantData = $accountant->toArray();
         $accountantData['company_logo'] = Utility::get_file('uploads/logo/') . $company_logo;
 
@@ -657,11 +735,17 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $like = $request->query('like');
-        $clients = CustomerClient::where('customer_id', $user->id);
+        $query = CustomerClient::where('customer_id', $user->id);
         if ($like) {
-            $clients = $clients->where('company_name', 'like', "%$like%")->OrWhere('client_name', 'like', "%$like%");
+            $query->where(function ($q) use ($like) {
+                $q->where('company_name', 'like', "%$like%")
+                    ->orWhere('client_name', 'like', "%$like%");
+            });
         }
-        $clients = $clients->orderBy('created_at', 'desc')->get();
+        $clients = $query->orderBy('created_at', 'desc')
+            ->with('invoices.articles')
+            ->withSum('articles as total_revenue_ht', 'total_price_ht')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -814,9 +898,12 @@ class CustomerController extends Controller
         $like = $request->query('like');
         $suppliers = CustomerSupplier::where('customer_id', $user->id);
         if ($like) {
-            $suppliers = $suppliers->where('company_name', 'like', "%$like%")->OrWhere('supplier_name', 'like', "%$like%");
+            $suppliers = $suppliers->where(function ($q) use ($like) {
+                $q->where('company_name', 'like', "%$like%")
+                    ->orWhere('supplier_name', 'like', "%$like%");
+            });
         }
-        $suppliers = $suppliers->orderBy('created_at', 'desc')->get();
+        $suppliers = $suppliers->orderBy('created_at', 'desc')->with('expenses')->withSum('expenses as total_ttc', 'total_ttc')->get();
 
         return response()->json([
             'success' => true,
