@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
             'XSS' => \App\Http\Middleware\XSS::class,
             'revalidate' => \App\Http\Middleware\RevalidateBackHistory::class,
+            'bot.auth' => \App\Http\Middleware\BotAuthMiddleware::class,
         ]);
 
         // middlewareGroups / Group Middleware

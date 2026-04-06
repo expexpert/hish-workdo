@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LookupController;
+use App\Http\Middleware\BotAuthMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,8 +30,7 @@ Route::post('/customer/forgot-password', [AuthController::class, 'ForgotPassword
 Route::post('/customer/forgot-password-otp', [AuthController::class, 'resetPasswordWithOtp']);
 
 
-
-Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::get('/last-password-update', [AuthController::class, 'lastPasswordUpdate']);
@@ -109,12 +109,37 @@ Route::prefix('customer')->middleware('auth:sanctum')->group(function () {
     Route::delete('/customer-product/{id}', [CustomerController::class, 'deleteCustomerProduct']);
 
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
-
+    
+    // WhatsApp Bot Activation (OTP) - Protected by standard user auth too
+    Route::post('/bot/request-activation', [CustomerController::class, 'requestActivation']);
+    Route::post('/bot/verify-activation', [CustomerController::class, 'verifyActivation']);
 });
 
+// --- WhatsApp Bot Bridge (Secure Proxy Access via Dedicated Prefix) ---
+Route::group(['prefix' => 'bot/customer', 'middleware' => 'bot.auth'], function () {
+    // Shared Data Store Handlers
+    Route::post('/transaction', [CustomerController::class, 'storeTransaction']);
+    Route::post('/bank-statement', [CustomerController::class, 'storeStatement']);
+    Route::post('/customer-client', [CustomerController::class, 'storeCustomerClient']);
+    Route::post('/customer-supplier', [CustomerController::class, 'storeCustomerSupplier']);
+    Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
+    Route::post('/customer-invoice', [CustomerController::class, 'storeInvoice']);
+    Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
+    
+    // Status metrics specifically for the bot
+    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
 
+    // AI Quota & Limits
+    Route::get('/ai/status', [CustomerController::class, 'aiStatus']);
+    Route::post('/ai/log', [CustomerController::class, 'aiLog']);
 
+    // Resource Lookups
+    Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
+    Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
 
+    // Profile check for Global Activation
+    Route::get('/profile', [CustomerController::class, 'getProfile']);
+});
 
-
-
+// Publicly accessible file download for WhatsApp Bot AI
+Route::get('/bot/file/{id}', [CustomerController::class, 'downloadFilePublic']);
