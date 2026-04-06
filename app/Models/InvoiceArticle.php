@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\CustomerInvoice;
 
 class InvoiceArticle extends Model
 {
@@ -33,10 +34,10 @@ class InvoiceArticle extends Model
     ];
 
     /**
-     * Get the invoice that owns the article.
+     * Get the customer invoice that owns the article.
      */
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(CustomerInvoice::class, 'invoice_id');
     }
 }

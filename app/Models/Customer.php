@@ -35,6 +35,7 @@ class Customer extends Authenticatable
         'if_number',
         'cnss',
         'company_type',
+        'company_color',
         'phone',
         'address',
         'vat_number',

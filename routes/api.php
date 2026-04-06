@@ -42,6 +42,8 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);    
     Route::get('/dashboard-graph-data', [CustomerController::class, 'getDashboardGraphData']);
 
+    Route::get('/analyse-rapide', [CustomerController::class, 'getAnalyseRapide']);
+
     Route::get('/has-unread-notifications', [CustomerController::class, 'hasUnreadNotifications']);
     
     Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);

@@ -18,6 +18,9 @@ class CustomerProduct extends Model
         'tva_percent',
         'quantity',
         'total_price_ht',
+        'description',
+        'reference',
+        'category',
     ];
 
     /**

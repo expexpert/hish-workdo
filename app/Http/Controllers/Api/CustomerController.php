@@ -60,6 +60,7 @@ class CustomerController extends Controller
             'if_number'        => 'sometimes|required|string|max:255',
             'cnss'             => 'sometimes|required|string|max:255',
             'company_type'     => 'sometimes|required|string|max:255',
+            'company_color'   => 'sometimes|required|string|max:7',
             'contact'          => 'sometimes|required|string|max:20',
             'address'          => 'sometimes|required|string|max:255',
             'billing_name'     => 'sometimes|required|string|max:255',
@@ -349,6 +350,75 @@ class CustomerController extends Controller
     }
 
 
+    public function getAnalyseRapide(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Dates Setup
+        $now = Carbon::now();
+        $startOfCurrentMonth = $now->copy()->startOfMonth();
+        $startOfPreviousMonth = $now->copy()->subMonth()->startOfMonth();
+        $endOfPreviousMonth = $now->copy()->subMonth()->endOfMonth();
+
+        $currentMonthExpenses = CustomerExpense::where('customer_id', $user->id)
+            ->whereBetween('date', [$startOfCurrentMonth, $now])
+            ->sum('total_ttc');
+
+        $previousMonthExpenses = CustomerExpense::where('customer_id', $user->id)
+            ->whereBetween('date', [$startOfPreviousMonth, $endOfPreviousMonth])
+            ->sum('total_ttc');
+
+        $expenseVariation = 0;
+        if ($previousMonthExpenses > 0) {
+            $expenseVariation = (($currentMonthExpenses - $previousMonthExpenses) / $previousMonthExpenses) * 100;
+        }
+
+        $pendingData = CustomerInvoice::where('customer_id', $user->id)
+            ->where('status', 'ISSUED')
+            ->leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->selectRaw('COUNT(DISTINCT customer_invoices.id) as count, SUM(invoice_articles.total_price_ht) as amount')
+            ->first();
+
+        // 3. GOOD PERFORMANCE (REVENUE) ALERT
+        $currentRevenue = InvoiceArticle::whereHas('invoice', function ($q) use ($user, $startOfCurrentMonth, $now) {
+                $q->where('customer_id', $user->id)
+                    ->whereBetween('date', [$startOfCurrentMonth, $now]);
+            })->sum('total_price_ht');
+
+        $previousRevenue = InvoiceArticle::whereHas('invoice', function ($q) use ($user, $startOfPreviousMonth, $endOfPreviousMonth) {
+                $q->where('customer_id', $user->id)
+                    ->whereBetween('date', [$startOfPreviousMonth, $endOfPreviousMonth]);
+            })->sum('total_price_ht');
+
+        $revenueVariation = 0;
+        if ($previousRevenue > 0) {
+            $revenueVariation = (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'expenses_alert' => [
+                    'is_higher' => $currentMonthExpenses > $previousMonthExpenses,
+                    'variation_percentage' => round($expenseVariation, 2),
+                    'current' => $currentMonthExpenses,
+                    'previous' => $previousMonthExpenses,
+                ],
+                'pending_invoices' => [
+                    'count' => $pendingData->count ?? 0,
+                    'total_amount' => $pendingData->amount ?? 0,
+                ],
+                'performance_alert' => [
+                    'is_good' => $revenueVariation > 0,
+                    'variation_percentage' => round($revenueVariation, 2),
+                    'current_revenue' => $currentRevenue,
+                    'previous_revenue' => $previousRevenue,
+                ]
+            ]
+        ]);
+    }
+
+
     public function hasUnreadNotifications(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -491,6 +561,11 @@ class CustomerController extends Controller
 
         if (!$notification->document || !Storage::disk('public')->exists($notification->document)) {
             return response()->json(['message' => 'File not found'], 404);
+        }
+
+        if (! $notification->is_read) {
+            $notification->is_read = true;
+            $notification->save();
         }
 
         // This forces a download response
@@ -735,16 +810,40 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $like = $request->query('like');
+        $today = now()->format('Y-m-d');
+
         $query = CustomerClient::where('customer_id', $user->id);
+
         if ($like) {
             $query->where(function ($q) use ($like) {
                 $q->where('company_name', 'like', "%$like%")
                     ->orWhere('client_name', 'like', "%$like%");
             });
         }
-        $clients = $query->orderBy('created_at', 'desc')
-            ->with('invoices.articles')
-            ->withSum('articles as total_revenue_ht', 'total_price_ht')
+
+        $clients = $query
+            // 1. Sum of Issued Articles
+            ->withSum(['articles as total_revenue_ht' => function ($q) {
+                $q->whereHas('invoice', function ($innerQ) {
+                    $innerQ->where('status', 'Issued');
+                });
+            }], 'total_price_ht')
+            // 2. Count of Late Invoices (Date < Today AND Status != Paid)
+            ->withCount(['invoices as late_invoices_count' => function ($q) use ($today) {
+                $q->where('date', '<', $today)
+                    ->where('status', '!=', 'Paid');
+            }])
+            // 3. Sorting Logic
+            // Priority 1: Clients with ANY overdue invoices first (1 if count > 0, else 0)
+            ->orderByRaw('CASE WHEN late_invoices_count > 0 THEN 0 ELSE 1 END')
+            // Priority 2: Highest number of late invoices
+            ->orderBy('late_invoices_count', 'desc')
+            // Priority 3: Highest total revenue (due)
+            ->orderBy('total_revenue_ht', 'desc')
+
+            ->with(['invoices' => function ($q) {
+                $q->where('status', 'Issued')->with('articles');
+            }])
             ->get();
 
         return response()->json([
@@ -896,14 +995,36 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $like = $request->query('like');
-        $suppliers = CustomerSupplier::where('customer_id', $user->id);
+        $today = now()->format('Y-m-d');
+
+        $query = CustomerSupplier::where('customer_id', $user->id);
+
         if ($like) {
-            $suppliers = $suppliers->where(function ($q) use ($like) {
+            $query->where(function ($q) use ($like) {
                 $q->where('company_name', 'like', "%$like%")
                     ->orWhere('supplier_name', 'like', "%$like%");
             });
         }
-        $suppliers = $suppliers->orderBy('created_at', 'desc')->with('expenses')->withSum('expenses as total_ttc', 'total_ttc')->get();
+
+        $suppliers = $query
+            // 1. Total Sum of all expenses
+            ->withSum('expenses as total_ttc', 'total_ttc')
+
+            // 2. Count of Late Expenses (Date < Today)
+            ->withCount(['expenses as late_expenses_count' => function ($q) use ($today) {
+                $q->where('date', '<', $today);
+            }])
+
+            // 3. Sorting by Urgency
+            // Priority 1: Suppliers with late expenses first
+            ->orderByRaw('CASE WHEN late_expenses_count > 0 THEN 0 ELSE 1 END')
+            // Priority 2: Most late expenses first
+            ->orderBy('late_expenses_count', 'desc')
+            // Priority 3: Highest total amount owed
+            ->orderBy('total_ttc', 'desc')
+
+            ->with('expenses')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -1359,6 +1480,10 @@ class CustomerController extends Controller
                                 'tva_percent'    => $article['tva_percentage'], // Note the name mapping
                                 'quantity'       => $article['quantity'],
                                 'total_price_ht' => $article['total_price_ht'],
+                                'description'    => $article['description'] ?? null,
+                                'reference'       => $article['reference'] ?? null,
+                                'category'        => $article['category'] ?? null,
+
                             ]
                         );
                     }
@@ -1707,6 +1832,9 @@ class CustomerController extends Controller
             'tva_percent'   => 'required|numeric|min:0',
             'quantity'      => 'nullable|integer|min:1',
             'total_price_ht' => 'nullable|numeric|min:0',
+            'description'   => 'nullable|string|max:255',
+            'reference'      => 'nullable|string|max:255',
+            'category'       => 'nullable|string|max:255'
         ]);
 
         $validated['customer_id'] = $validated['customer_id'];
@@ -1786,6 +1914,9 @@ class CustomerController extends Controller
             'tva_percent'   => 'sometimes|required|numeric|min:0',
             'quantity'      => 'nullable|integer|min:1',
             'total_price_ht' => 'nullable|numeric|min:0',
+            'description'   => 'nullable|string|max:255',
+            'reference'      => 'nullable|string|max:255',
+            'category'       => 'nullable|string|max:255'
         ]);
 
         $product->update($validated);
@@ -1883,7 +2014,7 @@ class CustomerController extends Controller
         try {
             $botUrl = env('WHATSAPP_BOT_URL', 'http://localhost:3005');
             $botSecret = env('WHATSAPP_BOT_SECRET', 'super-secret');
-            
+
             Http::withHeaders([
                 'X-Bot-Secret' => $botSecret
             ])->post("{$botUrl}/api/v1/bot/send-otp", [
@@ -1912,9 +2043,9 @@ class CustomerController extends Controller
         ]);
 
         $customer = Customer::where('contact', $request->phone)
-                            ->where('bot_otp', $request->otp)
-                            ->where('bot_otp_expires_at', '>', now())
-                            ->first();
+            ->where('bot_otp', $request->otp)
+            ->where('bot_otp_expires_at', '>', now())
+            ->first();
 
         if (!$customer) {
             return response()->json(['status' => 'error', 'message' => 'Invalid or expired activation code.'], 400);
@@ -1987,7 +2118,7 @@ class CustomerController extends Controller
     {
         try {
             $accountant = $customer->accountant; // BelongsTo relationship to User (created_by)
-            
+
             if (!$accountant || !$accountant->email) {
                 return;
             }
