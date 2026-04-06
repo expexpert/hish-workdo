@@ -63,6 +63,11 @@ class Customer extends Authenticatable
         'shipping_zip',
         'shipping_address',
         'last_login_at',
+        'bot_otp',
+        'bot_pending_phone',
+        'bot_otp_expires_at',
+        'bot_active',
+        'bot_verified_at',
     ];
 
     protected $hidden = [

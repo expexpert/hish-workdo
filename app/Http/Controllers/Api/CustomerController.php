@@ -14,6 +14,7 @@ use App\Models\CustomerExpense;
 use App\Models\CustomerInvoice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Utility;
@@ -25,9 +26,11 @@ use App\Models\CustomerMonthStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\HandlesBotInputs;
 
 class CustomerController extends Controller
 {
+    use HandlesBotInputs;
 
     public function getProfile(Request $request): JsonResponse
     {
@@ -192,6 +195,31 @@ class CustomerController extends Controller
 
         $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_tva ?? 0);
 
+        // Added metrics for WhatsApp Bot (Filtered by date if provided)
+        $expensesCount = CustomerExpense::where('customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('date', '<=', $dateTo);
+            })
+            ->count();
+
+        $statementsCount = ClientBankStatement::where('customer_id', $user->id)
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->where('month_year', Carbon::parse($dateFrom)->format('m-Y'));
+            })
+            ->count();
+
+        $pendingReviewCount = CustomerInvoice::where('customer_id', $user->id)
+            ->where('review_status', 'PENDING')
+            ->when($dateFrom, function ($query, $dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($query, $dateTo) {
+                $query->whereDate('date', '<=', $dateTo);
+            })
+            ->count();
         // 2. Month-over-Month Comparison Logic
         $currentRange = [now()->startOfMonth(), now()->endOfMonth()];
         $previousRange = [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()];
@@ -233,13 +261,16 @@ class CustomerController extends Controller
             'data' => [
                 'userName'            => $userName,
                 'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
-                'total_paid_sum'        => (float) ($invoiceStats->total_paid_sum ?? 0),
-                'total_expenses_sum'    => (float) ($expenseStats->total_sum ?? 0),
-                'total_vat_payable'     => (float) $totalVatPayable,
-                'total_issued_count'    => $invoiceStats->total_issued_count,
-                'total_quote_count'     => $invoiceStats->total_quote_count,
-                'total_issued_sum'      => (float) ($invoiceStats->total_issued_sum ?? 0),
-                'total_quote_sum'       => (float) ($invoiceStats->total_quote_sum ?? 0),
+                'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0),
+                'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
+                'total_vat_payable' => (float) $totalVatPayable,
+                'total_issued_count' => $invoiceStats->total_issued_count,
+                'total_quote_count' => $invoiceStats->total_quote_count,
+                'total_expenses_count' => $expensesCount,
+                'bank_statements_count' => $statementsCount,
+                'total_pending_review_count' => $pendingReviewCount,
+                'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
+                'total_quote_sum' => (float) ($invoiceStats->total_quote_sum ?? 0),
 
                 // Trends
                 'total_paid_percentage_change'        => $calcTrend($current->paid, $previous->paid),
@@ -469,6 +500,7 @@ class CustomerController extends Controller
 
     public function storeTransaction(Request $request)
     {
+        $this->mapBotInputs($request);
         $validated = $request->validate([
             'type'             => 'required|in:expense,revenue',
             'transaction_date' => 'required|date',
@@ -550,6 +582,7 @@ class CustomerController extends Controller
 
     public function storeStatement(Request $request)
     {
+        $this->mapBotInputs($request);
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:10240',
@@ -582,6 +615,8 @@ class CustomerController extends Controller
 
         $status = $statement->wasRecentlyCreated ? 201 : 200;
         $message = $statement->wasRecentlyCreated ? 'Statement uploaded successfully' : 'Statement updated successfully';
+
+        $this->notifyAccountant($request->user(), 'Bank Statement', null, $request->month_year);
 
         return response()->json(['message' => $message, 'data' => $statement], $status);
     }
@@ -673,6 +708,7 @@ class CustomerController extends Controller
 
     public function storeCustomerClient(Request $request)
     {
+        $this->mapBotInputs($request);
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
@@ -832,6 +868,7 @@ class CustomerController extends Controller
 
     public function storeCustomerSupplier(Request $request)
     {
+        $this->mapBotInputs($request);
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
@@ -989,6 +1026,7 @@ class CustomerController extends Controller
 
     public function storeExpense(Request $request)
     {
+        $this->mapBotInputs($request);
         try {
             $validated = $request->validate([
                 'customer_id'    => 'required|exists:customers,id',
@@ -1004,6 +1042,14 @@ class CustomerController extends Controller
                 'notes'          => 'nullable|string',
             ]);
 
+            // Ensure metrics columns are populated for dashboard sync
+            if (!isset($validated['total_ttc']) || empty($validated['total_ttc'])) {
+                $validated['total_ttc'] = $validated['ttc'];
+            }
+            if (!isset($validated['total_tva'])) {
+                $validated['total_tva'] = $validated['tva'] ?? 0;
+            }
+
             // Handle File Upload
             if ($request->hasFile('file')) {
                 $path = $request->file('file')->store('expenses', 'private');
@@ -1011,6 +1057,8 @@ class CustomerController extends Controller
             }
 
             $expense = CustomerExpense::create($validated);
+
+            $this->notifyAccountant($request->user(), 'Expense', $expense->ttc);
 
             return response()->json([
                 'success' => true,
@@ -1263,6 +1311,7 @@ class CustomerController extends Controller
 
     public function storeInvoice(Request $request)
     {
+        $this->mapBotInputs($request);
         $validated = $request->validate([
             // Invoice Header
             'customer_id'    => 'required|exists:customers,id',
@@ -1314,6 +1363,8 @@ class CustomerController extends Controller
                         );
                     }
                 }
+
+                $this->notifyAccountant($request->user(), 'Invoice');
 
                 return response()->json([
                     'success' => true,
@@ -1648,6 +1699,7 @@ class CustomerController extends Controller
 
     public function storeCustomerProduct(Request $request)
     {
+        $this->mapBotInputs($request);
         $validated = $request->validate([
             'customer_id'   => 'required|exists:customers,id',
             'designation'    => 'required|string|max:255',
@@ -1804,6 +1856,157 @@ class CustomerController extends Controller
             return response()->json(['success' => true, 'message' => 'Email sent to accountant.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
+     * Request Activation (OTP) for WhatsApp Bot
+     */
+    public function requestActivation(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required'
+        ]);
+
+        $customer = Customer::where('contact', $request->phone)->first();
+        if (!$customer) {
+            return response()->json(['status' => 'error', 'message' => 'Customer not found. Please register on the web portal first.'], 404);
+        }
+
+        $otp = rand(1000, 9999);
+        $customer->bot_otp = $otp;
+        $customer->bot_otp_expires_at = now()->addMinutes(15);
+        $customer->save();
+
+        // --- NEW: Trigger WhatsApp Bot to send the OTP ---
+        try {
+            $botUrl = env('WHATSAPP_BOT_URL', 'http://localhost:3005');
+            $botSecret = env('WHATSAPP_BOT_SECRET', 'super-secret');
+            
+            Http::withHeaders([
+                'X-Bot-Secret' => $botSecret
+            ])->post("{$botUrl}/api/v1/bot/send-otp", [
+                'phone' => $request->phone,
+                'otp'   => (string)$otp
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to trigger WhatsApp Bot OTP: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Activation code sent to WhatsApp. Valid for 15 minutes.',
+            'debug_otp' => $otp
+        ]);
+    }
+
+    /**
+     * Verify Activation for WhatsApp Bot
+     */
+    public function verifyActivation(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required',
+            'otp' => 'required'
+        ]);
+
+        $customer = Customer::where('contact', $request->phone)
+                            ->where('bot_otp', $request->otp)
+                            ->where('bot_otp_expires_at', '>', now())
+                            ->first();
+
+        if (!$customer) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid or expired activation code.'], 400);
+        }
+
+        $customer->bot_active = true;
+        $customer->bot_verified_at = now();
+        $customer->bot_otp = null;
+        $customer->bot_otp_expires_at = null;
+        $customer->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'WhatsApp Bot activated successfully!'
+        ]);
+    }
+
+    /**
+     * Public file download for the Bot AI (OpenAI Needs a URL)
+     */
+    public function downloadFilePublic($id)
+    {
+        $expense = CustomerExpense::find($id);
+        if ($expense && $expense->file_path) {
+            return Storage::download('expenses/' . $expense->file_path);
+        }
+
+        $invoice = CustomerInvoice::find($id);
+        if ($invoice && $invoice->file_path) {
+            return Storage::download('invoices/' . $invoice->file_path);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'File not found.'], 404);
+    }
+
+    /**
+     * Check if user is allowed to use AI (Internal Bot API)
+     */
+    public function aiStatus(Request $request)
+    {
+        $limitService = new \App\Services\AiLimitService();
+        return response()->json($limitService->checkCanUseAI($request->user()->id));
+    }
+
+    /**
+     * Record AI Usage (Internal Bot API)
+     */
+    public function aiLog(Request $request)
+    {
+        $request->validate([
+            'model' => 'required',
+            'tokens_in' => 'required|integer',
+            'tokens_out' => 'required|integer',
+        ]);
+
+        $limitService = new \App\Services\AiLimitService();
+        $limitService->recordUsage(
+            $request->user()->id,
+            $request->model,
+            $request->tokens_in,
+            $request->tokens_out
+        );
+
+        return response()->json(['status' => 'success']);
+    }
+    /**
+     * Notify Accountant about a new WhatsApp Document
+     */
+    private function notifyAccountant($customer, $type, $amount = null, $monthYear = null)
+    {
+        try {
+            $accountant = $customer->accountant; // BelongsTo relationship to User (created_by)
+            
+            if (!$accountant || !$accountant->email) {
+                return;
+            }
+
+            $details = [
+                'customer_name' => $customer->name,
+                'type'          => $type,
+                'amount'        => $amount ? $customer->priceFormat($amount) : null,
+                'month_year'    => $monthYear,
+                'date'          => now()->format('Y-m-d H:i'),
+                'dashboard_url' => url('/login'), // Link to dashboard
+            ];
+
+            // Ensure SMTP is ready (using system settings)
+            \App\Models\Utility::getSMTPDetails(1);
+
+            \Mail::to($accountant->email)->send(new \App\Mail\WhatsAppDocumentNotification($details));
+        } catch (\Exception $e) {
+            \Log::error("WhatsApp Notification Error: " . $e->getMessage());
         }
     }
 }

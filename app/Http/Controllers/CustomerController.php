@@ -963,11 +963,25 @@ class CustomerController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        if (!Storage::disk('private')->exists($bankStatement->file_path)) {
-            abort(404);
+        // --- Handle Platform-Wide Storage ---
+        $storage_settings = Utility::getStorageSetting();
+        $disk = $storage_settings['storage_setting'] ?? 'public';
+        $upload_disk = ($disk == 'local' || $disk == '') ? 'public' : $disk;
+
+        if (Storage::disk($upload_disk)->exists('bank_statements/' . $bankStatement->file_path)) {
+             return Storage::disk($upload_disk)->response('bank_statements/' . $bankStatement->file_path);
         }
 
-        return Storage::disk('private')->response($bankStatement->file_path);
+        // Fallback for private disk or transition
+        if (Storage::disk('private')->exists($bankStatement->file_path)) {
+             return Storage::disk('private')->response($bankStatement->file_path);
+        }
+
+        if (Storage::disk('public')->exists('bank_statements/' . $bankStatement->file_path)) {
+             return Storage::disk('public')->response('bank_statements/' . $bankStatement->file_path);
+        }
+
+        abort(404);
     }
 
     public function showExpenseFile(CustomerExpense $expense)
@@ -983,11 +997,27 @@ class CustomerController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        if (!$expense->file || !Storage::disk('private')->exists($expense->file)) {
-            abort(404);
+        // --- Handle Platform-Wide Storage ---
+        $storage_settings = Utility::getStorageSetting();
+        $disk = $storage_settings['storage_setting'];
+        $upload_disk = ($disk == 'local' || $disk == '') ? 'private' : $disk;
+
+        // Try the exact path in the DB
+        if ($expense->file && Storage::disk($upload_disk)->exists($expense->file)) {
+            return Storage::disk($upload_disk)->response($expense->file);
         }
 
-        return Storage::disk('private')->response($expense->file);
+        // Fallback for old public/expenses/ path logic
+        if ($expense->file && Storage::disk('public')->exists('expenses/' . $expense->file)) {
+            return Storage::disk('public')->response('expenses/' . $expense->file);
+        }
+
+        // Fallback for when 'expenses/' wasn't in the DB path but is on the disk
+        if ($expense->file && !str_starts_with($expense->file, 'expenses/') && Storage::disk($upload_disk)->exists('expenses/' . $expense->file)) {
+            return Storage::disk($upload_disk)->response('expenses/' . $expense->file);
+        }
+
+        abort(404);
     }
 
     public function showInvoiceFile(CustomerInvoice $invoice)
@@ -1003,11 +1033,15 @@ class CustomerController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        if (!$invoice->document_path || !Storage::disk('private')->exists($invoice->document_path)) {
+        $storage_settings = Utility::getStorageSetting();
+        $disk = $storage_settings['storage_setting'];
+        $upload_disk = ($disk == 'local' || $disk == '') ? 'private' : $disk;
+
+        if (!$invoice->document_path || !Storage::disk($upload_disk)->exists($invoice->document_path)) {
             abort(404);
         }
 
-        return Storage::disk('private')->response($invoice->document_path);
+        return Storage::disk($upload_disk)->response($invoice->document_path);
     }
 
 
