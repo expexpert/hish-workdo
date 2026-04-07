@@ -58,7 +58,6 @@ body{
 }
 
 .invoice-table th{
-    background:#4FA3D1;
     color:#fff;
     padding:8px;
     text-align:left;
@@ -84,7 +83,6 @@ body{
 }
 
 .total-final{
-    background:#4FA3D1;
     color:#fff;
     font-weight:bold;
 }
@@ -104,7 +102,6 @@ body{
 
 .footer{
     margin-top:80px;
-    background:#4FA3D1;
     color:#fff;
     text-align:center;
     padding:15px;
@@ -209,10 +206,10 @@ Tél : {{ $invoice->client->telephone }}
 
 <thead>
 <tr>
-<th width="10%">QTE</th>
-<th width="40%">DESIGNATION</th>
-<th width="25%">PRIX UNIT HT</th>
-<th width="25%">MONTANT HT</th>
+<th width="10%" style="background:{{ $pdfColor }};">QTE</th>
+<th width="40%" style="background:{{ $pdfColor }};">DESIGNATION</th>
+<th width="25%" style="background:{{ $pdfColor }};">PRIX UNIT HT</th>
+<th width="25%" style="background:{{ $pdfColor }};">MONTANT HT</th>
 </tr>
 </thead>
 
@@ -262,7 +259,7 @@ Tél : {{ $invoice->client->telephone }}
 </td>
 </tr>
 
-<tr class="total-final">
+<tr class="total-final" style="background:{{ $pdfColor }};">
 <td><strong>TOTAL TTC</strong></td>
 <td>
 {{ number_format($totals['total_ttc'],2,',',' ') }}
@@ -290,7 +287,7 @@ $sigSrc = $signature_data_uri ?? $signature_url ?? ($company->signature_url ?? n
 
 <!-- FOOTER -->
 
-<div class="footer">
+<div class="footer" style="background:{{ $pdfColor }};">
 
 @if($company->contact)
 TELE : {{ $company->contact }}
