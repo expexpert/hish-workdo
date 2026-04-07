@@ -613,8 +613,8 @@ class CustomerController extends Controller
         foreach ($bankStatements as $doc) {
             $allDocs->push([
                 'id'         => $doc->id,
-                'name'       => $doc->month_year ? "Relevé - " . $doc->month_year : basename($doc->file_path),
-                'type'       => 'Releves bancaires',
+                'name'       => $doc->month_year ? "Statement - " . $doc->month_year : basename($doc->file_path),
+                'type'       => 'Bank statements',
                 'created_at' => $doc->created_at,
                 'size'       => $this->formatSize(Storage::disk('private')->exists($doc->file_path) ? Storage::disk('private')->size($doc->file_path) : 0),
                 'url'        => $doc->file_url,
@@ -625,21 +625,21 @@ class CustomerController extends Controller
         // 6. Categories data
         $categories = [
             [
-                'name'  => 'Documents juridiques',
+                'name'  => 'Documents legal',
                 'count' => $juridiques->count(),
                 'size'  => $this->formatSize($this->calculateSize($juridiques, 'document')),
                 'type'  => 'juridiques',
                 'created_at' => $juridiques->max('created_at')
             ],
             [
-                'name'  => 'Documents comptables',
+                'name'  => 'Documents accountants',
                 'count' => $comptables->count(),
                 'size'  => $this->formatSize($this->calculateSize($comptables, 'document')),
                 'type'  => 'comptables',
                 'created_at' => $comptables->max('created_at')
             ],
             [
-                'name'  => 'Relevés bancaires',
+                'name'  => 'Bank statements',
                 'count' => $relevesBancaires->count(),
                 'size'  => $this->formatSize($this->calculateSize($relevesBancaires, 'file_path')),
                 'type'  => 'releves_bancaires',
@@ -652,7 +652,7 @@ class CustomerController extends Controller
             'data'   => [
                 'total_documents'  => $totalCount,
                 'total_size'       => $totalSizeFormatted,
-                'total_categories' => 3, // static as requested
+                'total_categories' => 3,
                 'recent_documents' => $recentDocs,
                 'categories'       => $categories
             ]
