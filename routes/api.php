@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::post('/clear-notifications', [CustomerController::class, 'clearNotifications']);
 
     Route::get('/documents', [CustomerController::class, 'getDocuments']);
+    Route::get('/documents-data', [CustomerController::class, 'getDocumentsData']);
     Route::get('/documents/download/{id}', [CustomerController::class, 'downloadDocument']);
 
     Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);

@@ -381,14 +381,14 @@ class CustomerController extends Controller
 
         // 3. GOOD PERFORMANCE (REVENUE) ALERT
         $currentRevenue = InvoiceArticle::whereHas('invoice', function ($q) use ($user, $startOfCurrentMonth, $now) {
-                $q->where('customer_id', $user->id)
-                    ->whereBetween('date', [$startOfCurrentMonth, $now]);
-            })->sum('total_price_ht');
+            $q->where('customer_id', $user->id)
+                ->whereBetween('date', [$startOfCurrentMonth, $now]);
+        })->sum('total_price_ht');
 
         $previousRevenue = InvoiceArticle::whereHas('invoice', function ($q) use ($user, $startOfPreviousMonth, $endOfPreviousMonth) {
-                $q->where('customer_id', $user->id)
-                    ->whereBetween('date', [$startOfPreviousMonth, $endOfPreviousMonth]);
-            })->sum('total_price_ht');
+            $q->where('customer_id', $user->id)
+                ->whereBetween('date', [$startOfPreviousMonth, $endOfPreviousMonth]);
+        })->sum('total_price_ht');
 
         $revenueVariation = 0;
         if ($previousRevenue > 0) {
@@ -535,23 +535,154 @@ class CustomerController extends Controller
     public function getDocuments(Request $request): JsonResponse
     {
         $user = $request->user();
-        $documentType = $request->get('documentType', 'juridiques');
+        $documentType = $request->get('documentType');
 
-        // Prepare the data payload
-        $data = [
-            'documents' => ClientNotification::where('customer_id', $user->id)
-                ->where('data', 'like', '%"document_notification"%')
-                ->where('title', $documentType)
+        // 1. Fetch filtered ClientNotifications
+        $notifications = ClientNotification::where('customer_id', $user->id)
+            ->where('data', 'like', '%"document_notification"%')
+            ->when($documentType && $documentType !== 'all', function ($query) use ($documentType) {
+                return $query->where('title', $documentType);
+            })
+            ->orderBy('created_at', 'desc')
+            // ->limit(20)
+            ->get();
+
+        $documents = $notifications;
+
+        // 2. If 'all', merge with Bank Statements
+        if ($documentType === 'all') {
+            $bankStatements = ClientBankStatement::where('customer_id', $user->id)
                 ->orderBy('created_at', 'desc')
-                ->limit(20)
-                ->get(),
-        ];
+                // ->limit(20)
+                ->get();
+
+            // Merge and re-sort by created_at if you want a unified timeline
+            $documents = $notifications->concat($bankStatements)
+                ->sortByDesc('created_at')
+                ->values(); // Reset keys
+                // ->take(20); // Keep the limit consistent
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Customer documents retrieved successfully.',
-            'data'    => $data
+            'data'    => [
+                'documents' => $documents
+            ]
         ], 200);
+    }
+
+
+    public function getDocumentsData(Request $request)
+    {
+        $user = $request->user();
+
+        // 1. Get documents from ClientNotification
+        $notifications = ClientNotification::where('customer_id', $user->id)
+            ->where('data', 'like', '%document_notification%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 2. Get bank statements
+        $bankStatements = ClientBankStatement::where('customer_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 3. Categorize
+        $juridiques = $notifications->where('title', 'juridiques');
+        $comptables = $notifications->where('title', 'comptables');
+        $relevesBancaires = $bankStatements;
+
+        // 4. Calculate total count and size
+        $totalCount = $notifications->count() + $bankStatements->count();
+        $totalSizeBytes = $this->calculateSize($notifications, 'document') + $this->calculateSize($bankStatements, 'file_path');
+        $totalSizeFormatted = $this->formatSize($totalSizeBytes);
+
+        // 5. Recent 3 documents
+        $allDocs = collect();
+        foreach ($notifications as $doc) {
+            $allDocs->push([
+                'id'         => $doc->id,
+                'name'       => $doc->message ?: basename($doc->document),
+                'type'       => $doc->title, // juridiques or comptables
+                'created_at' => $doc->created_at,
+                'size'       => $this->formatSize(Storage::disk('public')->exists($doc->document) ? Storage::disk('public')->size($doc->document) : 0),
+                'url'        => $doc->document_url,
+            ]);
+        }
+        foreach ($bankStatements as $doc) {
+            $allDocs->push([
+                'id'         => $doc->id,
+                'name'       => $doc->month_year ? "Relevé - " . $doc->month_year : basename($doc->file_path),
+                'type'       => 'Releves bancaires',
+                'created_at' => $doc->created_at,
+                'size'       => $this->formatSize(Storage::disk('private')->exists($doc->file_path) ? Storage::disk('private')->size($doc->file_path) : 0),
+                'url'        => $doc->file_url,
+            ]);
+        }
+        $recentDocs = $allDocs->sortByDesc('created_at')->take(3)->values();
+
+        // 6. Categories data
+        $categories = [
+            [
+                'name'  => 'Documents juridiques',
+                'count' => $juridiques->count(),
+                'size'  => $this->formatSize($this->calculateSize($juridiques, 'document')),
+                'type'  => 'juridiques',
+                'created_at' => $juridiques->max('created_at')
+            ],
+            [
+                'name'  => 'Documents comptables',
+                'count' => $comptables->count(),
+                'size'  => $this->formatSize($this->calculateSize($comptables, 'document')),
+                'type'  => 'comptables',
+                'created_at' => $comptables->max('created_at')
+            ],
+            [
+                'name'  => 'Relevés bancaires',
+                'count' => $relevesBancaires->count(),
+                'size'  => $this->formatSize($this->calculateSize($relevesBancaires, 'file_path')),
+                'type'  => 'releves_bancaires',
+                'created_at' => $relevesBancaires->max('created_at')
+            ]
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'total_documents'  => $totalCount,
+                'total_size'       => $totalSizeFormatted,
+                'total_categories' => 3, // static as requested
+                'recent_documents' => $recentDocs,
+                'categories'       => $categories
+            ]
+        ]);
+    }
+
+    private function calculateSize($collection, $field)
+    {
+        $size = 0;
+        foreach ($collection as $item) {
+            if ($item->$field && (Storage::disk('public')->exists($item->$field) || Storage::disk('private')->exists($item->$field))) {
+                if ($field === 'file_path') {
+                    $size += Storage::disk('private')->size($item->$field);
+                } else {
+                    $size += Storage::disk('public')->size($item->$field);
+                }
+            }
+        }
+        return $size;
+    }
+
+    private function formatSize($bytes)
+    {
+        if ($bytes >= 1048576) {
+            return round($bytes / 1048576, 1) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return round($bytes / 1024, 1) . ' KB';
+        } else {
+            return $bytes . ' B';
+        }
     }
 
     public function downloadDocument($id, Request $request)
@@ -1583,6 +1714,7 @@ class CustomerController extends Controller
 
         $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
         $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
+        $pdfColor = $company && $company->company_color ? $company->company_color : '#4FA3D1';
 
         $logoDataUri = null;
         $signatureDataUri = null;
@@ -1618,6 +1750,7 @@ class CustomerController extends Controller
             'signature_url'    => $signatureUrl,
             'logo_data_uri'    => $logoDataUri,
             'signature_data_uri' => $signatureDataUri,
+            'pdfColor'         => $pdfColor
         ])->setPaper('a4')->setOptions(['isRemoteEnabled' => true]);
 
         $context = stream_context_create([
