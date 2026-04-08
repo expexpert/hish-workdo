@@ -121,7 +121,7 @@ Route::get('/login/{lang?}', [AuthenticatedSessionController::class, 'showLoginF
 
 Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, 'showLinkRequestForm'])->name('langPass');
 
-// Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
+Route::get('/test-landing', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
 Route::get('/', function () {
     return view('coming-soon');
 });
