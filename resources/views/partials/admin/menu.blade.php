@@ -380,7 +380,7 @@
                 @endif
 
                 {{-- -------  Double Entry ---------- --}}
-                <!-- @if (Gate::check('manage chart of account') ||
+                @if (Gate::check('manage chart of account') ||
                         Gate::check('manage journal entry') ||
                         Gate::check('balance sheet report') ||
                         Gate::check('ledger report') ||
@@ -431,7 +431,7 @@
                             @endcan
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
                 {{-- -------  Budget Planner ---------- --}}
                 @if (\Auth::user()->type == 'company')
