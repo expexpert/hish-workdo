@@ -45,6 +45,18 @@ class BotAuthMiddleware
                 Auth::setUser($customer);
             } else {
                 Log::warning('⚠️ BotAuthMiddleware: User NOT FOUND or NOT ACTIVE', ['phone' => $phone]);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Customer not found or bot not active for this number.'
+                ], 403);
+            }
+        } else {
+            // For /bot/customer routes, phone header is MANDATORY
+            if ($request->is('api/bot/customer/*')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'X-Customer-Phone header is required for bot requests.'
+                ], 400);
             }
         }
 
