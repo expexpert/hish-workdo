@@ -14,28 +14,35 @@ class AiLimitService
      */
     public function checkCanUseAI($userId)
     {
+        // 0. Global Bypass (controlled via Bot Server header)
+        if (request()->header('X-AI-Skip-Limits') === 'true') {
+            return ['allowed' => true];
+        }
+
         $now = now();
         $date = $now->format('Y-m-d');
         $monthYear = $now->format('m-Y');
 
-        // 1. Check Anti-Spam (4s cooldown)
-        if (Cache::has("ai_cooldown_{$userId}")) {
-            return [
-                'allowed' => false,
-                'reason' => 'anti_spam',
-                'message' => 'Please wait a few seconds before sending another message.'
-            ];
-        }
-
-        // 2. Load Limits and Current Usage (Seed Cache if empty)
+        // 1. Check if blocked (Step 1 - Highest priority)
         $limits = $this->getUserLimits($userId);
         
         if ($limits->is_blocked) {
             return [
                 'allowed' => false,
                 'reason' => 'blocked',
-                'message' => 'Your AI access has been temporarily blocked.'
+                'message' => 'Account temporarily blocked.'
             ];
+        }
+
+        // 2. Check Anti-Spam (Step 2 - Only for active accounts)
+        if (request()->header('X-AI-Skip-Cooldown') !== 'true') {
+            if (Cache::has("ai_cooldown_{$userId}")) {
+                return [
+                    'allowed' => false,
+                    'reason' => 'anti_spam',
+                    'message' => 'Please wait a few seconds before sending another message.'
+                ];
+            }
         }
 
         // 3. Daily Request Check (Cache-first)
@@ -84,18 +91,25 @@ class AiLimitService
         $total = $tokensIn + $tokensOut;
 
         // 1. Calculate Cost
-        $rates = config('ai_limits.rates.' . $model, config('ai_limits.rates.gpt-4o-mini'));
-        $cost = ($tokensIn * $rates['input']) + ($tokensOut * $rates['output']);
+        $rateConfig = config('ai_limits.rates.' . $model, config('ai_limits.rates.gpt-4o-mini'));
+        $inputRate = $rateConfig['input'] ?? 0;
+        $outputRate = $rateConfig['output'] ?? 0;
+        
+        $cost = ($tokensIn * $inputRate) + ($tokensOut * $outputRate);
 
-        // 2. Save to DB
-        AiUsageLog::create([
-            'user_id' => $userId,
-            'model' => $model,
-            'tokens_in' => $tokensIn,
-            'tokens_out' => $tokensOut,
-            'total_tokens' => $total,
-            'estimated_cost' => $cost,
-        ]);
+        // 2. Save to DB (With Safety Catch)
+        try {
+            AiUsageLog::create([
+                'user_id' => $userId,
+                'model' => $model,
+                'tokens_in' => $tokensIn,
+                'tokens_out' => $tokensOut,
+                'total_tokens' => $total,
+                'estimated_cost' => $cost,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('❌ AiUsageLog Create Error: ' . $e->getMessage());
+        }
 
         // 3. Update Cache
         $dailyKey = "ai_daily_{$userId}_{$date}";
@@ -104,8 +118,8 @@ class AiLimitService
         if (Cache::has($dailyKey)) Cache::increment($dailyKey);
         if (Cache::has($monthlyKey)) Cache::increment($monthlyKey, $total);
 
-        // 4. Set Anti-Spam (4s)
-        $cooldown = config('ai_limits.defaults.anti_spam_seconds', 4);
+        // 4. Set Anti-Spam (Protects against external spam)
+        $cooldown = config('ai_limits.defaults.anti_spam_seconds', 2);
         Cache::put("ai_cooldown_{$userId}", true, $cooldown);
 
         // 5. Update last_request_at (persistently)
