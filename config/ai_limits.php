@@ -4,7 +4,7 @@ return [
     'defaults' => [
         'daily_request_limit' => env('AI_DAILY_LIMIT', 30),
         'monthly_token_limit' => env('AI_MONTHLY_LIMIT', 25000),
-        'anti_spam_seconds' => env('AI_ANTISPAM_SECONDS', 4),
+        'anti_spam_seconds' => env('AI_ANTISPAM_SECONDS', 10),
     ],
     'bot_secret' => env('WHATSAPP_BOT_SECRET', 'super-secret'),
     'rates' => [
