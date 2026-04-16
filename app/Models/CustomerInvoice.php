@@ -15,6 +15,7 @@ class CustomerInvoice extends Model
         'customer_id',
         'client_id',
         'date',
+        'due_date',
         'invoice_number',
         'payment_method',
         'status',

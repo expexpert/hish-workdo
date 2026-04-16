@@ -21,12 +21,20 @@ use App\Models\Utility;
 use App\Models\InvoiceArticle;
 use Illuminate\Validation\ValidationException;
 use App\Models\CustomerProduct;
+use App\Models\ProductService;
 use App\Models\CustomerSupplier;
 use App\Models\CustomerMonthStatus;
+use App\Models\Invoice;
+use App\Models\ProductServiceUnit;
+use App\Models\ProductServiceCategory;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use App\Traits\HandlesBotInputs;
+use Illuminate\Validation\Rule;
+
+
+
 
 class CustomerController extends Controller
 {
@@ -59,6 +67,7 @@ class CustomerController extends Controller
             'patent_number'    => 'sometimes|required|string|max:255',
             'if_number'        => 'sometimes|required|string|max:255',
             'cnss'             => 'sometimes|required|string|max:255',
+            'rib'              => 'sometimes|required|string|max:255',
             'company_type'     => 'sometimes|required|string|max:255',
             'company_color'   => 'sometimes|required|string|max:7',
             'contact'          => 'sometimes|required|string|max:20',
@@ -560,7 +569,7 @@ class CustomerController extends Controller
             $documents = $notifications->concat($bankStatements)
                 ->sortByDesc('created_at')
                 ->values(); // Reset keys
-                // ->take(20); // Keep the limit consistent
+            // ->take(20); // Keep the limit consistent
         }
 
         return response()->json([
@@ -1569,6 +1578,7 @@ class CustomerController extends Controller
             'customer_id'    => 'required|exists:customers,id',
             'client_id'      => 'required|exists:customer_clients,id',
             'date'           => 'required|date',
+            'due_date'       => 'required|date|after:date',
             'invoice_number' => 'required|string|max:255|unique:customer_invoices,invoice_number',
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
@@ -1581,7 +1591,7 @@ class CustomerController extends Controller
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percent' => 'required_with:articles|numeric|min:0',
         ]);
 
         try {
@@ -1600,22 +1610,18 @@ class CustomerController extends Controller
                     $invoice->articles()->createMany($validated['articles']);
 
                     foreach ($validated['articles'] as $article) {
-                        // Check if product already exists for this customer based on designation
-                        CustomerProduct::firstOrCreate(
-                            [
-                                'customer_id' => $validated['customer_id'],
-                                'designation' => $article['designation'],
-                            ],
-                            [
-                                'unit_price_ht'  => $article['unit_price_ht'],
-                                'tva_percent'    => $article['tva_percentage'], // Note the name mapping
-                                'quantity'       => $article['quantity'],
-                                'total_price_ht' => $article['total_price_ht'],
-                                'description'    => $article['description'] ?? null,
-                                'reference'       => $article['reference'] ?? null,
-                                'category'        => $article['category'] ?? null,
 
+                        InvoiceArticle::create(
+                            [
+                                'invoice_id' => $invoice->id,
+                                'product_id' => $article['product_id'] ?? null,
+                                'designation' => $article['designation'],
+                                'unit_price_ht' => $article['unit_price_ht'],
+                                'quantity' => $article['quantity'] ?? 1,
+                                'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
+                                'tva_percentage' => $article['tva_percent'],
                             ]
+
                         );
                     }
                 }
@@ -1959,26 +1965,58 @@ class CustomerController extends Controller
     {
         $this->mapBotInputs($request);
         $validated = $request->validate([
-            'customer_id'   => 'required|exists:customers,id',
-            'designation'    => 'required|string|max:255',
+            'customer_id' => 'required|exists:customers,id',
+            'designation' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('product_services', 'name')->where(function ($query) use ($request) {
+                    return $query->where('created_by', $request->customer_id);
+                }),
+            ],
             'unit_price_ht' => 'required|numeric|min:0',
-            'tva_percent'   => 'required|numeric|min:0',
-            'quantity'      => 'nullable|integer|min:1',
-            'total_price_ht' => 'nullable|numeric|min:0',
-            'description'   => 'nullable|string|max:255',
-            'reference'      => 'nullable|string|max:255',
-            'category'       => 'nullable|string|max:255'
+            'tva_percent' => 'required|numeric|min:0',
+            'quantity' => 'nullable|integer|min:1',
+            'description' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
+        ], [
+            'designation.unique' => 'This product designation already exists for this customer.',
         ]);
 
         $validated['customer_id'] = $validated['customer_id'];
 
+        $unitID = ProductServiceUnit::where('created_by', $validated['customer_id'])
+            ->first()
+            ?->id ?? 1;
 
-        $product = CustomerProduct::create($validated);
+        $categoryID = ProductServiceCategory::where('created_by', $validated['customer_id'])
+            ->where('type', 'product & service')
+            ->first()
+            ?->id ?? 1;
+
+
+        $productService = new ProductService();
+        $productService->name           = $request->designation;
+        $productService->description    = $request->description;
+        $productService->sku            = $request->reference;
+        $productService->sale_price     = $request->unit_price_ht;
+        $productService->purchase_price = $request->unit_price_ht;
+        $productService->tax_id         = $request->tva_percent;
+        $productService->quantity       = $request->quantity ?? 0;
+        $productService->type           = $request->category;
+        $productService->sale_chartaccount_id       = ($request->category === 'Service') ? '4020' : '4010';
+        $productService->expense_chartaccount_id    = ($request->category === 'Service') ? '5005' : '5010';
+        $productService->created_by     = $request->customer_id;
+        $productService->unit_id        = $unitID;
+        $productService->category_id    = $categoryID;
+        $productService->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Customer product created successfully.',
-            'data'    => $product
+            'data'    => $productService,
+            'product_id' => $productService->id
         ], 201);
     }
 
@@ -1988,7 +2026,7 @@ class CustomerController extends Controller
         $user = $request->user();
         $like = $request->query('like');
 
-        $products = CustomerProduct::where('customer_id', $user->id)
+        $products = ProductService::where('created_by', $user->id)
             ->when($like, function ($query, $like) {
                 return $query->where('designation', 'like', "%{$like}%");
             })
@@ -2007,8 +2045,8 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $product = CustomerProduct::where('id', $id)
-            ->where('customer_id', $user->id)
+        $product = ProductService::where('id', $id)
+            ->where('created_by', $user->id)
             ->first();
 
         if (! $product) {
@@ -2030,29 +2068,47 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $product = CustomerProduct::where('id', $id)
-            ->where('customer_id', $user->id)
+        // 1. Fetch the product and verify ownership in one go
+        $product = ProductService::where('id', $id)
+            ->where('created_by', $user->id)
             ->first();
 
-        if (! $product) {
+        if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Customer product not found or does not belong to the customer.'
+                'message' => 'Customer product not found or does not belong to you.'
             ], 404);
         }
 
+        // 2. Validate the input
         $validated = $request->validate([
-            'designation'    => 'sometimes|required|string|max:255',
+            'designation'   => 'sometimes|required|string|max:255',
             'unit_price_ht' => 'sometimes|required|numeric|min:0',
             'tva_percent'   => 'sometimes|required|numeric|min:0',
             'quantity'      => 'nullable|integer|min:1',
-            'total_price_ht' => 'nullable|numeric|min:0',
             'description'   => 'nullable|string|max:255',
-            'reference'      => 'nullable|string|max:255',
-            'category'       => 'nullable|string|max:255'
+            'reference'     => 'nullable|string|max:255',
+            'category'      => 'nullable|string|max:255'
         ]);
 
-        $product->update($validated);
+        // 3. Apply updates only for provided fields
+        if ($request->has('designation'))   $product->name = $validated['designation'];
+        if ($request->has('description'))   $product->description = $validated['description'];
+        if ($request->has('reference'))     $product->sku = $validated['reference'];
+        if ($request->has('unit_price_ht')) {
+            $product->sale_price = $validated['unit_price_ht'];
+            $product->purchase_price = $validated['unit_price_ht'];
+        }
+        if ($request->has('tva_percent'))   $product->tax_id = $validated['tva_percent'];
+        if ($request->has('quantity'))      $product->quantity = $validated['quantity'];
+
+        if ($request->has('category')) {
+            $product->type = $validated['category'];
+            $product->sale_chartaccount_id    = ($validated['category'] === 'Service') ? '4020' : '4010';
+            $product->expense_chartaccount_id = ($validated['category'] === 'Service') ? '5005' : '5010';
+        }
+
+        $product->save();
 
         return response()->json([
             'success' => true,
@@ -2066,8 +2122,8 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $product = CustomerProduct::where('id', $id)
-            ->where('customer_id', $user->id)
+        $product = ProductService::where('id', $id)
+            ->where('created_by', $user->id)
             ->first();
 
         if (! $product) {

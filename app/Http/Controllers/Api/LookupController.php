@@ -8,6 +8,7 @@ use App\Models\CustomerCategory;
 use App\Models\ProductServiceCategory;
 use App\Models\CustomerClient;
 use App\Models\CustomerSupplier;
+use App\Models\Tax;
 
 class LookupController extends Controller
 {
@@ -32,6 +33,17 @@ class LookupController extends Controller
             'data' => [
                 'clients' => CustomerClient::where('customer_id', auth()->id())->select('id', 'client_name')->get(),
                 'accounts' => BankAccount::select('id', 'holder_name as name')->get(),
+            ]
+        ]);
+    }
+
+
+    public function getProductResources()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'tax' => Tax::select('name', 'rate')->get()
             ]
         ]);
     }
