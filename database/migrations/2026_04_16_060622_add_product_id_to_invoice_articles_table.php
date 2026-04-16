@@ -10,11 +10,6 @@ return new class extends Migration
     {
         Schema::table('invoice_articles', function (Blueprint $table) {
             $table->unsignedBigInteger('product_id')->nullable()->after('invoice_id');
-
-            $table->foreign('product_id')
-                ->references('id')
-                ->on('customers_products')
-                ->onDelete('set null');
         });
     }
 
