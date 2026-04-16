@@ -1588,10 +1588,11 @@ class CustomerController extends Controller
 
             'articles'                 => 'sometimes|array',
             'articles.*.designation'    => 'required_with:articles|string|max:255',
+            'articles.*.product_id'    => 'required_with:articles|integer',
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percent' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
         ]);
 
         try {
@@ -1619,7 +1620,7 @@ class CustomerController extends Controller
                                 'unit_price_ht' => $article['unit_price_ht'],
                                 'quantity' => $article['quantity'] ?? 1,
                                 'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
-                                'tva_percentage' => $article['tva_percent'],
+                                'tva_percentage' => $article['tva_percentage'],
                             ]
 
                         );
@@ -1818,6 +1819,7 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'client_id'      => 'sometimes|required|exists:customer_clients,id',
             'date'           => 'sometimes|required|date',
+            'due_date'       => 'sometimes|required|date|after:date',
             'invoice_number' => 'sometimes|required|string|max:255|unique:customer_invoices,invoice_number,' . $invoice->id,
             'payment_method' => 'sometimes|required|string|max:255',
             'status'         => 'sometimes|required|string|max:50',
@@ -1826,6 +1828,7 @@ class CustomerController extends Controller
 
             // Articles validation (optional during update)
             'articles'                 => 'sometimes|array',
+            'articles.*.product_id'    => 'required_with:articles|integer',
             'articles.*.designation'    => 'required_with:articles|string|max:255',
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'      => 'required_with:articles|integer|min:1',
@@ -1975,7 +1978,7 @@ class CustomerController extends Controller
                 }),
             ],
             'unit_price_ht' => 'required|numeric|min:0',
-            'tva_percent' => 'required|numeric|min:0',
+            'tva_percentage' => 'required|numeric|min:0',
             'quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:255',
@@ -2002,7 +2005,7 @@ class CustomerController extends Controller
         $productService->sku            = $request->reference;
         $productService->sale_price     = $request->unit_price_ht;
         $productService->purchase_price = $request->unit_price_ht;
-        $productService->tax_id         = $request->tva_percent;
+        $productService->tax_id         = $request->tva_percentage;
         $productService->quantity       = $request->quantity ?? 0;
         $productService->type           = $request->category;
         $productService->sale_chartaccount_id       = ($request->category === 'Service') ? '4020' : '4010';
@@ -2084,7 +2087,7 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'designation'   => 'sometimes|required|string|max:255',
             'unit_price_ht' => 'sometimes|required|numeric|min:0',
-            'tva_percent'   => 'sometimes|required|numeric|min:0',
+            'tva_percentage'   => 'sometimes|required|numeric|min:0',
             'quantity'      => 'nullable|integer|min:1',
             'description'   => 'nullable|string|max:255',
             'reference'     => 'nullable|string|max:255',
@@ -2099,7 +2102,7 @@ class CustomerController extends Controller
             $product->sale_price = $validated['unit_price_ht'];
             $product->purchase_price = $validated['unit_price_ht'];
         }
-        if ($request->has('tva_percent'))   $product->tax_id = $validated['tva_percent'];
+        if ($request->has('tva_percentage'))   $product->tax_id = $validated['tva_percentage'];
         if ($request->has('quantity'))      $product->quantity = $validated['quantity'];
 
         if ($request->has('category')) {
