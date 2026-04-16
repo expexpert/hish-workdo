@@ -2016,11 +2016,11 @@ class CustomerController extends Controller
 
         $validated['customer_id'] = $validated['customer_id'];
 
-        $unitID = ProductServiceUnit::where('created_by', auth()->creatorId())
+        $unitID = ProductServiceUnit::where('created_by', auth()->user()->creatorId())
             ->first()
             ?->id ?? 1;
 
-        $categoryID = ProductServiceCategory::where('created_by', auth()->creatorId())
+        $categoryID = ProductServiceCategory::where('created_by', auth()->user()->creatorId())
             ->where('type', 'product & service')
             ->first()
             ?->id ?? 1;
@@ -2038,7 +2038,7 @@ class CustomerController extends Controller
         $productService->sale_chartaccount_id       = ($request->category === 'Service') ? '4020' : '4010';
         $productService->expense_chartaccount_id    = ($request->category === 'Service') ? '5005' : '5010';
         $productService->customer_id     = $request->customer_id;
-        $productService->created_by     = auth()->creatorId();
+        $productService->created_by     = auth()->user()->creatorId();
         $productService->unit_id        = $unitID;
         $productService->category_id    = $categoryID;
         $productService->save();
