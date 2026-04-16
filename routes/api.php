@@ -113,6 +113,14 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::put('/customer-product/{id}', [CustomerController::class, 'updateCustomerProduct']);
     Route::delete('/customer-product/{id}', [CustomerController::class, 'deleteCustomerProduct']);
 
+
+    Route::get('/customer-quotes', [CustomerController::class, 'getQuotes']);
+    Route::post('/customer-quote', [CustomerController::class, 'storeQuote']);
+    Route::get('/customer-quote/{id}', [CustomerController::class, 'viewSingleQuote']);
+    Route::put('/customer-quote/{id}', [CustomerController::class, 'updateQuote']);
+    Route::delete('/customer-quote/{id}', [CustomerController::class, 'deleteQuote']);
+
+
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
     
     // WhatsApp Bot Activation (OTP) - Protected by standard user auth too
