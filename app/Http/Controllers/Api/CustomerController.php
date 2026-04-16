@@ -2028,7 +2028,7 @@ class CustomerController extends Controller
 
         $products = ProductService::where('created_by', $user->id)
             ->when($like, function ($query, $like) {
-                return $query->where('designation', 'like', "%{$like}%");
+                return $query->where('name', 'like', "%{$like}%");
             })
             ->orderBy('created_at', 'desc')
             ->get();
