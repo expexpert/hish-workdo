@@ -1201,6 +1201,7 @@ class CustomerController extends Controller
             $newInvoice->status         = 0;
             $newInvoice->issue_date     = $invoice->date;
             $newInvoice->due_date       = $invoice->due_date;
+            $newInvoice->send_date      = $invoice->created_at->format('Y-m-d');
             $newInvoice->category_id    = $categoryID;
             $newInvoice->ref_number     = $invoice->invoice_number;
             $newInvoice->discount_apply = isset($invoice->discount_apply) ? 1 : 0;

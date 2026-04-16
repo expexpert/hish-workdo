@@ -27,6 +27,8 @@ use App\Models\CustomerMonthStatus;
 use App\Models\Invoice;
 use App\Models\ProductServiceUnit;
 use App\Models\ProductServiceCategory;
+use App\Models\CustomerQuote;
+use App\Models\QuoteArticle;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -1584,7 +1586,7 @@ class CustomerController extends Controller
                 'message' => 'Expense not found or does not belong to the customer.'
             ], 404);
         }
-        
+
         $duplicateExpense = $expense->replicate();
         $duplicateExpense->customer_id = $user->id;
         $duplicateExpense->save();
@@ -1999,7 +2001,7 @@ class CustomerController extends Controller
                 'string',
                 'max:255',
                 Rule::unique('product_services', 'name')->where(function ($query) use ($request) {
-                    return $query->where('created_by', $request->customer_id);
+                    return $query->where('customer_id', $request->customer_id);
                 }),
             ],
             'unit_price_ht' => 'required|numeric|min:0',
@@ -2014,11 +2016,11 @@ class CustomerController extends Controller
 
         $validated['customer_id'] = $validated['customer_id'];
 
-        $unitID = ProductServiceUnit::where('created_by', $validated['customer_id'])
+        $unitID = ProductServiceUnit::where('created_by', auth()->creatorId())
             ->first()
             ?->id ?? 1;
 
-        $categoryID = ProductServiceCategory::where('created_by', $validated['customer_id'])
+        $categoryID = ProductServiceCategory::where('created_by', auth()->creatorId())
             ->where('type', 'product & service')
             ->first()
             ?->id ?? 1;
@@ -2035,7 +2037,8 @@ class CustomerController extends Controller
         $productService->type           = $request->category;
         $productService->sale_chartaccount_id       = ($request->category === 'Service') ? '4020' : '4010';
         $productService->expense_chartaccount_id    = ($request->category === 'Service') ? '5005' : '5010';
-        $productService->created_by     = $request->customer_id;
+        $productService->customer_id     = $request->customer_id;
+        $productService->created_by     = auth()->creatorId();
         $productService->unit_id        = $unitID;
         $productService->category_id    = $categoryID;
         $productService->save();
@@ -2054,7 +2057,7 @@ class CustomerController extends Controller
         $user = $request->user();
         $like = $request->query('like');
 
-        $products = ProductService::where('created_by', $user->id)
+        $products = ProductService::where('customer_id', $user->id)
             ->when($like, function ($query, $like) {
                 return $query->where('name', 'like', "%{$like}%");
             })
@@ -2074,7 +2077,7 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $product = ProductService::where('id', $id)
-            ->where('created_by', $user->id)
+            ->where('customer_id', $user->id)
             ->first();
 
         if (! $product) {
@@ -2098,7 +2101,7 @@ class CustomerController extends Controller
 
         // 1. Fetch the product and verify ownership in one go
         $product = ProductService::where('id', $id)
-            ->where('created_by', $user->id)
+            ->where('customer_id', $user->id)
             ->first();
 
         if (!$product) {
@@ -2151,7 +2154,7 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $product = ProductService::where('id', $id)
-            ->where('created_by', $user->id)
+            ->where('customer_id', $user->id)
             ->first();
 
         if (! $product) {
@@ -2167,6 +2170,238 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Customer product deleted successfully.'
         ], 200);
+    }
+
+
+    public function getQuotes(Request $request)
+    {
+        $user = $request->user();
+
+        $quotes = CustomerQuote::where('customer_id', $user->id)
+            ->with(['client:id,client_name', 'articles'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer quotes retrieved successfully.',
+            'data'    => $quotes
+        ], 200);
+    }
+
+
+    public function storeQuote(Request $request)
+    {
+        // $this->mapBotInputs($request);
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'client_id'   => 'required|exists:customer_clients,id',
+            'date'        => 'required|date',
+            'due_date'    => 'required|date|after:date',
+            'quote_number' => 'required|string|max:255|unique:customer_quotes,quote_number',
+            'payment_method' => 'required|string|max:255',
+            'status'      => 'required|string|max:50',
+            'review_status' => 'required|string|max:50',
+            'notes'       => 'nullable|string',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+
+            'articles'                 => 'sometimes|array',
+            'articles.*.designation'    => 'required_with:articles|string|max:255',
+            'articles.*.product_id'    => 'nullable|integer',
+            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.quantity'        => 'nullable|integer|min:1',
+            'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request, $validated) {
+                // 1. Handle File Upload
+                if ($request->hasFile('document')) {
+                    $path = $request->file('document')->store('customer_quotes', 'private');
+                    $validated['document_path'] = $path;
+                }
+
+                // 2. Create the Quote Header
+                $quote = CustomerQuote::create($validated);
+
+                // 3. Create Articles ONLY if they exist in the request
+                if (!empty($validated['articles'])) {
+                    foreach ($validated['articles'] as $article) {
+                        QuoteArticle::create([
+                            'quotes_id' => $quote->id,
+                            'product_id' => $article['product_id'] ?? 1,
+                            'designation' => $article['designation'],
+                            'unit_price_ht' => $article['unit_price_ht'],
+                            'quantity' => $article['quantity'] ?? 1,
+                            'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
+                            'tva_percentage' => $article['tva_percentage'],
+                        ]);
+                    }
+                }
+
+                $this->notifyAccountant($request->user(), 'Quote');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote created successfully.',
+                    'data'    => $quote->load('articles')
+                ], 201);
+            });
+        } catch (\Exception $e) {
+            if (isset($validated['document_path'])) {
+                Storage::disk('private')->delete($validated['document_path']);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create quote: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function viewSingleQuote(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $quote = CustomerQuote::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with(['client:id,client_name', 'articles'])
+            ->first();
+
+        if (! $quote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quote not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Quote retrieved successfully.',
+            'data'    => $quote
+        ], 200);
+    }
+
+
+    public function updateQuote(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $quote = CustomerQuote::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (!$quote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quote not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'client_id'      => 'sometimes|required|exists:customer_clients,id',
+            'date'           => 'sometimes|required|date',
+            'due_date'       => 'sometimes|required|date|after:date',
+            'quote_number'   => 'sometimes|required|string|max:255|unique:customer_quotes,quote_number,' . $quote->id,
+            'payment_method' => 'sometimes|required|string|max:255',
+            'status'         => 'sometimes|required|string|max:50',
+            'review_status'  => 'sometimes|required|string|max:50',
+            'notes'          => 'nullable|string',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+
+            // Articles validation
+            'articles'                 => 'sometimes|array',
+            'articles.*.product_id'    => 'required_with:articles|integer',
+            'articles.*.designation'    => 'required_with:articles|string|max:255',
+            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.quantity'      => 'required_with:articles|integer|min:1',
+            'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request, $validated, $quote) {
+
+                // 1. Handle File Upload
+                if ($request->hasFile('document')) {
+                    if ($quote->document_path) {
+                        Storage::disk('private')->delete($quote->document_path);
+                    }
+                    $path = $request->file('document')->store('customer_quotes', 'private');
+                    $validated['document_path'] = $path;
+                }
+
+                // 2. Update Quote Header
+                $quote->update($validated);
+
+                if ($request->has('articles')) {
+                    // Delete existing articles first
+                    $quote->articles()->delete();
+
+                    // If the array isn't empty, create the new ones
+                    if (!empty($validated['articles'])) {
+                        // We need to map the articles to include the quote_id
+                        $articlesData = array_map(function ($article) use ($quote) {
+                            return array_merge($article, ['quotes_id' => $quote->id]);
+                        }, $validated['articles']);
+
+                        $quote->articles()->createMany($articlesData);
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote and articles updated successfully.',
+                    'data'    => $quote->load('articles')
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Update failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteQuote(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $quote = CustomerQuote::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (!$quote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quote not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        try {
+            return DB::transaction(function () use ($quote) {
+                // 1. Delete the physical file from storage if it exists
+                if ($quote->document_path) {
+                    Storage::disk('private')->delete($quote->document_path);
+                }
+
+                // Delete associated articles first
+                $quote->articles()->delete();
+                $quote->delete();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote and associated files deleted successfully.'
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete quote: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 
