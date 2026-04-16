@@ -1635,8 +1635,6 @@ class CustomerController extends Controller
 
                 // 3. Create Articles ONLY if they exist in the request
                 if (!empty($validated['articles'])) {
-                    $invoice->articles()->createMany($validated['articles']);
-
                     foreach ($validated['articles'] as $article) {
 
                         InvoiceArticle::create(
