@@ -16,6 +16,7 @@ class InvoiceArticle extends Model
      */
     protected $fillable = [
         'invoice_id',
+        'product_id',
         'designation',
         'unit_price_ht',
         'quantity',
