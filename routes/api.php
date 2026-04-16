@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/export-expenses', [CustomerController::class, 'exportExpenses']);
     Route::get('/customer-expenses/file/{id}', [CustomerController::class, 'downloadExpenseFile']);
     Route::get('/customer-expenses/chart', [CustomerController::class, 'getExpenseCategoryChart']);
+    Route::post('/duplicate-expense/{id}', [CustomerController::class, 'duplicateExpense']);
 
 
     Route::get('/customer-clients-resources', [LookupController::class, 'getCustomerClientResources']);
