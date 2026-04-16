@@ -18,7 +18,6 @@ class ProductService extends Model
         'type',
         'sale_chartaccount_id',
         'expense_chartaccount_id',
-        'customer_id',
         'created_by',
     ];
 
