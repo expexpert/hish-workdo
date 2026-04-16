@@ -43,7 +43,7 @@ class LookupController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'tax' => Tax::select('name', 'rate')->get()
+                'tax' => Tax::get()
             ]
         ]);
     }
