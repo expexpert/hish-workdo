@@ -1570,6 +1570,33 @@ class CustomerController extends Controller
     }
 
 
+    public function duplicateExpense(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $expense = CustomerExpense::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $expense) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense not found or does not belong to the customer.'
+            ], 404);
+        }
+        
+        $duplicateExpense = $expense->replicate();
+        $duplicateExpense->customer_id = $user->id;
+        $duplicateExpense->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expense duplicated successfully.',
+            'data'    => $duplicateExpense
+        ], 200);
+    }
+
+
     public function storeInvoice(Request $request)
     {
         $this->mapBotInputs($request);
@@ -1588,7 +1615,7 @@ class CustomerController extends Controller
 
             'articles'                 => 'sometimes|array',
             'articles.*.designation'    => 'required_with:articles|string|max:255',
-            'articles.*.product_id'    => 'required_with:articles|integer',
+            'articles.*.product_id'    => 'nullable|integer',
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
@@ -1615,7 +1642,7 @@ class CustomerController extends Controller
                         InvoiceArticle::create(
                             [
                                 'invoice_id' => $invoice->id,
-                                'product_id' => $article['product_id'] ?? null,
+                                'product_id' => $article['product_id'] ?? 1,
                                 'designation' => $article['designation'],
                                 'unit_price_ht' => $article['unit_price_ht'],
                                 'quantity' => $article['quantity'] ?? 1,
