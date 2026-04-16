@@ -34,6 +34,7 @@ class Customer extends Authenticatable
         'patent_number',
         'if_number',
         'cnss',
+        'rib',
         'company_type',
         'company_color',
         'phone',

@@ -26,6 +26,8 @@ use App\Models\ClientTransaction;
 use App\Models\ClientBankStatement;
 use App\Models\CustomerExpense;
 use App\Models\CustomerInvoice;
+use App\Models\InvoiceArticle;
+use App\Models\InvoiceProduct;
 
 class CustomerController extends Controller
 {
@@ -969,16 +971,16 @@ class CustomerController extends Controller
         $upload_disk = ($disk == 'local' || $disk == '') ? 'public' : $disk;
 
         if (Storage::disk($upload_disk)->exists('bank_statements/' . $bankStatement->file_path)) {
-             return Storage::disk($upload_disk)->response('bank_statements/' . $bankStatement->file_path);
+            return Storage::disk($upload_disk)->response('bank_statements/' . $bankStatement->file_path);
         }
 
         // Fallback for private disk or transition
         if (Storage::disk('private')->exists($bankStatement->file_path)) {
-             return Storage::disk('private')->response($bankStatement->file_path);
+            return Storage::disk('private')->response($bankStatement->file_path);
         }
 
         if (Storage::disk('public')->exists('bank_statements/' . $bankStatement->file_path)) {
-             return Storage::disk('public')->response('bank_statements/' . $bankStatement->file_path);
+            return Storage::disk('public')->response('bank_statements/' . $bankStatement->file_path);
         }
 
         abort(404);
@@ -1166,12 +1168,69 @@ class CustomerController extends Controller
     }
 
 
+    public function invoiceNumber()
+    {
+        $latest = Invoice::where('created_by', '=', \Auth::user()->creatorId())->latest()->first();
+        if(!$latest)
+        {
+            return 1;
+        }
+
+        return $latest->invoice_id + 1;
+    }
+
     public function invoiceReviewAction(Request $request)
     {
         $invoice = CustomerInvoice::findOrFail($request->invoice_id);
 
         $invoice->review_status = $request->action;
         $invoice->save();
+
+        $categoryID = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())
+            ->where('type', 'Income')
+            ->first()
+            ?->id ?? 1;
+
+        $InvoiceArticle = InvoiceArticle::where('invoice_id', $invoice->id)->get();    
+
+
+        if ($request->action == 'VALIDATED') {
+            $newInvoice = new Invoice();
+            $newInvoice->invoice_id     = $this->invoiceNumber();
+            $newInvoice->customer_id    = $invoice->customer_id;
+            $newInvoice->status         = 0;
+            $newInvoice->issue_date     = $invoice->date;
+            $newInvoice->due_date       = $invoice->due_date;
+            $newInvoice->category_id    = $categoryID;
+            $newInvoice->ref_number     = $invoice->invoice_number;
+            $newInvoice->discount_apply = isset($invoice->discount_apply) ? 1 : 0;
+            $newInvoice->created_by     = \Auth::user()->id;
+
+            $newInvoice->save();
+            Utility::starting_number($newInvoice->invoice_id + 1, 'invoice');
+
+
+            foreach ($InvoiceArticle as $article) {
+                $newArticle = new InvoiceProduct();                
+                $newArticle->invoice_id  = $newInvoice->id;
+                $newArticle->product_id  = $article->product_id;
+                $newArticle->quantity    = $article->quantity;
+                $newArticle->tax         = $article->tva_percentage;
+                $newArticle->discount    = '0';
+                $newArticle->price       = $article->unit_price_ht;
+                $newArticle->description = null;
+                $newArticle->save();
+
+                Utility::total_quantity('minus', $newArticle->quantity, $newArticle->product_id);
+
+                //Product Stock Report
+                $type = 'invoice';
+                $type_id = $newInvoice->id;
+                $description = $newArticle->quantity . '  ' . __(' quantity sold in invoice') . ' ' . \Auth::user()->invoiceNumberFormat($newInvoice->invoice_id);
+                Utility::addProductStock($newArticle->product_id, $newArticle->quantity, $type, $description, $type_id);
+            }
+        }
+
 
         $counts = [
             'total'     => CustomerInvoice::count(),

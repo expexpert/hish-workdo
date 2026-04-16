@@ -105,6 +105,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/customer-invoices/pdf/{id}', [CustomerController::class, 'downloadInvoicePdf']);
 
 
+    Route::get('/product-resources', [LookupController::class, 'getProductResources']);
     Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
     Route::get('/customer-products', [CustomerController::class, 'getCustomerProducts']);
     Route::get('/customer-product/{id}', [CustomerController::class, 'viewSingleCustomerProduct']);
