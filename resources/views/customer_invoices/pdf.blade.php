@@ -1,322 +1,328 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-<meta charset="UTF-8">
-<title>Facture {{ $invoice->invoice_number }}</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<style>
+    <meta charset="UTF-8">
+    <title>Facture {{ $invoice->invoice_number }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 12px;
+            color: #000;
+            margin: 40px;
+        }
 
-body{
-    font-family: DejaVu Sans, Arial, sans-serif;
-    font-size:12px;
-    color:#000;
-    margin:40px;
-}
+        /* HEADER */
 
-/* HEADER */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-.header-table{
-    width:100%;
-    border-collapse:collapse;
-}
+        .header-table td {
+            vertical-align: top;
+        }
 
-.header-table td{
-    vertical-align:top;
-}
+        .logo {
+            height: 80px;
+        }
 
-.logo{
-    height:80px;
-}
+        .invoice-title {
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
 
-.invoice-title{
-    font-size:40px;
-    font-weight:bold;
-    margin-top:10px;
-}
+        .client-info {
+            margin-top: 10px;
+        }
 
-.client-info{
-    margin-top:10px;
-}
+        /* CONTACT */
 
-/* CONTACT */
+        .contact-list {
+            margin: 0;
+            padding-left: 18px;
+        }
 
-.contact-list{
-    margin:0;
-    padding-left:18px;
-}
+        .contact-list li {
+            margin-bottom: 4px;
+        }
 
-.contact-list li{
-    margin-bottom:4px;
-}
+        /* ARTICLE TABLE */
 
-/* ARTICLE TABLE */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
 
-.invoice-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:25px;
-}
+        .invoice-table th {
+            color: #fff;
+            padding: 8px;
+            text-align: left;
+        }
 
-.invoice-table th{
-    color:#fff;
-    padding:8px;
-    text-align:left;
-}
+        .invoice-table td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
 
-.invoice-table td{
-    border:1px solid #000;
-    padding:6px;
-}
+        /* TOTALS */
 
-/* TOTALS */
+        .totals-table {
+            width: 40%;
+            margin-left: auto;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
 
-.totals-table{
-    width:40%;
-    margin-left:auto;
-    margin-top:10px;
-    border-collapse:collapse;
-}
+        .totals-table td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
 
-.totals-table td{
-    border:1px solid #000;
-    padding:6px;
-}
+        .total-final {
+            color: #fff;
+            font-weight: bold;
+        }
 
-.total-final{
-    color:#fff;
-    font-weight:bold;
-}
+        /* SIGNATURE */
 
-/* SIGNATURE */
+        .signature {
+            margin-top: 70px;
+            text-align: right;
+        }
 
-.signature{
-    margin-top:70px;
-    text-align:right;
-}
+        .signature img {
+            height: 70px;
+        }
 
-.signature img{
-    height:70px;
-}
+        /* FOOTER */
 
-/* FOOTER */
-
-.footer{
-    margin-top:80px;
-    color:#fff;
-    text-align:center;
-    padding:15px;
-    font-size:11px;
-}
-
-</style>
+        .footer {
+            margin-top: 80px;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            font-size: 11px;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<table class="header-table">
-<tr>
+    <!-- HEADER -->
+    <table class="header-table">
+        <tr>
 
-<td width="60%">
+            <td width="60%">
 
-@php
-$logoSrc = $logo_data_uri ?? $logo_url ?? ($company->avatar_url ?? null);
-@endphp
+                @php
+                $logoSrc = $logo_data_uri ?? $logo_url ?? ($company->avatar_url ?? null);
+                @endphp
 
-@if($logoSrc)
-<img src="{{ $logoSrc }}" class="logo">
-@endif
+                @if($logoSrc)
+                <img src="{{ $logoSrc }}" class="logo">
+                @endif
 
-<div class="invoice-title">FACTURE</div>
+                <div class="invoice-title">FACTURE</div>
 
-<div class="client-info">
+                <div class="client-info">
 
-@if($invoice->client)
-Client : {{ $invoice->client->client_name }}<br>
+                    @if($invoice->client)
+                    Client : {{ $invoice->client->client_name }}<br>
 
-@if($invoice->client->company_name)
-Company : {{ $invoice->client->company_name }}<br>
-@endif
+                    @if($invoice->client->company_name)
+                    Company : {{ $invoice->client->company_name }}<br>
+                    @endif
 
-@if($invoice->client->city || $invoice->client->postal_code)
-Adresse : {{ $invoice->client->city ?? '' }} - {{ $invoice->client->postal_code ?? ''}}<br>
-@endif
+                    @if($invoice->client->city || $invoice->client->postal_code)
+                    Adresse : {{ $invoice->client->city ?? '' }} - {{ $invoice->client->postal_code ?? ''}}<br>
+                    @endif
 
-@if($invoice->client->telephone)
-Tél : {{ $invoice->client->telephone }}
-@endif
+                    @if($invoice->client->telephone)
+                    Tél : {{ $invoice->client->telephone }}
+                    @endif
 
-@endif
+                    @endif
 
-</div>
+                </div>
 
-</td>
-
-
-<td width="40%">
+            </td>
 
 
-@if($company->contact)
-<i class="fa fa-phone"></i>
-{{ $company->contact }}
-@endif<br>
-
-@if($company->email)
-<i class="fa fa-envelope"></i>
-{{ $company->email }}
-@endif<br>
-
-@if($company->website)
-<i class="fa fa-globe"></i>
-{{ $company->website }}
-@endif<br>
-
-@if($company->address)
-<i class="fa fa-map-marker"></i>
-{{ $company->address }}
-@endif<br>
+            <td width="40%">
 
 
-<br>
+                @if($company->contact)
+                <i class="fa fa-phone"></i>
+                {{ $company->contact }}
+                @endif<br>
 
-<strong>N° de facture :</strong> {{ $invoice->invoice_number }}<br>
+                @if($company->email)
+                <i class="fa fa-envelope"></i>
+                {{ $company->email }}
+                @endif<br>
 
-<strong>Date de facturation :</strong>
-{{ $invoice->date ? $invoice->date->format('d/m/Y') : '' }}
+                @if($company->website)
+                <i class="fa fa-globe"></i>
+                {{ $company->website }}
+                @endif<br>
 
-@if($invoice->payment_method)
-<br>
-<strong>Mode de paiement :</strong> {{ $invoice->payment_method }}
-@endif
+                @if($company->address)
+                <i class="fa fa-map-marker"></i>
+                {{ $company->address }}
+                @endif<br>
 
-<!-- @if($invoice->status)
+
+                <br>
+
+                <strong>N° de facture :</strong> {{ $invoice->invoice_number }}<br>
+
+                <strong>Date de facturation :</strong>
+                {{ $invoice->date ? $invoice->date->format('d/m/Y') : '' }}
+
+                @if($invoice->payment_method)
+                <br>
+                <strong>Mode de paiement :</strong> {{ $invoice->payment_method }}
+                @endif
+
+                <br>
+                <br>
+
+                <strong>CNSS :</strong> {{ $company->cnss }}<br>
+                <strong>RIB :</strong> {{ $company->rib }}<br>
+
+                <!-- @if($invoice->status)
 <br>
 <strong>Statut :</strong> {{ $invoice->status }}
 @endif -->
 
-</td>
+            </td>
 
-</tr>
-</table>
-
-
-<!-- ARTICLES -->
-
-<table class="invoice-table">
-
-<thead>
-<tr>
-<th width="10%" style="background:{{ $pdfColor }};">QTE</th>
-<th width="40%" style="background:{{ $pdfColor }};">DESIGNATION</th>
-<th width="25%" style="background:{{ $pdfColor }};">PRIX UNIT HT</th>
-<th width="25%" style="background:{{ $pdfColor }};">MONTANT HT</th>
-</tr>
-</thead>
-
-<tbody>
-
-@foreach($invoice->articles as $article)
-
-<tr>
-<td>{{ $article->quantity }}</td>
-
-<td>{{ $article->designation }}</td>
-
-<td>
-{{ number_format($article->unit_price_ht,2,',',' ') }}
-{{ $currency_symbol }}
-</td>
-
-<td>
-{{ number_format($article->total_price_ht,2,',',' ') }}
-{{ $currency_symbol }}
-</td>
-</tr>
-
-@endforeach
-
-</tbody>
-</table>
+        </tr>
+    </table>
 
 
-<!-- TOTALS -->
+    <!-- ARTICLES -->
 
-<table class="totals-table">
+    <table class="invoice-table">
 
-<tr>
-<td><strong>TOTAL HT</strong></td>
-<td>
-{{ number_format($totals['total_ht'],2,',',' ') }}
-{{ $currency_symbol }}
-</td>
-</tr>
+        <thead>
+            <tr>
+                <th width="10%" style="background:{{ $pdfColor }};">QTE</th>
+                <th width="40%" style="background:{{ $pdfColor }};">DESIGNATION</th>
+                <th width="25%" style="background:{{ $pdfColor }};">PRIX UNIT HT</th>
+                <th width="25%" style="background:{{ $pdfColor }};">MONTANT HT</th>
+            </tr>
+        </thead>
 
-<tr>
-<td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
-<td>
-{{ number_format($totals['total_tva'],2,',',' ') }}
-{{ $currency_symbol }}
-</td>
-</tr>
+        <tbody>
 
-<tr class="total-final" style="background:{{ $pdfColor }};">
-<td><strong>TOTAL TTC</strong></td>
-<td>
-{{ number_format($totals['total_ttc'],2,',',' ') }}
-{{ $currency_symbol }}
-</td>
-</tr>
+            @foreach($invoice->articles as $article)
 
-</table>
+            <tr>
+                <td>{{ $article->quantity }}</td>
 
+                <td>{{ $article->designation }}</td>
 
-<!-- SIGNATURE -->
+                <td>
+                    {{ number_format($article->unit_price_ht,2,',',' ') }}
+                    {{ $currency_symbol }}
+                </td>
 
-<div class="signature">
+                <td>
+                    {{ number_format($article->total_price_ht,2,',',' ') }}
+                    {{ $currency_symbol }}
+                </td>
+            </tr>
 
-@php
-$sigSrc = $signature_data_uri ?? $signature_url ?? ($company->signature_url ?? null);
-@endphp
+            @endforeach
 
-@if($sigSrc)
-<img src="{{ $sigSrc }}" alt="Signature">
-@endif
-
-</div>
+        </tbody>
+    </table>
 
 
-<!-- FOOTER -->
+    <!-- TOTALS -->
 
-<div class="footer" style="background:{{ $pdfColor }};">
+    <table class="totals-table">
 
-@if($company->contact)
-TELE : {{ $company->contact }}
-@endif
+        <tr>
+            <td><strong>TOTAL HT</strong></td>
+            <td>
+                {{ number_format($totals['total_ht'],2,',',' ') }}
+                {{ $currency_symbol }}
+            </td>
+        </tr>
 
-@if($company->fax)
- | FAX : {{ $company->fax }}
-@endif
+        <tr>
+            <td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
+            <td>
+                {{ number_format($totals['total_tva'],2,',',' ') }}
+                {{ $currency_symbol }}
+            </td>
+        </tr>
 
-<br>
+        <tr class="total-final" style="background:{{ $pdfColor }};">
+            <td><strong>TOTAL TTC</strong></td>
+            <td>
+                {{ number_format($totals['total_ttc'],2,',',' ') }}
+                {{ $currency_symbol }}
+            </td>
+        </tr>
 
-@if($company->vat_number)
-TVA : {{ $company->vat_number }}
-@endif
+    </table>
 
-@if($company->rc_number)
- | RC : {{ $company->rc_number }}
-@endif
 
-@if($company->ice_number)
- | ICE : {{ $company->ice_number }}
-@endif
+    <!-- SIGNATURE -->
 
-<br><br>
+    <div class="signature">
 
-Merci de Votre Confiance
+        @php
+        $sigSrc = $signature_data_uri ?? $signature_url ?? ($company->signature_url ?? null);
+        @endphp
 
-</div>
+        @if($sigSrc)
+        <img src="{{ $sigSrc }}" alt="Signature">
+        @endif
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="footer" style="background:{{ $pdfColor }};">
+
+        @if($company->contact)
+        TELE : {{ $company->contact }}
+        @endif
+
+        @if($company->fax)
+        | FAX : {{ $company->fax }}
+        @endif
+
+        <br>
+
+        @if($company->vat_number)
+        TVA : {{ $company->vat_number }}
+        @endif
+
+        @if($company->rc_number)
+        | RC : {{ $company->rc_number }}
+        @endif
+
+        @if($company->ice_number)
+        | ICE : {{ $company->ice_number }}
+        @endif
+
+        <br><br>
+
+        Merci de Votre Confiance
+
+    </div>
 
 
 </body>
+
 </html>
