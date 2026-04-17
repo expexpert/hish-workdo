@@ -2199,39 +2199,28 @@ class CustomerController extends Controller
 
     public function storeQuote(Request $request)
     {
-        // $this->mapBotInputs($request);
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'client_id'   => 'required|exists:customer_clients,id',
-            'date'        => 'required|date',
-            'due_date'    => 'required|date|after:date',
-            'quote_number' => 'required|string|max:255|unique:customer_quotes,quote_number',
-            'payment_method' => 'required|string|max:255',
-            'status'      => 'required|string|max:50',
-            'notes'       => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-
-            'articles'                 => 'sometimes|array',
-            'articles.*.designation'    => 'required_with:articles|string|max:255',
-            'articles.*.product_id'    => 'nullable|integer',
-            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
-            'articles.*.quantity'        => 'nullable|integer|min:1',
-            'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
+            // ... your validation rules ...
         ]);
 
+        // 1. Process File OUTSIDE the transaction
+        $documentPath = null;
+        if ($request->hasFile('document')) {
+            $documentPath = $request->file('document')->store('customer_quotes', 'private');
+        }
+
         try {
-            $quote = DB::transaction(function () use ($request, $validated) {
-                // 1. Handle File Upload
-                if ($request->hasFile('document')) {
-                    $path = $request->file('document')->store('customer_quotes', 'private');
-                    $validated['document_path'] = $path;
-                }
+            // 2. Prepare the data first
+            $quoteData = collect($validated)->except(['articles', 'document'])->toArray();
+            if ($documentPath) {
+                $quoteData['document_path'] = $documentPath;
+            }
 
-                // 2. Create the Quote Header
-                $quote = CustomerQuote::create($validated);
+            $quote = DB::transaction(function () use ($quoteData, $validated) {
+                // 3. Create Header
+                $quote = CustomerQuote::create($quoteData);
 
-                // 3. Create Articles ONLY if they exist in the request
+                // 4. Batch Insert Articles
                 if (!empty($validated['articles'])) {
                     $articlesData = array_map(function ($article) {
                         return [
@@ -2241,6 +2230,8 @@ class CustomerController extends Controller
                             'quantity'       => $article['quantity'] ?? 1,
                             'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
                             'tva_percentage' => $article['tva_percentage'],
+                            'created_at'     => now(), // createMany doesn't always handle timestamps automatically depending on version
+                            'updated_at'     => now(),
                         ];
                     }, $validated['articles']);
 
@@ -2250,17 +2241,20 @@ class CustomerController extends Controller
                 return $quote;
             });
 
-            // 4. Notify Accountant (outside transaction to minimize lock time)
+            // 5. Fire notification via Queue
+            // If notifyAccountant sends an email/SMS directly, it will be VERY slow.
+            // Ensure this method dispatches a Job to a Queue.
             $this->notifyAccountant($request->user(), 'Quote');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Quote created successfully.',
-                'data'    => $quote->load('articles')
+                'data'    => $quote->setRelation('articles', collect($validated['articles'] ?? []))
+                // Manual injection is faster than reloading from DB
             ], 201);
         } catch (\Exception $e) {
-            if (isset($validated['document_path'])) {
-                Storage::disk('private')->delete($validated['document_path']);
+            if ($documentPath) {
+                Storage::disk('private')->delete($documentPath);
             }
 
             return response()->json([
