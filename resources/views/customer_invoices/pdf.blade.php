@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Facture {{ $invoice->invoice_number }}</title>
+    <title>Facture {{ $invoice->invoice_number ?? $invoice->quote_number ?? '' }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         body {
@@ -178,7 +178,7 @@
 
                 <br>
 
-                <strong>N° de facture :</strong> {{ $invoice->invoice_number }}<br>
+                <strong>N° de facture :</strong> {{ $invoice->invoice_number ?? $invoice->quote_number ?? '' }}<br>
 
                 <strong>Date de facturation :</strong>
                 {{ $invoice->date ? $invoice->date->format('d/m/Y') : '' }}

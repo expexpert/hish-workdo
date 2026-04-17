@@ -119,6 +119,9 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/customer-quote/{id}', [CustomerController::class, 'viewSingleQuote']);
     Route::put('/customer-quote/{id}', [CustomerController::class, 'updateQuote']);
     Route::delete('/customer-quote/{id}', [CustomerController::class, 'deleteQuote']);
+    Route::get('/customer-quotes/pdf/{id}', [CustomerController::class, 'downloadQuotePdf']);
+
+    Route::post('/quote-to-invoice/{id}', [CustomerController::class, 'quoteToInvoice']);
 
 
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
