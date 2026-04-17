@@ -110,6 +110,7 @@
                         <thead>
                             <tr>
                                 <th>{{__('Date')}}</th>
+                                <th>{{__('Due Date')}}</th>
                                 @if (\Auth::user()->type == 'company')
                                 <th>{{__('Accountant')}}</th>
                                 @endif
@@ -129,6 +130,7 @@
                             @foreach ($quotes as $quote)
                             <tr>
                                 <td>{{ \Auth::user()->dateFormat($quote->date)}}</td>
+                                <td>{{ \Auth::user()->dateFormat($quote->due_date)}}</td>
                                 @if (\Auth::user()->type == 'company')
                                 <td>{{ $quote->customer?->accountant->name ?? '-' }}</td>
                                 @endif

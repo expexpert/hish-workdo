@@ -169,6 +169,7 @@
                         <thead>
                             <tr>
                                 <th>{{__('Date')}}</th>
+                                <th>{{__('Due Date')}}</th>
                                 @if (\Auth::user()->type == 'company')
                                 <th>{{__('Accountant')}}</th>
                                 @endif
@@ -189,6 +190,7 @@
                             @foreach ($invoices as $invoice)
                             <tr>
                                 <td>{{ \Auth::user()->dateFormat($invoice->date)}}</td>
+                                <td>{{ \Auth::user()->dateFormat($invoice->due_date)}}</td>
                                 @if (\Auth::user()->type == 'company')
                                 <td>{{ $invoice->customer?->accountant->name ?? '-' }}</td>
                                 @endif
