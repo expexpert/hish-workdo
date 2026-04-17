@@ -2410,6 +2410,152 @@ class CustomerController extends Controller
         }
     }
 
+    public function downloadQuotePdf(Request $request, $id)
+    {
+
+        $quote = CustomerQuote::where('customer_id', $request->user()->id)
+            ->with(['client', 'articles.tax', 'customer'])
+            ->findOrFail($id);
+
+        $company = $quote->customer;
+
+        $totals = [
+            'total_ht' => $quote->articles->sum('total_price_ht'),
+            'total_tva' => $quote->articles->sum(function ($a) {
+                $taxRate = $a->tax ? $a->tax->rate : 0;
+                return round($a->total_price_ht * ($taxRate / 100), 2);
+            }),
+        ];
+        $totals['total_ttc'] = round($totals['total_ht'] + $totals['total_tva'], 2);
+        $totals['average_tva_percentage'] = $totals['total_ht'] > 0 ? round(($totals['total_tva'] / $totals['total_ht']) * 100, 2) : 0;
+
+        $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
+        $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
+        $pdfColor = $company && $company->company_color ? $company->company_color : '#4FA3D1';
+
+        $logoDataUri = null;
+        $signatureDataUri = null;
+
+        try {
+            if ($company && $company->avatar) {
+                $logoPath = storage_path('app/public/' . $company->avatar);
+                if (is_file($logoPath)) {
+                    $mime = mime_content_type($logoPath) ?: 'image/png';
+                    $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        try {
+            if ($company && $company->signature) {
+                $sigPath = storage_path('app/public/' . $company->signature);
+                if (is_file($sigPath)) {
+                    $mime = mime_content_type($sigPath) ?: 'image/png';
+                    $signatureDataUri = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($sigPath));
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        $pdf = Pdf::loadView('customer_invoices.pdf', [
+            'invoice'          => $quote,
+            'company'          => $company,
+            'totals'           => $totals,
+            'currency_symbol'  => $company ? $company->currencySymbol() : '',
+            'logo_url'         => $logoUrl,
+            'signature_url'    => $signatureUrl,
+            'logo_data_uri'    => $logoDataUri,
+            'signature_data_uri' => $signatureDataUri,
+            'pdfColor'         => $pdfColor
+        ])->setPaper('a4')->setOptions(['isRemoteEnabled' => true]);
+
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+            'http' => [
+                'timeout' => 3,
+                'user_agent' => 'Mozilla/5.0',
+            ],
+        ]);
+        $pdf->setHttpContext($context);
+
+        $filename = 'Invoice_' . $quote->quote_number . '.pdf';
+        return $pdf->download($filename);
+    }
+
+
+    public function quoteToInvoice(Request $request, $id)
+    {
+        try {
+            return \DB::transaction(function () use ($request, $id) {
+                $quote = CustomerQuote::where('id', $id)
+                    ->where('customer_id', $request->user()->id)
+                    ->first();
+
+                if (!$quote) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Quote not found or does not belong to the customer.'
+                    ], 404);
+                }
+
+                if ($quote->status != 'accepted') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Quote is not accepted yet.'
+                    ], 404);
+                }
+
+                $articles = QuoteArticle::where('quotes_id', $quote->id)->get();
+
+                $invoice = new CustomerInvoice();
+                $invoice->customer_id = $quote->customer_id;
+                $invoice->client_id = $quote->client_id;
+                $invoice->date = $quote->date;
+                $invoice->due_date = $quote->due_date;
+                $invoice->invoice_number = $quote->quote_number;
+                $invoice->payment_method = $quote->payment_method;
+                $invoice->status = 'Issued';
+                $invoice->review_status = 'PENDING';
+                $invoice->notes = $quote->notes;
+                $invoice->document_path = $quote->document_path;
+                $invoice->save();
+
+                if ($articles->count() > 0) {
+                    $articlesData = $articles->map(function ($item) {
+                        return [
+                            'product_id'     => $item->product_id,
+                            'designation'    => $item->designation,
+                            'unit_price_ht'  => $item->unit_price_ht,
+                            'quantity'       => $item->quantity,
+                            'total_price_ht' => $item->total_price_ht,
+                            'tva_percentage' => $item->tva_percentage,
+                        ];
+                    })->toArray();
+
+                    $invoice->articles()->createMany($articlesData);
+                }
+
+                $quote->delete();
+                QuoteArticle::where('quotes_id', $quote->id)->delete();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote converted to invoice successfully.',
+                    'data'    => $invoice->load('articles')
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to convert quote to invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function sendToAccountant(Request $request)
     {
