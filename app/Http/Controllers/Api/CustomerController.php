@@ -2200,7 +2200,23 @@ class CustomerController extends Controller
     public function storeQuote(Request $request)
     {
         $validated = $request->validate([
-            // ... your validation rules ...
+            'customer_id' => 'required|exists:customers,id',
+            'client_id'   => 'required|exists:customer_clients,id',
+            'date'        => 'required|date',
+            'due_date'    => 'required|date|after:date',
+            'quote_number' => 'required|string|max:255|unique:customer_quotes,quote_number',
+            'payment_method' => 'required|string|max:255',
+            'status'      => 'required|string|max:50',
+            'notes'       => 'nullable|string',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+
+            'articles'                 => 'sometimes|array',
+            'articles.*.designation'    => 'required_with:articles|string|max:255',
+            'articles.*.product_id'    => 'nullable|integer',
+            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles.*.quantity'        => 'nullable|integer|min:1',
+            'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
         ]);
 
         // 1. Process File OUTSIDE the transaction
