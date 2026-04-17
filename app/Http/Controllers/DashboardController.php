@@ -152,11 +152,12 @@ class DashboardController extends Controller
 
 
                     $data['totalVatCollected'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
                         ->whereIn('customer_invoices.customer_id', \Auth::user()->getAccountantCustomersIds())
                         ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
                         ->whereMonth('customer_invoices.date', date('m'))
                         ->whereYear('customer_invoices.date', date('Y'))
-                        ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
+                        ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * COALESCE(taxes.rate, 0) / 100), 2)'));
 
                     $data['totalVatDeductible'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->whereMonth('date', date('m'))
                         ->whereYear('date', date('Y'))
@@ -201,11 +202,12 @@ class DashboardController extends Controller
 
 
                     $data['totalVatCollected'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                        ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
                         ->whereIn('customer_invoices.customer_id', $companyCustomerIds)
                         ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
                         ->whereMonth('customer_invoices.date', date('m'))
                         ->whereYear('customer_invoices.date', date('Y'))
-                        ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
+                        ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * COALESCE(taxes.rate, 0) / 100), 2)'));
 
                     $data['totalVatDeductible'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)->sum('ttc');
 
@@ -371,11 +373,12 @@ class DashboardController extends Controller
             ->sum('ttc');
         $netResult = $currentMonthRevenue - $currentMonthExpense;
         $totalVatCollected = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->whereIn('customer_invoices.customer_id', $customerIds)
             ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
             ->whereMonth('customer_invoices.date', date('m'))
             ->whereYear('customer_invoices.date', date('Y'))
-            ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * invoice_articles.tva_percentage / 100), 2)'));
+            ->sum(DB::raw('ROUND((invoice_articles.unit_price_ht * COALESCE(taxes.rate, 0) / 100), 2)'));
         $totalVatDeductible = CustomerExpense::whereIn('customer_id', $customerIds)
             ->whereMonth('date', date('m'))
             ->whereYear('date', date('Y'))

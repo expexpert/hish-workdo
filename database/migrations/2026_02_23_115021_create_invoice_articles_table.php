@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('unit_price_ht', 15, 2); // Prix H.T. unitaire
             $table->integer('quantity'); // Quantité
             $table->decimal('total_price_ht', 15, 2); // Prix H.T. total
-            $table->decimal('tva_percentage', 5, 2); // T.V.A. %
+            $table->unsignedBigInteger('tva_percentage')->nullable();
 
             $table->timestamps();
         });

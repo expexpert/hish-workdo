@@ -31,7 +31,7 @@ class InvoiceArticle extends Model
         'unit_price_ht'  => 'decimal:2',
         'quantity'       => 'integer',
         'total_price_ht' => 'decimal:2',
-        'tva_percentage' => 'decimal:2',
+        'tva_percentage' => 'integer',
     ];
 
     /**
@@ -40,5 +40,13 @@ class InvoiceArticle extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(CustomerInvoice::class, 'invoice_id');
+    }
+
+    /**
+     * Get the tax associated with the article.
+     */
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Tax::class, 'tva_percentage');
     }
 }

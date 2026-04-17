@@ -215,7 +215,7 @@
                                 if ($invoice->articles && $invoice->articles->count()) {
                                 $totalTtc=$invoice->articles->sum(function ($article) {
                                 $ht = floatval($article->total_price_ht ?? 0);
-                                $tvaPct = floatval($article->tva_percentage ?? 0) / 100;
+                                $tvaPct = floatval($article->tax ? $article->tax->rate : 0) / 100;
                                 return $ht + ($ht * $tvaPct);
                                 });
                                 }
@@ -298,7 +298,7 @@
                                                 @foreach ($invoice->articles as $article)
                                                 @php
                                                 $lineHT = (float) $article->total_price_ht;
-                                                $lineTvaPct = (float) $article->tva_percentage;
+                                                $lineTvaPct = (float) ($article->tax ? $article->tax->rate : 0);
                                                 $lineTva = $lineHT * ($lineTvaPct / 100);
                                                 $grandTotalHT += $lineHT;
                                                 $grandTotalTVA += $lineTva;
