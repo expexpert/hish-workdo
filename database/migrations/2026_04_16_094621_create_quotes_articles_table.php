@@ -20,10 +20,9 @@ return new class extends Migration
 
             $table->string('designation');
             $table->decimal('unit_price_ht', 15, 2);
-            $table->integer('quantity');
+            $table->integer('quantity')->default(1);
             $table->decimal('total_price_ht', 15, 2);
-            $table->decimal('tva_percentage', 5, 2);
-
+            $table->unsignedBigInteger('tva_percentage')->nullable();
             $table->timestamps();
         });
     }

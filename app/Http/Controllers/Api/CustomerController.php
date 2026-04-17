@@ -184,6 +184,7 @@ class CustomerController extends Controller
 
         // 1. Global Stats (Based on Filter)
         $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->where('customer_invoices.customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_invoices.date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_invoices.date', '<=', $dt))
@@ -192,7 +193,7 @@ class CustomerController extends Controller
                 DB::raw("SUM(CASE WHEN status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
                 DB::raw("SUM(CASE WHEN status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
                 DB::raw("SUM(CASE WHEN status = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
-                DB::raw("SUM(CASE WHEN status = 'PAID' THEN invoice_articles.tva_percentage ELSE 0 END) as vat_collected"),
+                DB::raw("SUM(CASE WHEN status = 'PAID' THEN (invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat_collected"),
                 DB::raw("COUNT(DISTINCT CASE WHEN status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
                 DB::raw("COUNT(DISTINCT CASE WHEN status = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
             )->first();
@@ -239,11 +240,12 @@ class CustomerController extends Controller
         // Helper to get periodic stats
         $getPeriodicStats = function ($range) use ($user) {
             $inv = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+                ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
                 ->where('customer_invoices.customer_id', $user->id)
                 ->whereBetween('customer_invoices.date', $range)
                 ->select(
                     DB::raw("SUM(CASE WHEN status = 'PAID' THEN total_price_ht ELSE 0 END) as paid"),
-                    DB::raw("SUM(CASE WHEN status = 'PAID' THEN tva_percentage ELSE 0 END) as vat")
+                    DB::raw("SUM(CASE WHEN status = 'PAID' THEN (total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat")
                 )->first();
 
             $exp = CustomerExpense::where('customer_id', $user->id)
@@ -1621,7 +1623,7 @@ class CustomerController extends Controller
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
         ]);
 
         try {
@@ -1732,7 +1734,7 @@ class CustomerController extends Controller
     public function downloadInvoicePdf($id, Request $request)
     {
         $invoice = CustomerInvoice::where('customer_id', $request->user()->id)
-            ->with(['client', 'articles', 'customer'])
+            ->with(['client', 'articles.tax', 'customer'])
             ->findOrFail($id);
 
         $company = $invoice->customer;
@@ -1740,7 +1742,8 @@ class CustomerController extends Controller
         $totals = [
             'total_ht' => $invoice->articles->sum('total_price_ht'),
             'total_tva' => $invoice->articles->sum(function ($a) {
-                return round($a->total_price_ht * ($a->tva_percentage / 100), 2);
+                $taxRate = $a->tax ? $a->tax->rate : 0;
+                return round($a->total_price_ht * ($taxRate / 100), 2);
             }),
         ];
         $totals['total_ttc'] = round($totals['total_ht'] + $totals['total_tva'], 2);
@@ -1860,7 +1863,7 @@ class CustomerController extends Controller
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'      => 'required_with:articles|integer|min:1',
             'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
         ]);
 
         try {
@@ -1946,7 +1949,7 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $invoices = CustomerInvoice::where('customer_id', $user->id)
-            ->with(['client:id,client_name', 'articles'])
+            ->with(['client:id,client_name', 'articles.tax'])
             ->orderBy('date', 'desc')
             ->get();
 
@@ -1969,6 +1972,7 @@ class CustomerController extends Controller
             foreach ($invoices as $invoice) {
                 $clientName = $invoice->client->client_name ?? 'N/A';
                 foreach ($invoice->articles as $article) {
+                    $taxRate = $article->tax ? $article->tax->rate : 0;
                     fputcsv($file, [
                         $invoice->invoice_number,
                         $invoice->date,
@@ -1976,11 +1980,11 @@ class CustomerController extends Controller
                         $invoice->status,
                         $article->designation ?? '',
                         $article->total_price_ht,
-                        $article->tva_percentage,
+                        $taxRate,
                         $invoice->payment_method,
                         $article->designation ?? '',
                         $article->total_price_ht,
-                        $article->tva_percentage
+                        $taxRate
                     ]);
                 }
             }
@@ -2005,7 +2009,7 @@ class CustomerController extends Controller
                 }),
             ],
             'unit_price_ht' => 'required|numeric|min:0',
-            'tva_percentage' => 'required|numeric|min:0',
+            'tva_percentage' => 'required|integer|min:0',
             'quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:255',
@@ -2211,7 +2215,7 @@ class CustomerController extends Controller
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
         ]);
 
         try {
@@ -2318,7 +2322,7 @@ class CustomerController extends Controller
             'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'      => 'required_with:articles|integer|min:1',
             'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|numeric|min:0',
+            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
         ]);
 
         try {

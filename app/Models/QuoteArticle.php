@@ -24,7 +24,7 @@ class QuoteArticle extends Model
     protected $casts = [
         'unit_price_ht' => 'decimal:2',
         'total_price_ht' => 'decimal:2',
-        'tva_percentage' => 'decimal:2',
+        'tva_percentage' => 'integer',
     ];
 
     /*
@@ -41,5 +41,13 @@ class QuoteArticle extends Model
     public function product()
     {
         return $this->belongsTo(ProductService::class);
+    }
+
+    /**
+     * Get the tax associated with the article.
+     */
+    public function tax()
+    {
+        return $this->belongsTo(Tax::class, 'tva_percentage');
     }
 }
