@@ -200,7 +200,6 @@
                                                         @endif
                                                     @endcan
 
-                                                    @if (\Auth::user()->type !== 'company')
 
                                                     @can('edit invoice')
                                                         <div class="action-btn me-2">
@@ -225,7 +224,6 @@
                                                         </div>
                                                     @endcan
 
-                                                    @endif
                                                 </span>
                                             </td>
                                         @endif
