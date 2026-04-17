@@ -1637,23 +1637,24 @@ class CustomerController extends Controller
                 // 2. Create the Invoice Header
                 $invoice = CustomerInvoice::create($validated);
 
-                // 3. Create Articles ONLY if they exist in the request
+                // 3. Bulk Create Articles ONLY if they exist in the request
                 if (!empty($validated['articles'])) {
-                    foreach ($validated['articles'] as $article) {
+                    $now = now();
+                    $articlesToInsert = collect($validated['articles'])->map(function ($article) use ($invoice, $now) {
+                        return [
+                            'invoice_id'     => $invoice->id,
+                            'product_id'     => $article['product_id'] ?? 1,
+                            'designation'    => $article['designation'],
+                            'unit_price_ht'  => $article['unit_price_ht'],
+                            'quantity'       => $article['quantity'] ?? 1,
+                            'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
+                            'tva_percentage' => $article['tva_percentage'],
+                            'created_at'     => $now,
+                            'updated_at'     => $now,
+                        ];
+                    })->toArray();
 
-                        InvoiceArticle::create(
-                            [
-                                'invoice_id' => $invoice->id,
-                                'product_id' => $article['product_id'] ?? 1,
-                                'designation' => $article['designation'],
-                                'unit_price_ht' => $article['unit_price_ht'],
-                                'quantity' => $article['quantity'] ?? 1,
-                                'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
-                                'tva_percentage' => $article['tva_percentage'],
-                            ]
-
-                        );
-                    }
+                    InvoiceArticle::insert($articlesToInsert);
                 }
 
                 $this->notifyAccountant($request->user(), 'Invoice');
@@ -2589,9 +2590,8 @@ class CustomerController extends Controller
             ];
 
             // Ensure SMTP is ready (using system settings)
-            \App\Models\Utility::getSMTPDetails(1);
-
-            \Mail::to($accountant->email)->send(new \App\Mail\WhatsAppDocumentNotification($details));
+            // Note: This is now handled within the mailable's build() for queue compatibility
+            \Mail::to($accountant->email)->queue(new \App\Mail\WhatsAppDocumentNotification($details));
         } catch (\Exception $e) {
             \Log::error("WhatsApp Notification Error: " . $e->getMessage());
         }
