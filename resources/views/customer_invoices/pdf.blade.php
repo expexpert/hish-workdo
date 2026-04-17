@@ -3,7 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Facture {{ $invoice->invoice_number ?? $invoice->quote_number ?? '' }}</title>
+    <title>
+        {{ $invoice->invoice_number ? 'Facture ' . $invoice->invoice_number : ($invoice->quote_number ? 'Devis ' . $invoice->quote_number : '') }}
+    </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         body {
@@ -126,7 +128,13 @@
                 <img src="{{ $logoSrc }}" class="logo">
                 @endif
 
-                <div class="invoice-title">FACTURE</div>
+                <div class="invoice-title">
+                    @if($invoice->invoice_number)
+                    FACTURE
+                    @elseif($invoice->quote_number)
+                    DEVIS
+                    @endif
+                </div>
 
                 <div class="client-info">
 
@@ -178,8 +186,11 @@
 
                 <br>
 
-                <strong>N° de facture :</strong> {{ $invoice->invoice_number ?? $invoice->quote_number ?? '' }}<br>
-
+                @if($invoice->invoice_number)
+                <strong>N° de facture :</strong> {{ $invoice->invoice_number }}<br>
+                @elseif($invoice->quote_number)
+                <strong>N° de devis :</strong> {{ $invoice->quote_number }}<br>
+                @endif
                 <strong>Date de facturation :</strong>
                 {{ $invoice->date ? $invoice->date->format('d/m/Y') : '' }}
 

@@ -2257,9 +2257,6 @@ class CustomerController extends Controller
                 return $quote;
             });
 
-            // 5. Fire notification via Queue
-            // If notifyAccountant sends an email/SMS directly, it will be VERY slow.
-            // Ensure this method dispatches a Job to a Queue.
             $this->notifyAccountant($request->user(), 'Quote');
 
             return response()->json([
@@ -2497,7 +2494,7 @@ class CustomerController extends Controller
         ]);
         $pdf->setHttpContext($context);
 
-        $filename = 'Invoice_' . $quote->quote_number . '.pdf';
+        $filename = 'Quote_' . $quote->quote_number . '.pdf';
         return $pdf->download($filename);
     }
 
@@ -2531,6 +2528,7 @@ class CustomerController extends Controller
                 $invoice->client_id = $quote->client_id;
                 $invoice->date = $quote->date;
                 $invoice->due_date = $quote->due_date;
+                $invoice->send_date = $quote->created_at->format('Y-m-d');
                 $invoice->invoice_number = $quote->quote_number;
                 $invoice->payment_method = $quote->payment_method;
                 $invoice->status = 'Issued';
