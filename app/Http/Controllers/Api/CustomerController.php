@@ -2021,7 +2021,7 @@ class CustomerController extends Controller
 
         $validated['customer_id'] = $validated['customer_id'];
 
-        $company_id = auth()->user()->accountant?->creatorId() ?? auth()->user()->created_by;
+        $company_id = auth()->user()->companyId();
 
         $unitID = ProductServiceUnit::where('created_by', $company_id)
             ->first()
@@ -2208,7 +2208,6 @@ class CustomerController extends Controller
             'quote_number' => 'required|string|max:255|unique:customer_quotes,quote_number',
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
-            'review_status' => 'required|string|max:50',
             'notes'       => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
 

@@ -12,17 +12,17 @@
 @section('action-btn')
     <div class="d-flex">
 
-        <a href="#" data-size="md" data-bs-toggle="tooltip" title="{{__('Import')}}" data-url="{{ route('productservice.file.import') }}" data-ajax-popup="true" data-title="{{__('Import product CSV file')}}" class="btn btn-sm btn-primary me-2">
+        <!-- <a href="#" data-size="md" data-bs-toggle="tooltip" title="{{__('Import')}}" data-url="{{ route('productservice.file.import') }}" data-ajax-popup="true" data-title="{{__('Import product CSV file')}}" class="btn btn-sm btn-primary me-2">
             <i class="ti ti-file-import"></i>
-        </a>
+        </a> -->
 
         <a href="{{route('productservice.export')}}" data-bs-toggle="tooltip" title="{{__('Export')}}" class="btn btn-sm btn-primary me-2">
             <i class="ti ti-file-export"></i>
         </a>
 
-        <a href="#" data-size="lg" data-url="{{ route('productservice.create') }}" data-ajax-popup="true" data-bs-toggle="tooltip" title="{{__('Create')}}" data-title="{{__('Create Product & Service')}}" class="btn btn-sm btn-primary">
+        <!-- <a href="#" data-size="lg" data-url="{{ route('productservice.create') }}" data-ajax-popup="true" data-bs-toggle="tooltip" title="{{__('Create')}}" data-title="{{__('Create Product & Service')}}" class="btn btn-sm btn-primary">
             <i class="ti ti-plus"></i>
-        </a>
+        </a> -->
 
     </div>
 @endsection

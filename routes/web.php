@@ -626,10 +626,13 @@ Route::group(['middleware' => ['verified']], function () {
         Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])->name('customer.bank-statements.view-file');
         Route::get('/customer-expenses/{expense}/view', [CustomerController::class, 'showExpenseFile'])->name('customer.expenses.view-file');
         Route::get('/customer-invoices/{invoice}/view', [CustomerController::class, 'showInvoiceFile'])->name('customer.invoices.view-file');
+        Route::get('/customer-quotes/{quote}/view', [CustomerController::class, 'showQuoteFile'])->name('customer.quotes.view-file');
         
         Route::get('/customer-expenses', [CustomerController::class, 'getExpenses'])->name('customer.expenses');
 
         Route::get('/customer-invoices', [CustomerController::class, 'getInvoices'])->name('customer.invoices');
+
+        Route::get('/customer-quotes', [CustomerController::class, 'getQuotes'])->name('customer.quotes');
 
         Route::post('/customer-invoice/review-action', [CustomerController::class, 'invoiceReviewAction'])->name('invoice.review.action');
         

@@ -28,6 +28,7 @@ use App\Models\CustomerExpense;
 use App\Models\CustomerInvoice;
 use App\Models\InvoiceArticle;
 use App\Models\InvoiceProduct;
+use App\Models\CustomerQuote;
 
 class CustomerController extends Controller
 {
@@ -1046,6 +1047,31 @@ class CustomerController extends Controller
         return Storage::disk($upload_disk)->response($invoice->document_path);
     }
 
+    public function showQuoteFile(CustomerQuote $quote)
+    {
+        $user = \Auth::user();
+
+        if (
+            !in_array($user->type, ['company', 'accountant']) ||
+            \App\Services\AdminActivityLogger::isImpersonating() ||
+            !$quote->customer ||
+            !$quote->customer->accountant ||
+            $user->creatorId() != $quote->customer->accountant->creatorId()
+        ) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $storage_settings = Utility::getStorageSetting();
+        $disk = $storage_settings['storage_setting'];
+        $upload_disk = ($disk == 'local' || $disk == '') ? 'private' : $disk;
+
+        if (!$quote->document_path || !Storage::disk($upload_disk)->exists($quote->document_path)) {
+            abort(404);
+        }
+
+        return Storage::disk($upload_disk)->response($quote->document_path);
+    }
+
 
     public function getExpenses(Request $request)
     {
@@ -1169,11 +1195,75 @@ class CustomerController extends Controller
     }
 
 
+    public function getQuotes(Request $request)
+    {
+        $user = Auth::user();
+        $data = [];
+        $status = $request->input('status', '');
+        $query = CustomerQuote::with([
+            'customer:id,name,created_by',
+            'customer.accountant:id,name',
+            'client:id,client_name',
+            'articles:id,quotes_id,designation,unit_price_ht,quantity,total_price_ht,tva_percentage',
+            'articles.tax'
+        ])
+            ->orderBy('date', 'desc');
+
+        if ($user->type == 'accountant') {
+            // Quotes for customers created by this specific accountant
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->where('created_by', $user->id);
+            });
+        } else if ($user->type == 'company') {
+            // Quotes for customers created by ANY accountant belonging to this company
+            $query->whereIn('customer_id', function ($q) use ($user) {
+                $q->select('id')->from('customers')->whereIn('created_by', function ($subQ) use ($user) {
+                    // Fetch IDs of accountants created by this company
+                    $subQ->select('id')->from('users')->where('created_by', $user->id);
+                });
+            });
+        }
+
+        // Filtering
+        if (!empty($request->start_date) && !empty($request->end_date)) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        } elseif (!empty($request->start_date)) {
+            $query->where('date', '>=', $request->start_date);
+        } elseif (!empty($request->end_date)) {
+            $query->where('date', '<=', $request->end_date);
+        }
+
+        if (!empty($request->customer)) {
+            $query->where('customer_id', $request->customer);
+        }
+
+        $quotes = $query->get();
+
+        $query->when($status, function ($q) use ($status) {
+            $q->where('review_status', $status);
+        });
+        $quotes = $query->get();
+
+        // Get customers for filter dropdown
+        $customers = \App\Models\Customer::query();
+        if ($user->type == 'accountant') {
+            $customers->where('created_by', $user->id);
+        } else if ($user->type == 'company') {
+            $customers->whereIn('created_by', function ($subQ) use ($user) {
+                $subQ->select('id')->from('users')->where('created_by', $user->id);
+            });
+        }
+        $customer = $customers->pluck('name', 'id')->toArray();
+        $customer = ['' => __('Select Customer')] + $customer;
+
+        return view('ClientReport.quote', compact('quotes', 'data', 'customer'));
+    }
+
+
     public function invoiceNumber()
     {
         $latest = Invoice::where('created_by', '=', \Auth::user()->creatorId())->latest()->first();
-        if(!$latest)
-        {
+        if (!$latest) {
             return 1;
         }
 
@@ -1192,10 +1282,11 @@ class CustomerController extends Controller
             ->first()
             ?->id ?? 1;
 
-        $InvoiceArticle = InvoiceArticle::where('invoice_id', $invoice->id)->get();    
+        $InvoiceArticle = InvoiceArticle::where('invoice_id', $invoice->id)->get();
+        $alreadyValidated = Invoice::where('ref_number', $invoice->invoice_number)->where('customer_id', $invoice->customer_id)->exists();
 
 
-        if ($request->action == 'VALIDATED') {
+        if ($request->action == 'VALIDATED' && !$alreadyValidated) {
             $newInvoice = new Invoice();
             $newInvoice->invoice_id     = $this->invoiceNumber();
             $newInvoice->customer_id    = $invoice->customer_id;
@@ -1213,7 +1304,7 @@ class CustomerController extends Controller
 
 
             foreach ($InvoiceArticle as $article) {
-                $newArticle = new InvoiceProduct();                
+                $newArticle = new InvoiceProduct();
                 $newArticle->invoice_id  = $newInvoice->id;
                 $newArticle->product_id  = $article->product_id;
                 $newArticle->quantity    = $article->quantity;

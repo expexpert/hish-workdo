@@ -103,6 +103,11 @@ class Customer extends Authenticatable
         }
     }
 
+    public function companyId()
+    {
+        return $this->accountant?->creatorId() ?? $this->created_by;
+    }
+
     public function currentLanguage()
     {
         return $this->lang;
