@@ -671,6 +671,10 @@
                                     <a class="dash-link"
                                         href="{{ route('customer.invoices') }}">{{ __('Customer Invoice') }}</a>
                                 </li>
+                                <li class="dash-item">
+                                    <a class="dash-link"
+                                        href="{{ route('customer.quotes') }}">{{ __('Customer Quote') }}</a>
+                                </li>
                          </ul>
                 </li>
                 @endif
