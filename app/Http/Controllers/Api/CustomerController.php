@@ -2221,7 +2221,7 @@ class CustomerController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $validated) {
+            $quote = DB::transaction(function () use ($request, $validated) {
                 // 1. Handle File Upload
                 if ($request->hasFile('document')) {
                     $path = $request->file('document')->store('customer_quotes', 'private');
@@ -2233,27 +2233,31 @@ class CustomerController extends Controller
 
                 // 3. Create Articles ONLY if they exist in the request
                 if (!empty($validated['articles'])) {
-                    foreach ($validated['articles'] as $article) {
-                        QuoteArticle::create([
-                            'quotes_id' => $quote->id,
-                            'product_id' => $article['product_id'] ?? 1,
-                            'designation' => $article['designation'],
-                            'unit_price_ht' => $article['unit_price_ht'],
-                            'quantity' => $article['quantity'] ?? 1,
+                    $articlesData = array_map(function ($article) {
+                        return [
+                            'product_id'     => $article['product_id'] ?? 1,
+                            'designation'    => $article['designation'],
+                            'unit_price_ht'  => $article['unit_price_ht'],
+                            'quantity'       => $article['quantity'] ?? 1,
                             'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
                             'tva_percentage' => $article['tva_percentage'],
-                        ]);
-                    }
+                        ];
+                    }, $validated['articles']);
+
+                    $quote->articles()->createMany($articlesData);
                 }
 
-                $this->notifyAccountant($request->user(), 'Quote');
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Quote created successfully.',
-                    'data'    => $quote->load('articles')
-                ], 201);
+                return $quote;
             });
+
+            // 4. Notify Accountant (outside transaction to minimize lock time)
+            $this->notifyAccountant($request->user(), 'Quote');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Quote created successfully.',
+                'data'    => $quote->load('articles')
+            ], 201);
         } catch (\Exception $e) {
             if (isset($validated['document_path'])) {
                 Storage::disk('private')->delete($validated['document_path']);
