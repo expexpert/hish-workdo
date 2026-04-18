@@ -23,6 +23,7 @@ use Illuminate\Validation\ValidationException;
 use App\Models\CustomerProduct;
 use App\Models\ProductService;
 use App\Models\CustomerSupplier;
+use Illuminate\Support\Facades\URL;
 use App\Models\CustomerMonthStatus;
 use App\Models\Invoice;
 use App\Models\ProductServiceUnit;
@@ -225,6 +226,9 @@ class CustomerController extends Controller
             ->when($dateTo, function ($query, $dateTo) {
                 $query->whereDate('date', '<=', $dateTo);
             })
+            ->when($supplierId, function ($query, $supplierId) {
+                $query->where('supplier_id', $supplierId);
+            })
             ->count();
 
         $statementsCount = ClientBankStatement::where('customer_id', $user->id)
@@ -240,6 +244,9 @@ class CustomerController extends Controller
             })
             ->when($dateTo, function ($query, $dateTo) {
                 $query->whereDate('date', '<=', $dateTo);
+            })
+            ->when($clientId, function ($query, $clientId) {
+                $query->where('client_id', $clientId);
             })
             ->count();
         // 2. Month-over-Month Comparison Logic
@@ -288,6 +295,7 @@ class CustomerController extends Controller
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
                 'total_issued_count' => $invoiceStats->total_issued_count,
+                'total_paid_count' => $invoiceStats->total_paid_count,
                 'total_quote_count' => $invoiceStats->total_quote_count,
                 'total_expenses_count' => $expensesCount,
                 'bank_statements_count' => $statementsCount,
@@ -847,7 +855,19 @@ class CustomerController extends Controller
 
         $this->notifyAccountant($request->user(), 'Bank Statement', null, $request->month_year);
 
-        return response()->json(['message' => $message, 'data' => $statement], $status);
+        // Generate temporary signed URL for browser access (Valid for 24h)
+        $downloadUrl = $statement->file_path ? URL::temporarySignedRoute(
+            'api.download.file.public',
+            now()->addHours(24),
+            ['id' => $statement->id, 'customer_id' => $statement->customer_id, 'type' => 'statement']
+        ) : null;
+
+        $statement->download_url = $downloadUrl;
+
+        return response()->json([
+            'message' => $message, 
+            'data' => $statement
+        ], $status);
     }
 
 
@@ -1346,7 +1366,16 @@ class CustomerController extends Controller
 
             $expense = CustomerExpense::create($validated);
 
+            // Generate temporary signed URL for browser access (Valid for 24h)
+            $downloadUrl = $expense->file ? URL::temporarySignedRoute(
+                'api.download.file.public',
+                now()->addHours(24),
+                ['id' => $expense->id, 'customer_id' => $expense->customer_id, 'type' => 'expense']
+            ) : null;
+
             $this->notifyAccountant($request->user(), 'Expense', $expense->ttc);
+
+            $expense->download_url = $downloadUrl;
 
             return response()->json([
                 'success' => true,
@@ -1372,10 +1401,20 @@ class CustomerController extends Controller
         $user = $request->user();
         $month = $request->query('month');
         $year = $request->query('year');
+        $supplierId = $request->query('supplier_id');
+        $id = $request->query('id');
 
         $query = CustomerExpense::where('customer_id', $user->id)
-            ->with('category:id,name')
+            ->with(['category:id,name', 'supplier:id,supplier_name'])
             ->orderBy('date', 'desc');
+
+        if ($id) {
+            $query->where('id', $id);
+        }
+
+        if ($supplierId) {
+            $query->where('supplier_id', $supplierId);
+        }
 
         // Use whereBetween for better performance when year is provided
         if ($year && $month) {
@@ -1391,6 +1430,15 @@ class CustomerController extends Controller
         }
 
         $expenses = $query->get();
+
+        // Append signed download URLs for the bot
+        $expenses->each(function($expense) {
+            $expense->download_url = URL::temporarySignedRoute(
+                'api.download.file.public', 
+                now()->addHours(24), 
+                ['id' => $expense->id, 'customer_id' => $expense->customer_id]
+            );
+        });
 
         return response()->json([
             'success' => true,
@@ -1693,6 +1741,15 @@ class CustomerController extends Controller
 
                 $this->notifyAccountant($request->user(), 'Invoice');
 
+                // Generate temporary signed URL for browser access (Valid for 24h)
+                $downloadUrl = URL::temporarySignedRoute(
+                    'api.download.invoice.pdf.public',
+                    now()->addHours(24),
+                    ['id' => $invoice->id, 'customer_id' => $invoice->customer_id]
+                );
+
+                $invoice->download_url = $downloadUrl;
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Invoice created successfully.',
@@ -1719,13 +1776,23 @@ class CustomerController extends Controller
         $month = $request->query('month');
         $year = $request->query('year');
         $status = $request->query('status');
+        $clientId = $request->query('client_id');
+        $id = $request->query('id');
 
         $query = CustomerInvoice::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles'])
             ->orderBy('date', 'desc');
 
+        if ($id) {
+            $query->where('id', $id);
+        }
+
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($clientId) {
+            $query->where('client_id', $clientId);
         }
 
         // Use whereBetween for better performance when year is provided (avoids YEAR() and MONTH() function calls on indexed column)
@@ -1742,6 +1809,15 @@ class CustomerController extends Controller
         }
 
         $invoices = $query->get();
+
+        // Append signed download URLs for the bot
+        $invoices->each(function($invoice) {
+            $invoice->download_url = URL::temporarySignedRoute(
+                'api.download.invoice.pdf.public', 
+                now()->addHours(24), 
+                ['id' => $invoice->id, 'customer_id' => $invoice->customer_id]
+            );
+        });
 
         return response()->json([
             'success' => true,
@@ -1773,7 +1849,7 @@ class CustomerController extends Controller
 
     public function downloadInvoicePdfPublic($id, Request $request)
     {
-        $customerId = $request->header('X-Customer-ID');
+        $customerId = $request->query('customer_id') ?? $request->header('X-Customer-ID');
         if (!$customerId) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized or missing identity.'], 401);
         }
