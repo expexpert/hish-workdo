@@ -33,9 +33,14 @@ trait HandlesBotInputs
         // 1. Map Category
         if ($request->has('category_name')) {
             $categoryName = $request->input('category_name');
-            $category = CustomerCategory::where('name', 'LIKE', $categoryName)->first();
+            $category = CustomerCategory::where('customer_id', $user->id)
+                ->where('name', 'LIKE', $categoryName)
+                ->first();
             if (!$category) {
-                $category = CustomerCategory::create(['name' => $categoryName]);
+                $category = CustomerCategory::create([
+                    'customer_id' => $user->id,
+                    'name' => $categoryName
+                ]);
             }
             $request->merge(['category_id' => $category->id]);
 

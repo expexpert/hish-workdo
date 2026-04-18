@@ -1687,7 +1687,7 @@ class CustomerController extends Controller
                         'unit_price_ht'  => $request->input('amount'),
                         'quantity'       => 1,
                         'total_price_ht' => $request->input('amount'),
-                        'tva_percentage' => $request->input('vat', 0), // Fallback to 0 if no tax provided
+                        'tva_percentage' => $request->input('vat', $request->input('tva_percentage')) ?: null,
                     ]);
                 }
 
