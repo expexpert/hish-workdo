@@ -16,13 +16,22 @@ class LookupController extends Controller
     {
         $company_id = auth()->user()->companyId();
 
+        $suppliersQuery = CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name');
+        
+        if (request()->query('sort') === 'recent') {
+            $suppliersQuery->withMax('expenses', 'created_at')
+                ->orderByRaw('expenses_max_created_at IS NULL, expenses_max_created_at DESC');
+        } else {
+            $suppliersQuery->orderBy('supplier_name', 'asc');
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => [
                 'accounts' => BankAccount::where('created_by', $company_id)->select('id', 'holder_name as name')->get(),
                 // 'categories' => ProductServiceCategory::select('id', 'name')->where('type', '=', 'income')->get(),
                 'categories' => CustomerCategory::where('is_active', '=', 1)->select('id', 'name')->orderBy('name', 'asc')->get(),
-                'suppliers' => CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name')->get(),
+                'suppliers' => $suppliersQuery->get(),
             ]
         ]);
     }
@@ -32,10 +41,19 @@ class LookupController extends Controller
     {
         $company_id = auth()->user()->companyId();
 
+        $clientsQuery = CustomerClient::where('customer_id', auth()->id())->select('id', 'client_name');
+
+        if (request()->query('sort') === 'recent') {
+            $clientsQuery->withMax('invoices', 'created_at')
+                ->orderByRaw('invoices_max_created_at IS NULL, invoices_max_created_at DESC');
+        } else {
+            $clientsQuery->orderBy('client_name', 'asc');
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => [
-                'clients' => CustomerClient::where('customer_id', auth()->id())->select('id', 'client_name')->get(),
+                'clients' => $clientsQuery->get(),
                 'accounts' => BankAccount::where('created_by', $company_id)->select('id', 'holder_name as name')->get(),
             ]
         ]);

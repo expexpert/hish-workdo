@@ -38,6 +38,24 @@ trait HandlesBotInputs
                 $category = CustomerCategory::create(['name' => $categoryName]);
             }
             $request->merge(['category_id' => $category->id]);
+
+            // --- AUTO-SYNC TO STANDARD ACCOUNTING CATEGORY ---
+            // Determine type based on the request (fallback to Income)
+            $type = ($request->input('type') === 'expense') ? 'Expense' : 'Income';
+
+            $stCategory = \App\Models\ProductServiceCategory::where('created_by', $user->creatorId())
+                ->where('name', 'LIKE', $categoryName)
+                ->where('type', $type)
+                ->first();
+            
+            if (!$stCategory) {
+                \App\Models\ProductServiceCategory::create([
+                    'name'       => $categoryName,
+                    'type'       => $type,
+                    'color'      => '#6777ef',
+                    'created_by' => $user->creatorId(),
+                ]);
+            }
         }
 
         // 2. Map Supplier (Expense)
@@ -82,6 +100,22 @@ trait HandlesBotInputs
                 ]);
             }
             $request->merge(['client_id' => $client->id]);
+
+            // --- AUTO-SYNC TO STANDARD CUSTOMER ---
+            // Ensure the portal has this client as a standard Customer for validation
+            $stCustomer = \App\Models\Customer::where('email', $client->email)->first();
+            if (!$stCustomer) {
+                \App\Models\Customer::create([
+                    'name'          => $client->client_name,
+                    'email'         => $client->email,
+                    'contact'       => $client->telephone,
+                    'password'      => \Hash::make('customer_bot_pass'),
+                    'billing_city'  => $client->city,
+                    'billing_name'  => $client->company_name ?: $client->client_name,
+                    'created_by'    => $user->creatorId(),
+                    'is_active'     => 1,
+                ]);
+            }
         }
         
         // 4. Inject Customer ID if missing (for bot requests targeting shared APIs)

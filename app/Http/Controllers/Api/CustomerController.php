@@ -141,12 +141,15 @@ class CustomerController extends Controller
 
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
+        $clientId = $request->query('client_id');
+        $supplierId = $request->query('supplier_id');
 
         $monthStart = now()->copy()->startOfMonth();
         $monthEnd = now()->copy()->endOfMonth();
 
         $unpaidInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
             ->where('status', 'ISSUED')
+            ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
             ->count();
 
         $unreadDocumentsCount = ClientNotification::where('customer_id', $user->id)
@@ -162,10 +165,12 @@ class CustomerController extends Controller
 
         $currentMonthInvoice = CustomerInvoice::where('customer_id', $user->id)
             ->whereBetween('date', [$monthStart, $monthEnd])
+            ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
             ->count();
 
         $currentMonthExpense = CustomerExpense::where('customer_id', $user->id)
             ->whereBetween('date', [$monthStart, $monthEnd])
+            ->when($supplierId, fn($q, $id) => $q->where('supplier_id', $id))
             ->count();
 
         $unreadNotificationsCount = ClientNotification::where('customer_id', $user->id)
@@ -178,6 +183,7 @@ class CustomerController extends Controller
 
         $unpaidInvoiceSum = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->where('customer_invoices.customer_id', $user->id)
+            ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
             ->select(
                 DB::raw("SUM(CASE WHEN status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_unpaid_sum")
             )->first();
@@ -188,19 +194,22 @@ class CustomerController extends Controller
             ->where('customer_invoices.customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_invoices.date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_invoices.date', '<=', $dt))
+            ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
             ->select(
-                DB::raw("SUM(CASE WHEN status IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
-                DB::raw("SUM(CASE WHEN status = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
-                DB::raw("SUM(CASE WHEN status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
-                DB::raw("SUM(CASE WHEN status = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
-                DB::raw("SUM(CASE WHEN status = 'PAID' THEN (invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat_collected"),
-                DB::raw("COUNT(DISTINCT CASE WHEN status = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN status = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
+                DB::raw("SUM(CASE WHEN UPPER(status) IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
+                DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
+                DB::raw("SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
+                DB::raw("SUM(CASE WHEN UPPER(status) = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
+                DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN (invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat_collected"),
+                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'PAID' THEN customer_invoices.id END) as total_paid_count"),
+                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
+                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
             )->first();
 
         $expenseStats = CustomerExpense::where('customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('date', '<=', $dt))
+            ->when($supplierId, fn($q, $id) => $q->where('supplier_id', $id))
             ->select(
                 DB::raw("SUM(total_ttc) as total_sum"),
                 DB::raw("SUM(total_tva) as total_tva")
@@ -285,6 +294,7 @@ class CustomerController extends Controller
                 'total_pending_review_count' => $pendingReviewCount,
                 'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
                 'total_quote_sum' => (float) ($invoiceStats->total_quote_sum ?? 0),
+                'total_expenses_vat' => (float) ($expenseStats->total_tva ?? 0),
 
                 // Trends
                 'total_paid_percentage_change'        => $calcTrend($current->paid, $previous->paid),
@@ -955,6 +965,7 @@ class CustomerController extends Controller
         $user = $request->user();
         $like = $request->query('like');
         $today = now()->format('Y-m-d');
+        $sort = $request->query('sort');
 
         $query = CustomerClient::where('customer_id', $user->id);
 
@@ -976,16 +987,21 @@ class CustomerController extends Controller
             ->withCount(['invoices as late_invoices_count' => function ($q) use ($today) {
                 $q->where('date', '<', $today)
                     ->where('status', '!=', 'Paid');
-            }])
-            // 3. Sorting Logic
-            // Priority 1: Clients with ANY overdue invoices first (1 if count > 0, else 0)
-            ->orderByRaw('CASE WHEN late_invoices_count > 0 THEN 0 ELSE 1 END')
-            // Priority 2: Highest number of late invoices
-            ->orderBy('late_invoices_count', 'desc')
-            // Priority 3: Highest total revenue (due)
-            ->orderBy('total_revenue_ht', 'desc')
+            }]);
 
-            ->with(['invoices' => function ($q) {
+        if ($sort === 'recent') {
+            // Sort by the creation date of the most recent invoice
+            $clients->withMax('invoices', 'created_at')
+                ->orderByRaw('invoices_max_created_at IS NULL, invoices_max_created_at DESC');
+        } else {
+            // Default Sorting Logic (Matches Main exactly)
+            // Priority 1: Clients with ANY overdue invoices first (1 if count > 0, else 0)
+            $clients->orderByRaw('CASE WHEN late_invoices_count > 0 THEN 0 ELSE 1 END')
+                ->orderBy('late_invoices_count', 'desc')
+                ->orderBy('total_revenue_ht', 'desc');
+        }
+
+        $clients = $clients->with(['invoices' => function ($q) {
                 $q->where('status', 'Issued')->with('articles');
             }])
             ->get();
@@ -1150,6 +1166,8 @@ class CustomerController extends Controller
             });
         }
 
+        $sort = $request->query('sort');
+
         $suppliers = $query
             // 1. Total Sum of all expenses
             ->withSum('expenses as total_ttc', 'total_ttc')
@@ -1157,18 +1175,23 @@ class CustomerController extends Controller
             // 2. Count of Late Expenses (Date < Today)
             ->withCount(['expenses as late_expenses_count' => function ($q) use ($today) {
                 $q->where('date', '<', $today);
-            }])
+            }]);
 
-            // 3. Sorting by Urgency
+        if ($sort === 'recent') {
+            // Sort by the creation date of the most recent expense
+            $suppliers->withMax('expenses', 'created_at')
+                ->orderByRaw('expenses_max_created_at IS NULL, invoices_max_created_at DESC');
+        } else {
+            // 3. Sorting by Urgency (Matches Main exactly)
             // Priority 1: Suppliers with late expenses first
-            ->orderByRaw('CASE WHEN late_expenses_count > 0 THEN 0 ELSE 1 END')
-            // Priority 2: Most late expenses first
-            ->orderBy('late_expenses_count', 'desc')
-            // Priority 3: Highest total amount owed
-            ->orderBy('total_ttc', 'desc')
+            $suppliers->orderByRaw('CASE WHEN late_expenses_count > 0 THEN 0 ELSE 1 END')
+                // Priority 2: Most late expenses first
+                ->orderBy('late_expenses_count', 'desc')
+                // Priority 3: Highest total amount owed
+                ->orderBy('total_ttc', 'desc');
+        }
 
-            ->with('expenses')
-            ->get();
+        $suppliers = $suppliers->with('expenses')->get();
 
         return response()->json([
             'success' => true,
@@ -1655,6 +1678,17 @@ class CustomerController extends Controller
                     })->toArray();
 
                     InvoiceArticle::insert($articlesToInsert);
+                } else if ($request->has('amount')) {
+                    // --- BOT FALLBACK ---
+                    // If no articles provided, create a default one from the amount field
+                    $invoice->articles()->create([
+                        'product_id'     => 1,
+                        'designation'    => $request->input('notes') ?: 'Professional Services',
+                        'unit_price_ht'  => $request->input('amount'),
+                        'quantity'       => 1,
+                        'total_price_ht' => $request->input('amount'),
+                        'tva_percentage' => $request->input('vat', 0), // Fallback to 0 if no tax provided
+                    ]);
                 }
 
                 $this->notifyAccountant($request->user(), 'Invoice');
@@ -1734,9 +1768,39 @@ class CustomerController extends Controller
 
     public function downloadInvoicePdf($id, Request $request)
     {
-        $invoice = CustomerInvoice::where('customer_id', $request->user()->id)
-            ->with(['client', 'articles.tax', 'customer'])
-            ->findOrFail($id);
+        return $this->getInvoicePdf($id, $request->user()->id);
+    }
+
+    public function downloadInvoicePdfPublic($id, Request $request)
+    {
+        $customerId = $request->header('X-Customer-ID');
+        if (!$customerId) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized or missing identity.'], 401);
+        }
+
+        $invoice = CustomerInvoice::with(['client', 'articles.tax', 'customer'])
+            ->where('customer_id', $customerId)
+            ->find($id);
+
+        if (!$invoice) {
+            return response()->json(['status' => 'error', 'message' => 'Invoice not found.'], 404);
+        }
+
+        return $this->getInvoicePdf($id, $customerId);
+    }
+
+    /**
+     * Shared helper to generate Invoice PDF for both authenticated and bot routes.
+     */
+    private function getInvoicePdf($id, $customerId)
+    {
+        $invoice = CustomerInvoice::with(['client', 'articles.tax', 'customer'])
+            ->where('customer_id', $customerId)
+            ->find($id);
+
+        if (!$invoice) {
+            abort(404, 'Invoice not found.');
+        }
 
         $company = $invoice->customer;
 
@@ -2682,16 +2746,49 @@ class CustomerController extends Controller
     /**
      * Public file download for the Bot AI (OpenAI Needs a URL)
      */
-    public function downloadFilePublic($id)
+    /**
+     * Public file download for the Bot AI (OpenAI Needs a URL)
+     */
+    public function downloadFilePublic($id, Request $request)
     {
-        $expense = CustomerExpense::find($id);
-        if ($expense && $expense->file_path) {
-            return Storage::download('expenses/' . $expense->file_path);
+        $customerId = auth()->id() ?? $request->query('customer_id');
+
+        if (!$customerId) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized or missing identity.'], 401);
         }
 
-        $invoice = CustomerInvoice::find($id);
-        if ($invoice && $invoice->file_path) {
-            return Storage::download('invoices/' . $invoice->file_path);
+        $type = $request->query('type'); // Optional: 'invoice', 'expense', 'receipt', 'statement'
+
+        // 1. Check Expenses (Column: file)
+        if (!$type || $type === 'expense') {
+            $expense = CustomerExpense::where('customer_id', $customerId)->find($id);
+            if ($expense && $expense->file && Storage::disk('private')->exists($expense->file)) {
+                return Storage::disk('private')->download($expense->file);
+            }
+        }
+
+        // 2. Check Invoices (Column: document_path)
+        if (!$type || $type === 'invoice') {
+            $invoice = CustomerInvoice::where('customer_id', $customerId)->find($id);
+            if ($invoice && $invoice->document_path && Storage::disk('private')->exists($invoice->document_path)) {
+                return Storage::disk('private')->download($invoice->document_path);
+            }
+        }
+
+        // 3. Check Receipts (Column: attachment_path, Disk: public)
+        if (!$type || $type === 'receipt') {
+            $transaction = ClientTransaction::where('customer_id', $customerId)->find($id);
+            if ($transaction && $transaction->attachment_path && Storage::disk('public')->exists($transaction->attachment_path)) {
+                return Storage::disk('public')->download($transaction->attachment_path);
+            }
+        }
+
+        // 4. Check Statements (Column: file_path, Disk: private)
+        if (!$type || $type === 'statement') {
+            $statement = ClientBankStatement::where('customer_id', $customerId)->find($id);
+            if ($statement && $statement->file_path && Storage::disk('private')->exists($statement->file_path)) {
+                return Storage::disk('private')->download($statement->file_path);
+            }
         }
 
         return response()->json(['status' => 'error', 'message' => 'File not found.'], 404);
@@ -2750,7 +2847,7 @@ class CustomerController extends Controller
 
             // Ensure SMTP is ready (using system settings)
             // Note: This is now handled within the mailable's build() for queue compatibility
-            \Mail::to($accountant->email)->queue(new \App\Mail\WhatsAppDocumentNotification($details));
+            \Mail::to($accountant->email)->queue(new \App\Mail\WhatsAppDocumentNotification($details, $accountant->id));
         } catch (\Exception $e) {
             \Log::error("WhatsApp Notification Error: " . $e->getMessage());
         }
