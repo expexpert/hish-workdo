@@ -1709,7 +1709,7 @@ class CustomerController extends Controller
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
         ]);
 
-        \Log::info('Validation done in: ' . (microtime(true) - $startTime));
+        \Log::info('Validation done in: ' . (microtime(true) - $startTime) . 'for invoice number: ' . $validated['invoice_number']);
 
         try {
             // ✅ STEP 2: Prepare header data
@@ -2434,7 +2434,7 @@ class CustomerController extends Controller
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
         ]);
 
-        \Log::info('Validation done in: ' . (microtime(true) - $startTime));
+        \Log::info('Validation done in: ' . (microtime(true) - $startTime) . 'for quote number: ' . ($validated['quote_number'] ?? 'N/A'));
 
         try {
             // ✅ STEP 2: Prepare Data
