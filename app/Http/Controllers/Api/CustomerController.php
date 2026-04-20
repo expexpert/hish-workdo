@@ -2419,7 +2419,7 @@ class CustomerController extends Controller
                     }
 
                     // 🚀 BULK INSERT (single query instead of many)
-                    DB::table('quote_articles')->insert($articlesData);
+                    DB::table('quotes_articles')->insert($articlesData);
                 }
 
                 return $quote;
