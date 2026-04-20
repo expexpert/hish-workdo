@@ -2356,6 +2356,11 @@ class CustomerController extends Controller
 
     public function storeQuote(Request $request)
     {
+        \Log::info('Quote API Hit');
+
+        $startTime = microtime(true);
+
+        // ✅ STEP 1: Validation
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'client_id'   => 'required|exists:customer_clients,id',
@@ -2365,72 +2370,90 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
             'notes'       => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
 
-            'articles'                 => 'sometimes|array',
-            'articles.*.designation'    => 'required_with:articles|string|max:255',
-            'articles.*.product_id'    => 'nullable|integer',
-            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles'                    => 'sometimes|array',
+            'articles.*.designation'     => 'required_with:articles|string|max:255',
+            'articles.*.product_id'      => 'nullable|integer',
+            'articles.*.unit_price_ht'   => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
+            'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
         ]);
 
-        // 1. Process File OUTSIDE the transaction
-        $documentPath = null;
-        if ($request->hasFile('document')) {
-            $documentPath = $request->file('document')->store('customer_quotes', 'private');
-        }
+        \Log::info('Validation done in: ' . (microtime(true) - $startTime));
 
         try {
-            // 2. Prepare the data first
+            // ✅ STEP 2: Prepare Data
             $quoteData = collect($validated)->except(['articles', 'document'])->toArray();
-            if ($documentPath) {
-                $quoteData['document_path'] = $documentPath;
-            }
 
-            // 3. Prepare Articles Data OUTSIDE the transaction to keep it short
             $articlesData = [];
+
             if (!empty($validated['articles'])) {
-                $articlesData = array_map(function ($article) {
-                    return [
+                foreach ($validated['articles'] as $article) {
+                    $quantity = $article['quantity'] ?? 1;
+
+                    $articlesData[] = [
                         'product_id'     => $article['product_id'] ?? 1,
                         'designation'    => $article['designation'],
                         'unit_price_ht'  => $article['unit_price_ht'],
-                        'quantity'       => $article['quantity'] ?? 1,
-                        'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
+                        'quantity'       => $quantity,
+                        'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * $quantity),
                         'tva_percentage' => $article['tva_percentage'],
                         'created_at'     => now(),
                         'updated_at'     => now(),
                     ];
-                }, $validated['articles']);
+                }
             }
 
+            \Log::info('Data prepared in: ' . (microtime(true) - $startTime));
+
+            // ✅ STEP 3: DB Transaction (FAST)
             $quote = DB::transaction(function () use ($quoteData, $articlesData) {
-                // 4. Create Header
+
                 $quote = CustomerQuote::create($quoteData);
 
-                // 5. Batch Insert Articles
                 if (!empty($articlesData)) {
-                    $quote->articles()->createMany($articlesData);
+                    foreach ($articlesData as &$article) {
+                        $article['quote_id'] = $quote->id;
+                    }
+
+                    // 🚀 BULK INSERT (single query instead of many)
+                    DB::table('quote_articles')->insert($articlesData);
                 }
 
                 return $quote;
             });
 
-            // 6. Notify Accountant (Queued, but might be slow if driver is sync)
-            // $this->notifyAccountant($request->user(), 'Quote');
+            \Log::info('DB Transaction done in: ' . (microtime(true) - $startTime));
 
+            // ✅ STEP 4: File Upload AFTER DB (non-blocking DB)
+            if ($request->hasFile('document')) {
+                $fileStart = microtime(true);
+
+                $documentPath = $request->file('document')->store('customer_quotes', 'private');
+
+                $quote->update([
+                    'document_path' => $documentPath
+                ]);
+
+                \Log::info('File upload done in: ' . (microtime(true) - $fileStart));
+            }
+
+            \Log::info('Total execution time: ' . (microtime(true) - $startTime));
+
+            // ✅ STEP 5: Response (no extra DB query)
             return response()->json([
                 'success' => true,
                 'message' => 'Quote created successfully.',
-                'data'    => $quote->setRelation('articles', collect($validated['articles'] ?? []))
-                // Manual injection is faster than reloading from DB
+                'data'    => $quote->setRelation(
+                    'articles',
+                    collect($validated['articles'] ?? [])
+                )
             ], 201);
         } catch (\Exception $e) {
-            if ($documentPath) {
-                Storage::disk('private')->delete($documentPath);
-            }
+
+            \Log::error('Quote creation failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
