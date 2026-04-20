@@ -2752,7 +2752,6 @@ class CustomerController extends Controller
                 $invoice->client_id = $quote->client_id;
                 $invoice->date = $quote->date;
                 $invoice->due_date = $quote->due_date;
-                $invoice->send_date = $quote->created_at->format('Y-m-d');
                 $invoice->invoice_number = $quote->quote_number;
                 $invoice->payment_method = $quote->payment_method;
                 $invoice->status = 'Issued';
