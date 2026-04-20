@@ -1309,7 +1309,7 @@ class CustomerController extends Controller
                 $newArticle->product_id  = $article->product_id;
                 $newArticle->quantity    = $article->quantity;
                 $newArticle->tax         = $article->tva_percentage;
-                $newArticle->discount    = '0';
+                $newArticle->discount    = $article->discount;
                 $newArticle->price       = $article->unit_price_ht;
                 $newArticle->description = null;
                 $newArticle->save();

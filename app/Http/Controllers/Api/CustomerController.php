@@ -1709,6 +1709,7 @@ class CustomerController extends Controller
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
+            'articles.*.discount'        => 'nullable|numeric|min:0|max:100',
         ]);
 
         \Log::info('Validation done in: ' . (microtime(true) - $startTime) . 'for invoice number: ' . $validated['invoice_number']);
@@ -1732,6 +1733,7 @@ class CustomerController extends Controller
                         'quantity'       => $qty,
                         'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * $qty),
                         'tva_percentage' => $article['tva_percentage'],
+                        'discount'       => $article['discount'] ?? 0,
                         'created_at'     => $now,
                         'updated_at'     => $now,
                     ];
@@ -1765,6 +1767,7 @@ class CustomerController extends Controller
                             'quantity'       => 1,
                             'total_price_ht' => $request->input('amount'),
                             'tva_percentage' => $request->input('vat', $request->input('tva_percentage')) ?: null,
+                            'discount'       => $request->input('discount', 0),
                             'created_at'     => now(),
                             'updated_at'     => now(),
                         ]
@@ -2244,7 +2247,7 @@ class CustomerController extends Controller
         $productService->expense_chartaccount_id    = ($request->category === 'Service') ? '5005' : '5010';
         $productService->customer_id     = $request->customer_id;
         $productService->created_by     = $company_id;
-        $productService->unit_id        = $unitID;
+        $productService->unit_id        = $request->unit_id;
         $productService->category_id    = $categoryID;
         $productService->save();
 

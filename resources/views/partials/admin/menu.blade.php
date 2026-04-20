@@ -735,14 +735,14 @@
                                         href="{{ route('product-category.index') }}">{{ __('Category') }}</a>
                                 </li>
                             @endcan
-                            <!-- @can('manage constant unit')
+                            @can('manage constant unit')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'product-unit.index' ? ' active' : '' }}">
                                     <a class="dash-link"
                                         href="{{ route('product-unit.index') }}">{{ __('Unit') }}</a>
                                 </li>
                             @endcan
-                            @can('manage constant custom field')
+                            <!-- @can('manage constant custom field')
                                 <li
                                     class="dash-item {{ Request::route()->getName() == 'custom-field.index' ? 'active' : '' }}">
                                     <a class="dash-link"
