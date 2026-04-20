@@ -205,12 +205,12 @@ class CustomerController extends Controller
                 DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count")
             )->first();
 
-        $quoteStats = CustomerQuote::leftJoin('quote_articles', 'customer_quotes.id', '=', 'quote_articles.quote_id')
+        $quoteStats = CustomerQuote::leftJoin('quotes_articles', 'customer_quotes.id', '=', 'quotes_articles.quotes_id')
             ->where('customer_quotes.customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_quotes.date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_quotes.date', '<=', $dt))
             ->select(
-                DB::raw("SUM(quote_articles.total_price_ht) as total_quote_sum"),
+                DB::raw("SUM(quotes_articles.total_price_ht) as total_quote_sum"),
                 DB::raw("COUNT(DISTINCT customer_quotes.id) as total_quote_count")
             )
             ->first();
