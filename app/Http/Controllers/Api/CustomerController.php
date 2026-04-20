@@ -2415,7 +2415,7 @@ class CustomerController extends Controller
 
                 if (!empty($articlesData)) {
                     foreach ($articlesData as &$article) {
-                        $article['quote_id'] = $quote->id;
+                        $article['quotes_id'] = $quote->id;
                     }
 
                     // 🚀 BULK INSERT (single query instead of many)
