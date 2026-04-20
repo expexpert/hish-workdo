@@ -1682,9 +1682,14 @@ class CustomerController extends Controller
 
     public function storeInvoice(Request $request)
     {
+        \Log::info('Invoice API Hit');
+        $startTime = microtime(true);
+
+        // Optional preprocessing
         $this->mapBotInputs($request);
+
+        // ✅ STEP 1: Validation
         $validated = $request->validate([
-            // Invoice Header
             'customer_id'    => 'required|exists:customers,id',
             'client_id'      => 'required|exists:customer_clients,id',
             'date'           => 'required|date',
@@ -1695,88 +1700,122 @@ class CustomerController extends Controller
             'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
 
-
-            'articles'                 => 'sometimes|array',
-            'articles.*.designation'    => 'required_with:articles|string|max:255',
-            'articles.*.product_id'    => 'nullable|integer',
-            'articles.*.unit_price_ht' => 'required_with:articles|numeric|min:0',
+            'articles'                    => 'sometimes|array',
+            'articles.*.designation'     => 'required_with:articles|string|max:255',
+            'articles.*.product_id'      => 'nullable|integer',
+            'articles.*.unit_price_ht'   => 'required_with:articles|numeric|min:0',
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
-            'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
+            'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
         ]);
 
-        // 1. Handle File Upload OUTSIDE the transaction
-        $documentPath = null;
-        if ($request->hasFile('document')) {
-            $documentPath = $request->file('document')->store('customer_invoices', 'private');
-        }
+        \Log::info('Validation done in: ' . (microtime(true) - $startTime));
 
         try {
-            // 2. Prepare the data first
+            // ✅ STEP 2: Prepare header data
             $invoiceData = collect($validated)->except(['articles', 'document'])->toArray();
-            if ($documentPath) {
-                $invoiceData['document_path'] = $documentPath;
+
+            $articlesData = [];
+            $now = now();
+
+            // ✅ STEP 3: Prepare articles BEFORE DB
+            if (!empty($validated['articles'])) {
+                foreach ($validated['articles'] as $article) {
+                    $qty = $article['quantity'] ?? 1;
+
+                    $articlesData[] = [
+                        'product_id'     => $article['product_id'] ?? 1,
+                        'designation'    => $article['designation'],
+                        'unit_price_ht'  => $article['unit_price_ht'],
+                        'quantity'       => $qty,
+                        'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * $qty),
+                        'tva_percentage' => $article['tva_percentage'],
+                        'created_at'     => $now,
+                        'updated_at'     => $now,
+                    ];
+                }
             }
 
-            $invoice = DB::transaction(function () use ($request, $invoiceData, $validated) {
-                // 3. Create the Invoice Header
+            \Log::info('Data prepared in: ' . (microtime(true) - $startTime));
+
+            // ✅ STEP 4: DB Transaction (FAST)
+            $invoice = DB::transaction(function () use ($invoiceData, $articlesData, $request) {
+
                 $invoice = CustomerInvoice::create($invoiceData);
 
-                // 4. Bulk Create Articles ONLY if they exist in the request
-                if (!empty($validated['articles'])) {
-                    $now = now();
-                    $articlesToInsert = collect($validated['articles'])->map(function ($article) use ($invoice, $now) {
-                        return [
-                            'invoice_id'     => $invoice->id,
-                            'product_id'     => $article['product_id'] ?? 1,
-                            'designation'    => $article['designation'],
-                            'unit_price_ht'  => $article['unit_price_ht'],
-                            'quantity'       => $article['quantity'] ?? 1,
-                            'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
-                            'tva_percentage' => $article['tva_percentage'],
-                            'created_at'     => $now,
-                            'updated_at'     => $now,
-                        ];
-                    })->toArray();
+                // 🚀 BULK INSERT ARTICLES
+                if (!empty($articlesData)) {
+                    foreach ($articlesData as &$article) {
+                        $article['invoice_id'] = $invoice->id;
+                    }
 
-                    InvoiceArticle::insert($articlesToInsert);
-                } else if ($request->has('amount')) {
-                    // --- BOT FALLBACK ---
-                    // If no articles provided, create a default one from the amount field
-                    $invoice->articles()->create([
-                        'product_id'     => 1,
-                        'designation'    => $request->input('notes') ?: 'Professional Services',
-                        'unit_price_ht'  => $request->input('amount'),
-                        'quantity'       => 1,
-                        'total_price_ht' => $request->input('amount'),
-                        'tva_percentage' => $request->input('vat', $request->input('tva_percentage')) ?: null,
+                    DB::table('invoice_articles')->insert($articlesData);
+                }
+                // 🚀 BOT FALLBACK (also BULK STYLE)
+                else if ($request->has('amount')) {
+
+                    DB::table('invoice_articles')->insert([
+                        [
+                            'invoice_id'     => $invoice->id,
+                            'product_id'     => 1,
+                            'designation'    => $request->input('notes') ?: 'Professional Services',
+                            'unit_price_ht'  => $request->input('amount'),
+                            'quantity'       => 1,
+                            'total_price_ht' => $request->input('amount'),
+                            'tva_percentage' => $request->input('vat', $request->input('tva_percentage')) ?: null,
+                            'created_at'     => now(),
+                            'updated_at'     => now(),
+                        ]
                     ]);
                 }
 
                 return $invoice;
             });
 
-            // 5. Notify Accountant (Queued, but might be slow if driver is sync)
-            // $this->notifyAccountant($request->user(), 'Invoice');
+            \Log::info('DB Transaction done in: ' . (microtime(true) - $startTime));
 
-            // 6. Generate temporary signed URL for browser access (Valid for 24h)
+            // ✅ STEP 5: File Upload AFTER DB (important)
+            if ($request->hasFile('document')) {
+                $fileStart = microtime(true);
+
+                $documentPath = $request->file('document')->store('customer_invoices', 'private');
+
+                $invoice->update([
+                    'document_path' => $documentPath
+                ]);
+
+                \Log::info('File upload done in: ' . (microtime(true) - $fileStart));
+            }
+
+            // ✅ STEP 6: Generate signed URL
+            $urlStart = microtime(true);
+
             $downloadUrl = URL::temporarySignedRoute(
                 'api.download.invoice.pdf.public',
                 now()->addHours(24),
-                ['id' => $invoice->id, 'customer_id' => $invoice->customer_id]
+                [
+                    'id' => $invoice->id,
+                    'customer_id' => $invoice->customer_id
+                ]
             );
 
             $invoice->download_url = $downloadUrl;
 
+            \Log::info('URL generation done in: ' . (microtime(true) - $urlStart));
+            \Log::info('Total execution time: ' . (microtime(true) - $startTime));
+
+            // ✅ STEP 7: Return (no heavy reload)
             return response()->json([
                 'success' => true,
                 'message' => 'Invoice created successfully.',
-                'data'    => $invoice->load('articles')
+                'data'    => $invoice->setRelation(
+                    'articles',
+                    collect($validated['articles'] ?? [])
+                )
             ], 201);
         } catch (\Exception $e) {
-            if ($documentPath) {
-                Storage::disk('private')->delete($documentPath);
-            }
+
+            \Log::error('Invoice creation failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
