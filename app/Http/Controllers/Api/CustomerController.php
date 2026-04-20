@@ -2405,7 +2405,21 @@ class CustomerController extends Controller
             'client_id'   => 'required|exists:customer_clients,id',
             'date'        => 'required|date',
             'due_date'    => 'required|date|after:date',
-            'quote_number' => 'required|string|max:255|unique:customer_quotes,quote_number',
+            'quote_number' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:customer_quotes,quote_number',
+                function ($attribute, $value, $fail) {
+                    $exists = DB::table('customer_invoices')
+                        ->where('invoice_number', $value)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('This quote number already exists as an invoice number.');
+                    }
+                },
+            ],
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
             'notes'       => 'nullable|string',
@@ -2643,6 +2657,70 @@ class CustomerController extends Controller
                 'message' => 'Failed to delete quote: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function exportQuotes(Request $request)
+    {
+        $user = $request->user();
+        $quotes = CustomerQuote::where('customer_id', $user->id)
+            ->with(['client:id,client_name', 'articles.tax'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $fileName = "quotes_" . now()->format('Ymd_His') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function () use ($quotes) {
+            $file = fopen('php://output', 'w');
+
+            // Add Headers
+            fputcsv($file, ['Quote#', 'Date', 'Client', 'Status', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
+
+            foreach ($quotes as $quote) {
+                $clientName = $quote->client->client_name ?? 'N/A';
+                foreach ($quote->articles as $article) {
+                    $taxRate = $article->tax ? $article->tax->rate : 0;
+                    fputcsv($file, [
+                        $quote->quote_number,
+                        $quote->date,
+                        $clientName,
+                        $quote->status,
+                        $article->designation ?? '',
+                        $article->total_price_ht,
+                        $taxRate,
+                        $quote->payment_method,
+                        $article->designation ?? '',
+                        $article->total_price_ht,
+                        $taxRate
+                    ]);
+                }
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function downloadQuote(Request $request, $id)
+    {
+        $quote = CustomerQuote::where('customer_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!$quote->document_path || !Storage::disk('private')->exists($quote->document_path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quote file not found on server.'
+            ], 404);
+        }
+
+        return Storage::disk('private')->download($quote->document_path, 'Quote_' . $quote->id . '.' . pathinfo($quote->document_path, PATHINFO_EXTENSION));
     }
 
     public function downloadQuotePdf(Request $request, $id)

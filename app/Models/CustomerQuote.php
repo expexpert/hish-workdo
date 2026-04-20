@@ -29,6 +29,8 @@ class CustomerQuote extends Model
         'due_date' => 'date',
     ];
 
+    protected $appends = ['invoice_url', 'pdf_url'];
+
     /*
     |--------------------------------------------------------------------------
     | Relationships
@@ -48,5 +50,20 @@ class CustomerQuote extends Model
     public function articles()
     {
         return $this->hasMany(QuoteArticle::class, 'quotes_id');
+    }
+
+    public function getInvoiceUrlAttribute()
+    {
+        if (!$this->document_path) {
+            return null;
+        }
+
+        // Secure API URL instead of the public storage asset URL
+        return url("/api/customer/customer-quotes/download/{$this->id}");
+    }
+
+    public function getPdfUrlAttribute()
+    {
+        return url("/api/customer/customer-quotes/pdf/{$this->id}");
     }
 }
