@@ -41,6 +41,8 @@ class Customer extends Authenticatable
         'address',
         'vat_number',
         'website',
+        'notes',
+        'customer_type',
         'password',
         'password_changed_at',
         'contact',

@@ -84,6 +84,8 @@ class CustomerController extends Controller
 
             // These can be present and empty (null), or missing entirely
             'website'          => 'nullable|string|max:255',
+            'notes'            => 'nullable|string|max:1000',
+            'customer_type'    => 'nullable|string|max:255',
             'avatar'           => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             'signature'        => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
