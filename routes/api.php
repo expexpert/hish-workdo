@@ -34,18 +34,18 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::get('/last-password-update', [AuthController::class, 'lastPasswordUpdate']);
-    
+
     Route::get('/profile', [CustomerController::class, 'getProfile']);
     Route::put('/profile', [CustomerController::class, 'updateProfile']);
     Route::delete('/profile', [CustomerController::class, 'deleteProfile']);
-    
-    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);    
+
+    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
     Route::get('/dashboard-graph-data', [CustomerController::class, 'getDashboardGraphData']);
 
     Route::get('/analyse-rapide', [CustomerController::class, 'getAnalyseRapide']);
 
     Route::get('/has-unread-notifications', [CustomerController::class, 'hasUnreadNotifications']);
-    
+
     Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);
 
     Route::get('/notification', [CustomerController::class, 'getCustomerNotifications']);
@@ -82,7 +82,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::put('/customer-supplier/{id}', [CustomerController::class, 'updateCustomerSupplier']);
     Route::delete('/customer-supplier/{id}', [CustomerController::class, 'deleteCustomerSupplier']);
     Route::get('/customer-supplier-expenses/{id}', [CustomerController::class, 'getCustomerSupplierExpenses']);
-    
+
 
     Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
     Route::get('/customer-expenses', [CustomerController::class, 'getExpenses']);
@@ -119,13 +119,15 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/customer-quote/{id}', [CustomerController::class, 'viewSingleQuote']);
     Route::put('/customer-quote/{id}', [CustomerController::class, 'updateQuote']);
     Route::delete('/customer-quote/{id}', [CustomerController::class, 'deleteQuote']);
+    Route::get('/export-quotes', [CustomerController::class, 'exportQuotes']);
+    Route::get('/customer-quotes/download/{id}', [CustomerController::class, 'downloadQuote']);
     Route::get('/customer-quotes/pdf/{id}', [CustomerController::class, 'downloadQuotePdf']);
 
     Route::post('/quote-to-invoice/{id}', [CustomerController::class, 'quoteToInvoice']);
 
 
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
-    
+
     // WhatsApp Bot Activation (OTP) - Protected by standard user auth too
     Route::post('/bot/request-activation', [CustomerController::class, 'requestActivation']);
     Route::post('/bot/verify-activation', [CustomerController::class, 'verifyActivation']);
@@ -133,10 +135,10 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
 
 // --- WhatsApp Bot Bridge (Secure Proxy Access via Dedicated Prefix) ---
 Route::group(['prefix' => 'bot'], function () {
-    
+
     // 1. Secure Bot Identity Routes (Require X-Bot-Secret)
     Route::group(['middleware' => 'bot.auth'], function () {
-        
+
         // A. Customer Contextual Routes (Require X-Customer-Phone)
         Route::group(['prefix' => 'customer'], function () {
             // Shared Data Store Handlers
@@ -148,7 +150,7 @@ Route::group(['prefix' => 'bot'], function () {
             Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
             Route::post('/customer-invoice', [CustomerController::class, 'storeInvoice']);
             Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
-            
+
             // Status metrics specifically for the bot
             Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
 
