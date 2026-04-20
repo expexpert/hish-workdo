@@ -22,6 +22,7 @@ class InvoiceArticle extends Model
         'quantity',
         'total_price_ht',
         'tva_percentage',
+        'discount',
     ];
 
     /**
@@ -32,6 +33,7 @@ class InvoiceArticle extends Model
         'quantity'       => 'integer',
         'total_price_ht' => 'decimal:2',
         'tva_percentage' => 'integer',
+        'discount'       => 'decimal:2',
     ];
 
     /**
