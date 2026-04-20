@@ -200,12 +200,20 @@ class CustomerController extends Controller
                 DB::raw("SUM(CASE WHEN UPPER(status) IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
                 DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
                 DB::raw("SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
-                DB::raw("SUM(CASE WHEN UPPER(status) = 'QUOTES' THEN invoice_articles.total_price_ht ELSE 0 END) as total_quote_sum"),
                 DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN (invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat_collected"),
                 DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'PAID' THEN customer_invoices.id END) as total_paid_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'QUOTES' THEN customer_invoices.id END) as total_quote_count")
+                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count")
             )->first();
+
+        $quoteStats = CustomerQuote::leftJoin('quote_articles', 'customer_quotes.id', '=', 'quote_articles.quote_id')
+            ->where('customer_quotes.customer_id', $user->id)
+            ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_quotes.date', '>=', $df))
+            ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_quotes.date', '<=', $dt))
+            ->select(
+                DB::raw("SUM(quote_articles.total_price_ht) as total_quote_sum"),
+                DB::raw("COUNT(DISTINCT customer_quotes.id) as total_quote_count")
+            )
+            ->first();
 
         $expenseStats = CustomerExpense::where('customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('date', '>=', $df))
@@ -296,12 +304,12 @@ class CustomerController extends Controller
                 'total_vat_payable' => (float) $totalVatPayable,
                 'total_issued_count' => $invoiceStats->total_issued_count,
                 'total_paid_count' => $invoiceStats->total_paid_count,
-                'total_quote_count' => $invoiceStats->total_quote_count,
+                'total_quote_count' => $quoteStats->total_quote_count,
                 'total_expenses_count' => $expensesCount,
                 'bank_statements_count' => $statementsCount,
                 'total_pending_review_count' => $pendingReviewCount,
                 'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
-                'total_quote_sum' => (float) ($invoiceStats->total_quote_sum ?? 0),
+                'total_quote_sum' => (float) ($quoteStats->total_quote_sum ?? 0),
                 'total_expenses_vat' => (float) ($expenseStats->total_tva ?? 0),
 
                 // Trends
@@ -865,7 +873,7 @@ class CustomerController extends Controller
         $statement->download_url = $downloadUrl;
 
         return response()->json([
-            'message' => $message, 
+            'message' => $message,
             'data' => $statement
         ], $status);
     }
@@ -1022,8 +1030,8 @@ class CustomerController extends Controller
         }
 
         $clients = $clients->with(['invoices' => function ($q) {
-                $q->where('status', 'Issued')->with('articles');
-            }])
+            $q->where('status', 'Issued')->with('articles');
+        }])
             ->get();
 
         return response()->json([
@@ -1432,10 +1440,10 @@ class CustomerController extends Controller
         $expenses = $query->get();
 
         // Append signed download URLs for the bot
-        $expenses->each(function($expense) {
+        $expenses->each(function ($expense) {
             $expense->download_url = URL::temporarySignedRoute(
-                'api.download.file.public', 
-                now()->addHours(24), 
+                'api.download.file.public',
+                now()->addHours(24),
                 ['id' => $expense->id, 'customer_id' => $expense->customer_id]
             );
         });
@@ -1697,18 +1705,24 @@ class CustomerController extends Controller
             'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
         ]);
 
+        // 1. Handle File Upload OUTSIDE the transaction
+        $documentPath = null;
+        if ($request->hasFile('document')) {
+            $documentPath = $request->file('document')->store('customer_invoices', 'private');
+        }
+
         try {
-            return DB::transaction(function () use ($request, $validated) {
-                // 1. Handle File Upload
-                if ($request->hasFile('document')) {
-                    $path = $request->file('document')->store('customer_invoices', 'private');
-                    $validated['document_path'] = $path;
-                }
+            // 2. Prepare the data first
+            $invoiceData = collect($validated)->except(['articles', 'document'])->toArray();
+            if ($documentPath) {
+                $invoiceData['document_path'] = $documentPath;
+            }
 
-                // 2. Create the Invoice Header
-                $invoice = CustomerInvoice::create($validated);
+            $invoice = DB::transaction(function () use ($request, $invoiceData, $validated) {
+                // 3. Create the Invoice Header
+                $invoice = CustomerInvoice::create($invoiceData);
 
-                // 3. Bulk Create Articles ONLY if they exist in the request
+                // 4. Bulk Create Articles ONLY if they exist in the request
                 if (!empty($validated['articles'])) {
                     $now = now();
                     $articlesToInsert = collect($validated['articles'])->map(function ($article) use ($invoice, $now) {
@@ -1739,26 +1753,29 @@ class CustomerController extends Controller
                     ]);
                 }
 
-                $this->notifyAccountant($request->user(), 'Invoice');
-
-                // Generate temporary signed URL for browser access (Valid for 24h)
-                $downloadUrl = URL::temporarySignedRoute(
-                    'api.download.invoice.pdf.public',
-                    now()->addHours(24),
-                    ['id' => $invoice->id, 'customer_id' => $invoice->customer_id]
-                );
-
-                $invoice->download_url = $downloadUrl;
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Invoice created successfully.',
-                    'data'    => $invoice->load('articles')
-                ], 201);
+                return $invoice;
             });
+
+            // 5. Notify Accountant (Queued, but might be slow if driver is sync)
+            // $this->notifyAccountant($request->user(), 'Invoice');
+
+            // 6. Generate temporary signed URL for browser access (Valid for 24h)
+            $downloadUrl = URL::temporarySignedRoute(
+                'api.download.invoice.pdf.public',
+                now()->addHours(24),
+                ['id' => $invoice->id, 'customer_id' => $invoice->customer_id]
+            );
+
+            $invoice->download_url = $downloadUrl;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice created successfully.',
+                'data'    => $invoice->load('articles')
+            ], 201);
         } catch (\Exception $e) {
-            if (isset($validated['document_path'])) {
-                Storage::disk('private')->delete($validated['document_path']);
+            if ($documentPath) {
+                Storage::disk('private')->delete($documentPath);
             }
 
             return response()->json([
@@ -1811,10 +1828,10 @@ class CustomerController extends Controller
         $invoices = $query->get();
 
         // Append signed download URLs for the bot
-        $invoices->each(function($invoice) {
+        $invoices->each(function ($invoice) {
             $invoice->download_url = URL::temporarySignedRoute(
-                'api.download.invoice.pdf.public', 
-                now()->addHours(24), 
+                'api.download.invoice.pdf.public',
+                now()->addHours(24),
                 ['id' => $invoice->id, 'customer_id' => $invoice->customer_id]
             );
         });
@@ -2372,32 +2389,37 @@ class CustomerController extends Controller
                 $quoteData['document_path'] = $documentPath;
             }
 
-            $quote = DB::transaction(function () use ($quoteData, $validated) {
-                // 3. Create Header
+            // 3. Prepare Articles Data OUTSIDE the transaction to keep it short
+            $articlesData = [];
+            if (!empty($validated['articles'])) {
+                $articlesData = array_map(function ($article) {
+                    return [
+                        'product_id'     => $article['product_id'] ?? 1,
+                        'designation'    => $article['designation'],
+                        'unit_price_ht'  => $article['unit_price_ht'],
+                        'quantity'       => $article['quantity'] ?? 1,
+                        'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
+                        'tva_percentage' => $article['tva_percentage'],
+                        'created_at'     => now(),
+                        'updated_at'     => now(),
+                    ];
+                }, $validated['articles']);
+            }
+
+            $quote = DB::transaction(function () use ($quoteData, $articlesData) {
+                // 4. Create Header
                 $quote = CustomerQuote::create($quoteData);
 
-                // 4. Batch Insert Articles
-                if (!empty($validated['articles'])) {
-                    $articlesData = array_map(function ($article) {
-                        return [
-                            'product_id'     => $article['product_id'] ?? 1,
-                            'designation'    => $article['designation'],
-                            'unit_price_ht'  => $article['unit_price_ht'],
-                            'quantity'       => $article['quantity'] ?? 1,
-                            'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * ($article['quantity'] ?? 1)),
-                            'tva_percentage' => $article['tva_percentage'],
-                            'created_at'     => now(), // createMany doesn't always handle timestamps automatically depending on version
-                            'updated_at'     => now(),
-                        ];
-                    }, $validated['articles']);
-
+                // 5. Batch Insert Articles
+                if (!empty($articlesData)) {
                     $quote->articles()->createMany($articlesData);
                 }
 
                 return $quote;
             });
 
-            $this->notifyAccountant($request->user(), 'Quote');
+            // 6. Notify Accountant (Queued, but might be slow if driver is sync)
+            // $this->notifyAccountant($request->user(), 'Quote');
 
             return response()->json([
                 'success' => true,
