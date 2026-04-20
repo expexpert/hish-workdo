@@ -132,30 +132,49 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
 });
 
 // --- WhatsApp Bot Bridge (Secure Proxy Access via Dedicated Prefix) ---
-Route::group(['prefix' => 'bot/customer', 'middleware' => 'bot.auth'], function () {
-    // Shared Data Store Handlers
-    Route::post('/transaction', [CustomerController::class, 'storeTransaction']);
-    Route::post('/bank-statement', [CustomerController::class, 'storeStatement']);
-    Route::post('/customer-client', [CustomerController::class, 'storeCustomerClient']);
-    Route::post('/customer-supplier', [CustomerController::class, 'storeCustomerSupplier']);
-    Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
-    Route::post('/customer-invoice', [CustomerController::class, 'storeInvoice']);
-    Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
+Route::group(['prefix' => 'bot'], function () {
     
-    // Status metrics specifically for the bot
-    Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
+    // 1. Secure Bot Identity Routes (Require X-Bot-Secret)
+    Route::group(['middleware' => 'bot.auth'], function () {
+        
+        // A. Customer Contextual Routes (Require X-Customer-Phone)
+        Route::group(['prefix' => 'customer'], function () {
+            // Shared Data Store Handlers
+            Route::post('/transaction', [CustomerController::class, 'storeTransaction']);
+            // Add other routes as per your reference...
+            Route::post('/bank-statement', [CustomerController::class, 'storeStatement']);
+            Route::post('/customer-client', [CustomerController::class, 'storeCustomerClient']);
+            Route::post('/customer-supplier', [CustomerController::class, 'storeCustomerSupplier']);
+            Route::post('/customer-expense', [CustomerController::class, 'storeExpense']);
+            Route::post('/customer-invoice', [CustomerController::class, 'storeInvoice']);
+            Route::post('/customer-product', [CustomerController::class, 'storeCustomerProduct']);
+            
+            // Status metrics specifically for the bot
+            Route::get('/dashboard-data', [CustomerController::class, 'getDashboardData']);
 
-    // AI Quota & Limits
-    Route::get('/ai/status', [CustomerController::class, 'aiStatus']);
-    Route::post('/ai/log', [CustomerController::class, 'aiLog']);
+            // AI Quota & Limits
+            Route::get('/ai/status', [CustomerController::class, 'aiStatus']);
+            Route::post('/ai/log', [CustomerController::class, 'aiLog']);
 
-    // Resource Lookups
-    Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
-    Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
+            // Resource Lookups
+            Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
+            Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
 
-    // Profile check for Global Activation
-    Route::get('/profile', [CustomerController::class, 'getProfile']);
+            Route::get('/customer-invoices', [CustomerController::class, 'getInvoices']);
+            Route::get('/customer-expenses', [CustomerController::class, 'getExpenses']);
+            Route::get('/bank-statements', [CustomerController::class, 'getBankStatements']);
+
+            // Profile check for Global Activation
+            Route::get('/profile', [CustomerController::class, 'getProfile']);
+        });
+
+        // Add any other bot.auth routes here if needed
+    });
+    // 2. Public Technical Routes (Require Signed URL for Security)
+    Route::get('/file/{id}', [CustomerController::class, 'downloadFilePublic'])
+        ->middleware('signed')
+        ->name('api.download.file.public');
+    Route::get('/invoice/pdf/{id}', [CustomerController::class, 'downloadInvoicePdfPublic'])
+        ->middleware('signed')
+        ->name('api.download.invoice.pdf.public');
 });
-
-// Publicly accessible file download for WhatsApp Bot AI
-Route::get('/bot/file/{id}', [CustomerController::class, 'downloadFilePublic']);
