@@ -123,47 +123,69 @@ trait HandlesBotInputs
         }
         
         // 4. Map Tax (TVA) for Articles
+        // Now receiving tax ID directly - no conversion needed
         if ($request->has('articles') && is_array($request->input('articles'))) {
             $articles = $request->input('articles');
+            $company_id = auth()->user()->companyId();
             foreach ($articles as $key => $article) {
                 if (isset($article['tva_percentage'])) {
-                    $rate = (float) $article['tva_percentage'];
-                    
-                    // Look up existing tax by rate
-                    $tax = \App\Models\Tax::where('created_by', $user->creatorId())
-                        ->where('rate', $rate)
+                    // tva_percentage now contains tax ID - validate it exists
+                    $taxId = $article['tva_percentage'];
+                    $tax = \App\Models\Tax::where('id', $taxId)
+                        ->where('created_by', $company_id)
                         ->first();
-                        
-                    if (!$tax) {
-                        $tax = \App\Models\Tax::create([
-                            'name'       => 'VAT ' . $rate . '%',
-                            'rate'       => $rate,
-                            'created_by' => $user->creatorId(),
-                        ]);
-                    }
                     
-                    $articles[$key]['tva_percentage'] = $tax->id;
+                    if (!$tax) {
+                        // Tax ID invalid - try to find by rate as fallback
+                        $rate = (float) $taxId;
+                        $tax = \App\Models\Tax::where('created_by', $company_id)
+                            ->where('rate', $rate)
+                            ->first();
+                        
+                        if (!$tax) {
+                            $tax = \App\Models\Tax::create([
+                                'name'       => 'VAT ' . $rate . '%',
+                                'rate'       => $rate,
+                                'created_by' => $company_id,
+                            ]);
+                        }
+                        $articles[$key]['tva_percentage'] = $tax->id;
+                    }
+                    // else: tax ID is valid, keep as-is
                 }
             }
             $request->merge(['articles' => $articles]);
         }
 
-        // 5. Map Top-level Tax (Fallback for quick invoices)
+        // 5. Top-level Tax (Fallback for quick invoices)
+        // Now receiving tax ID directly - validate or create from rate
         $taxInput = $request->input('vat') ?: $request->input('tva_percentage');
-        if ($taxInput && is_numeric($taxInput) && strlen($taxInput) < 3) {
-            $rate = (float) $taxInput;
-            $tax = \App\Models\Tax::where('created_by', $user->creatorId())
-                ->where('rate', $rate)
+        $company_id = auth()->user()->companyId();
+        if ($taxInput) {
+            // Check if it's already a valid tax ID
+            $tax = \App\Models\Tax::where('id', $taxInput)
+                ->where('created_by', $company_id)
                 ->first();
+            
+            if ($tax) {
+                // Valid tax ID - use as-is
+                $request->merge(['tva_percentage' => $tax->id, 'vat' => $tax->id]);
+            } else {
+                // Not a valid ID - treat as rate and create tax
+                $rate = (float) $taxInput;
+                $tax = \App\Models\Tax::where('created_by', $company_id)
+                    ->where('rate', $rate)
+                    ->first();
 
-            if (!$tax) {
-                $tax = \App\Models\Tax::create([
-                    'name'       => 'VAT ' . $rate . '%',
-                    'rate'       => $rate,
-                    'created_by' => $user->creatorId(),
-                ]);
+                if (!$tax) {
+                    $tax = \App\Models\Tax::create([
+                        'name'       => 'VAT ' . $rate . '%',
+                        'rate'       => $rate,
+                        'created_by' => $company_id,
+                    ]);
+                }
+                $request->merge(['tva_percentage' => $tax->id, 'vat' => $tax->id]);
             }
-            $request->merge(['tva_percentage' => $tax->id, 'vat' => $tax->id]);
         }
 
         // 6. Inject Customer ID if missing (for bot requests targeting shared APIs)
