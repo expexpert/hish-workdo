@@ -122,6 +122,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/export-quotes', [CustomerController::class, 'exportQuotes']);
     Route::get('/customer-quotes/download/{id}', [CustomerController::class, 'downloadQuote']);
     Route::get('/customer-quotes/pdf/{id}', [CustomerController::class, 'downloadQuotePdf']);
+    Route::get('/customer-quotes/chart', [CustomerController::class, 'getQuoteStatusChart']);
 
     Route::post('/quote-to-invoice/{id}', [CustomerController::class, 'quoteToInvoice']);
 
