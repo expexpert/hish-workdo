@@ -51,4 +51,9 @@ class InvoiceArticle extends Model
     {
         return $this->belongsTo(Tax::class, 'tva_percentage');
     }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(ProductService::class, 'product_id');
+    }
 }

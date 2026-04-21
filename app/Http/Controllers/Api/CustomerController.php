@@ -1696,7 +1696,7 @@ class CustomerController extends Controller
             'client_id'      => 'required|exists:customer_clients,id',
             'date'           => 'required|date',
             'due_date'       => 'required|date|after:date',
-            'invoice_number' => 'required|string|max:255|unique:customer_invoices,invoice_number',
+            'invoice_number' => 'required|string|max:255',
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
             'notes'          => 'nullable|string',
@@ -1931,7 +1931,7 @@ class CustomerController extends Controller
      */
     private function getInvoicePdf($id, $customerId)
     {
-        $invoice = CustomerInvoice::with(['client', 'articles.tax', 'customer'])
+        $invoice = CustomerInvoice::with(['client', 'articles.tax', 'articles.product', 'customer'])
             ->where('customer_id', $customerId)
             ->find($id);
 
@@ -2414,16 +2414,6 @@ class CustomerController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:customer_quotes,quote_number',
-                function ($attribute, $value, $fail) {
-                    $exists = DB::table('customer_invoices')
-                        ->where('invoice_number', $value)
-                        ->exists();
-
-                    if ($exists) {
-                        $fail('This quote number already exists as an invoice number.');
-                    }
-                },
             ],
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
