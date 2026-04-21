@@ -241,11 +241,11 @@
                 <td>{{ $article->product->unit->name ?? '' }}</td>
 
                 <td>
-                    {{ \Auth::user()->priceFormat($article->unit_price_ht,2,',',' ') }}
+                    MAD {{ number_format($article->unit_price_ht,2,',',' ') }}
                 </td>
 
                 <td>
-                    {{ \Auth::user()->priceFormat($article->total_price_ht,2,',',' ') }}
+                    MAD {{ number_format($article->total_price_ht,2,',',' ') }}
                 </td>
             </tr>
 
@@ -262,21 +262,21 @@
         <tr>
             <td><strong>TOTAL HT</strong></td>
             <td>
-                {{ \Auth::user()->priceFormat($totals['total_ht'],2,',',' ') }}
+               MAD {{ number_format($totals['total_ht'],2,',',' ') }}               
             </td>
         </tr>
 
         <tr>
             <td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
             <td>
-                {{ \Auth::user()->priceFormat($totals['total_tva'],2,',',' ') }}
+               MAD {{ number_format($totals['total_tva'],2,',',' ') }}               
             </td>
         </tr>
 
         <tr class="total-final" style="background:{{ $pdfColor }};">
             <td><strong>TOTAL TTC</strong></td>
             <td>
-                {{ \Auth::user()->priceFormat($totals['total_ttc'],2,',',' ') }}
+               MAD {{ number_format($totals['total_ttc'],2,',',' ') }}               
             </td>
         </tr>
 

@@ -208,6 +208,10 @@ class CustomerController extends Controller
             )->first();
 
         $quoteStats = CustomerQuote::leftJoin('quotes_articles', 'customer_quotes.id', '=', 'quotes_articles.quotes_id')
+            ->where(function ($q) {
+                $q->where('customer_quotes.review_status', '!=', 'CONVERTED')
+                    ->orWhereNull('customer_quotes.review_status');
+            })
             ->where('customer_quotes.customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_quotes.date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_quotes.date', '<=', $dt))
@@ -2386,6 +2390,10 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $quotes = CustomerQuote::where('customer_id', $user->id)
+            ->where(function ($q) {
+                $q->where('review_status', '!=', 'CONVERTED')
+                    ->orWhereNull('review_status');
+            })
             ->with(['client:id,client_name', 'articles'])
             ->orderBy('date', 'desc')
             ->get();
@@ -2658,6 +2666,10 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $quotes = CustomerQuote::where('customer_id', $user->id)
+            ->where(function ($q) {
+                $q->where('review_status', '!=', 'CONVERTED')
+                    ->orWhereNull('review_status');
+            })
             ->with(['client:id,client_name', 'articles.tax'])
             ->orderBy('date', 'desc')
             ->get();
@@ -2796,6 +2808,57 @@ class CustomerController extends Controller
     }
 
 
+    public function getQuoteStatusChart(Request $request)
+    {
+        $user  = $request->user();
+        $month = $request->query('month');
+        $year  = $request->query('year');
+
+        $query = CustomerQuote::where('customer_id', $user->id)
+            ->where(function ($q) {
+                $q->where('review_status', '!=', 'CONVERTED')
+                    ->orWhereNull('review_status');
+            })
+            ->select(
+                'status as label',
+                DB::raw('COUNT(*) as value')
+            );
+
+        // Date filters (same logic as your previous API)
+        if ($year && $month) {
+            $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $end   = $start->copy()->endOfMonth();
+
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($year) {
+            $start = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $end   = $start->copy()->endOfYear();
+
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($month) {
+            $query->whereMonth('date', $month)
+                ->whereYear('date', now()->year);
+        }
+
+        $rows = $query->groupBy('status')
+            ->orderByDesc('value')
+            ->get();
+        
+        $convertedQuotes = CustomerQuote::where('customer_id', $user->id)->where('review_status', 'CONVERTED')->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Quote totals by status retrieved successfully.',
+            'data'    => $rows,
+            'convertedQuotes' => $convertedQuotes,
+
+            // Optional (frontend friendly)
+            'labels'  => $rows->pluck('label'),
+            'values'  => $rows->pluck('value'),
+        ]);
+    }
+
+
     public function quoteToInvoice(Request $request, $id)
     {
         try {
@@ -2848,7 +2911,8 @@ class CustomerController extends Controller
                     $invoice->articles()->createMany($articlesData);
                 }
 
-                $quote->delete();
+                $quote->review_status = 'CONVERTED';
+                $quote->save();
                 QuoteArticle::where('quotes_id', $quote->id)->delete();
 
                 return response()->json([
