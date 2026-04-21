@@ -151,19 +151,24 @@ trait HandlesBotInputs
         // 5. Map Top-level Tax (Fallback for quick invoices)
         $taxInput = $request->input('vat') ?: $request->input('tva_percentage');
         if ($taxInput && is_numeric($taxInput) && strlen($taxInput) < 3) {
-            $rate = (float) $taxInput;
-            $tax = \App\Models\Tax::where('created_by', $user->creatorId())
-                ->where('rate', $rate)
-                ->first();
+            $existingTax = \App\Models\Tax::where('id', $taxInput)->where('created_by', $user->creatorId())->first();
+            if ($existingTax) {
+                $request->merge(['tva_percentage' => $existingTax->id, 'vat' => $existingTax->id]);
+            } else {
+                $rate = (float) $taxInput;
+                $tax = \App\Models\Tax::where('created_by', $user->creatorId())
+                    ->where('rate', $rate)
+                    ->first();
 
-            if (!$tax) {
-                $tax = \App\Models\Tax::create([
-                    'name'       => 'VAT ' . $rate . '%',
-                    'rate'       => $rate,
-                    'created_by' => $user->creatorId(),
-                ]);
+                if (!$tax) {
+                    $tax = \App\Models\Tax::create([
+                        'name'       => 'VAT ' . $rate . '%',
+                        'rate'       => $rate,
+                        'created_by' => $user->creatorId(),
+                    ]);
+                }
+                $request->merge(['tva_percentage' => $tax->id, 'vat' => $tax->id]);
             }
-            $request->merge(['tva_percentage' => $tax->id, 'vat' => $tax->id]);
         }
 
         // 6. Inject Customer ID if missing (for bot requests targeting shared APIs)
