@@ -129,6 +129,9 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
 
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
 
+    Route::get('/bot/activation-status', [CustomerController::class, 'getBotActivationStatus']);
+    Route::post('/bot/request-deactivation', [CustomerController::class, 'requestBotDeactivation']);
+
     // WhatsApp Bot Activation (OTP) - Protected by standard user auth too
     Route::post('/bot/request-activation', [CustomerController::class, 'requestActivation']);
     Route::post('/bot/verify-activation', [CustomerController::class, 'verifyActivation']);

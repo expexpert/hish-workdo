@@ -2965,6 +2965,33 @@ class CustomerController extends Controller
     }
 
 
+    public function getBotActivationStatus(Request $request)
+    {
+        $customer = $request->user();
+
+        return response()->json([
+            'bot_active' => $customer->bot_active,
+            'bot_verified_at' => $customer->bot_verified_at,
+            'bot_contact' => $customer->contact,
+        ]);
+    }
+
+    public function requestBotDeactivation(Request $request)
+    {
+        $customer = $request->user();
+        $customer->bot_active = false;
+        $customer->bot_verified_at = null;
+        $customer->bot_otp = null;
+        $customer->bot_otp_expires_at = null;
+        $customer->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'WhatsApp Bot deactivated successfully.'
+        ]);
+    }
+
+
     /**
      * Request Activation (OTP) for WhatsApp Bot
      */
