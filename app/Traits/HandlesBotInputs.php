@@ -161,7 +161,7 @@ trait HandlesBotInputs
         // Now receiving tax ID directly - validate or create from rate
         $taxInput = $request->input('vat') ?: $request->input('tva_percentage');
         $company_id = auth()->user()->companyId();
-        if ($taxInput) {
+        if (isset($taxInput) && is_numeric($taxInput)) {
             // Check if it's already a valid tax ID
             $tax = \App\Models\Tax::where('id', $taxInput)
                 ->where('created_by', $company_id)

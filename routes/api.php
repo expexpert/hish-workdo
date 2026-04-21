@@ -161,6 +161,7 @@ Route::group(['prefix' => 'bot'], function () {
             // Resource Lookups
             Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
             Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
+            Route::get('/product-resources', [LookupController::class, 'getProductResources']);
 
             Route::get('/customer-invoices', [CustomerController::class, 'getInvoices']);
             Route::get('/customer-expenses', [CustomerController::class, 'getExpenses']);
