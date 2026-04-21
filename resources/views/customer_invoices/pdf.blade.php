@@ -224,6 +224,7 @@
             <tr>
                 <th width="10%" style="background:{{ $pdfColor }};">QTE</th>
                 <th width="40%" style="background:{{ $pdfColor }};">DESIGNATION</th>
+                <th width="40%" style="background:{{ $pdfColor }};">UNIT</th>
                 <th width="25%" style="background:{{ $pdfColor }};">PRIX UNIT HT</th>
                 <th width="25%" style="background:{{ $pdfColor }};">MONTANT HT</th>
             </tr>
@@ -237,15 +238,14 @@
                 <td>{{ $article->quantity }}</td>
 
                 <td>{{ $article->designation }}</td>
+                <td>{{ $article->product->unit->name ?? '' }}</td>
 
                 <td>
-                    {{ number_format($article->unit_price_ht,2,',',' ') }}
-                    {{ $currency_symbol }}
+                    {{ \Auth::user()->priceFormat($article->unit_price_ht,2,',',' ') }}
                 </td>
 
                 <td>
-                    {{ number_format($article->total_price_ht,2,',',' ') }}
-                    {{ $currency_symbol }}
+                    {{ \Auth::user()->priceFormat($article->total_price_ht,2,',',' ') }}
                 </td>
             </tr>
 
@@ -262,24 +262,21 @@
         <tr>
             <td><strong>TOTAL HT</strong></td>
             <td>
-                {{ number_format($totals['total_ht'],2,',',' ') }}
-                {{ $currency_symbol }}
+                {{ \Auth::user()->priceFormat($totals['total_ht'],2,',',' ') }}
             </td>
         </tr>
 
         <tr>
             <td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
             <td>
-                {{ number_format($totals['total_tva'],2,',',' ') }}
-                {{ $currency_symbol }}
+                {{ \Auth::user()->priceFormat($totals['total_tva'],2,',',' ') }}
             </td>
         </tr>
 
         <tr class="total-final" style="background:{{ $pdfColor }};">
             <td><strong>TOTAL TTC</strong></td>
             <td>
-                {{ number_format($totals['total_ttc'],2,',',' ') }}
-                {{ $currency_symbol }}
+                {{ \Auth::user()->priceFormat($totals['total_ttc'],2,',',' ') }}
             </td>
         </tr>
 

@@ -555,7 +555,7 @@
                     </li>
                 @endif
 
-                <!-- {{-- -------  Report ---------- --}}
+                {{-- -------  Report ---------- --}}
                 @if (Gate::check('income report') ||
                         Gate::check('expense report') ||
                         Gate::check('income vs expense report') ||
@@ -649,7 +649,7 @@
 
                         </ul>
                     </li>
-                @endif -->
+                @endif
 
                 @if (\Auth::user()->type == 'accountant' || \Auth::user()->type == 'company')
                 <li class="dash-item dash-hasmenu">
