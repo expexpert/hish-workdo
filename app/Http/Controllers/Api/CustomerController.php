@@ -2211,7 +2211,7 @@ class CustomerController extends Controller
                 }),
             ],
             'unit_price_ht' => 'required|numeric|min:0',
-            'tva_percentage' => 'required|integer|min:0',
+            'tva_percentage' => 'required|exists:taxes,id',
             'quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:255',
             'reference' => 'nullable|string|max:255',
@@ -2323,7 +2323,7 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'designation'   => 'sometimes|required|string|max:255',
             'unit_price_ht' => 'sometimes|required|numeric|min:0',
-            'tva_percentage'   => 'sometimes|required|numeric|min:0',
+            'tva_percentage'   => 'sometimes|required|exists:taxes,id',
             'quantity'      => 'nullable|integer|min:1',
             'description'   => 'nullable|string|max:255',
             'reference'     => 'nullable|string|max:255',
