@@ -86,7 +86,7 @@ class LookupController extends Controller
             'data' => [
                 'tax' => Tax::where('created_by', $company_id)->get(),
                 'units' => ProductServiceUnit::where('created_by', $company_id)->get(),
-                'categories' => ProductServiceCategory::where('created_by', $company_id)->get(),
+                'categories' => ProductServiceCategory::where('created_by', $company_id)->where('type', 'product & service')->get(),
             ]
         ]);
     }
