@@ -2293,7 +2293,7 @@ class CustomerController extends Controller
         $productService->expense_chartaccount_id    = ($request->type === 'Service') ? '5005' : '5010';
         $productService->customer_id     = $request->customer_id;
         $productService->unit_id        = $request->unit_id;
-        $productService->category_id    = $request->category;
+        $productService->category_id    = $request->category_id;
         $productService->created_by     = $company_id;
         $productService->save();
 
