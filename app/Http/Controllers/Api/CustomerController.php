@@ -35,6 +35,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use App\Traits\HandlesBotInputs;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 
 
@@ -208,10 +209,10 @@ class CustomerController extends Controller
             )->first();
 
         $quoteStats = CustomerQuote::leftJoin('quotes_articles', 'customer_quotes.id', '=', 'quotes_articles.quotes_id')
-            ->where(function ($q) {
-                $q->where('customer_quotes.review_status', '!=', 'CONVERTED')
-                    ->orWhereNull('customer_quotes.review_status');
-            })
+            // ->where(function ($q) {
+            //     $q->where('customer_quotes.review_status', '!=', 'CONVERTED')
+            //         ->orWhereNull('customer_quotes.review_status');
+            // })
             ->where('customer_quotes.customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_quotes.date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_quotes.date', '<=', $dt))
@@ -836,7 +837,7 @@ class CustomerController extends Controller
         $this->mapBotInputs($request);
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:10240',
+            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:1024',
             'month_year' => 'required|string',
         ]);
 
@@ -1019,7 +1020,7 @@ class CustomerController extends Controller
             }], 'total_price_ht')
             // 2. Count of Late Invoices (Date < Today AND Status != Paid)
             ->withCount(['invoices as late_invoices_count' => function ($q) use ($today) {
-                $q->where('date', '<', $today)
+                $q->where('due_date', '<', $today)
                     ->where('status', '!=', 'Paid');
             }]);
 
@@ -1205,24 +1206,12 @@ class CustomerController extends Controller
         $suppliers = $query
             // 1. Total Sum of all expenses
             ->withSum('expenses as total_ttc', 'total_ttc')
-
-            // 2. Count of Late Expenses (Date < Today)
-            ->withCount(['expenses as late_expenses_count' => function ($q) use ($today) {
-                $q->where('date', '<', $today);
-            }]);
+            ->withCount('expenses as expenses_count');
 
         if ($sort === 'recent') {
             // Sort by the creation date of the most recent expense
             $suppliers->withMax('expenses', 'created_at')
                 ->orderByRaw('expenses_max_created_at IS NULL, invoices_max_created_at DESC');
-        } else {
-            // 3. Sorting by Urgency (Matches Main exactly)
-            // Priority 1: Suppliers with late expenses first
-            $suppliers->orderByRaw('CASE WHEN late_expenses_count > 0 THEN 0 ELSE 1 END')
-                // Priority 2: Most late expenses first
-                ->orderBy('late_expenses_count', 'desc')
-                // Priority 3: Highest total amount owed
-                ->orderBy('total_ttc', 'desc');
         }
 
         $suppliers = $suppliers->with('expenses')->get();
@@ -1675,6 +1664,23 @@ class CustomerController extends Controller
         }
 
         $duplicateExpense = $expense->replicate();
+
+        // ✅ Handle file duplication
+        if ($expense->file && Storage::disk('private')->exists($expense->file)) {
+
+            $originalPath = $expense->file;
+
+            // Generate new unique file name
+            $extension = pathinfo($originalPath, PATHINFO_EXTENSION);
+            $newFileName = 'expenses/' . Str::uuid() . '.' . $extension;
+
+            // Copy file
+            Storage::disk('private')->copy($originalPath, $newFileName);
+
+            // Assign new file path
+            $duplicateExpense->file = $newFileName;
+        }
+
         $duplicateExpense->customer_id = $user->id;
         $duplicateExpense->save();
 
@@ -1784,7 +1790,6 @@ class CustomerController extends Controller
                 $invoice->update([
                     'document_path' => $documentPath
                 ]);
-
             }
 
             // ✅ STEP 6: Generate signed URL
@@ -2208,6 +2213,21 @@ class CustomerController extends Controller
             return DB::transaction(function () use ($invoice) {
                 $duplicateInvoice = $invoice->replicate();
                 $duplicateInvoice->invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+
+                // ✅ Handle document duplication
+                if ($invoice->document_path && Storage::disk('private')->exists($invoice->document_path)) {
+
+                    $originalPath = $invoice->document_path;
+
+                    $extension = pathinfo($originalPath, PATHINFO_EXTENSION);
+
+                    $newFileName = 'customer_invoices/' . Str::uuid() . '.' . $extension;
+
+                    Storage::disk('private')->copy($originalPath, $newFileName);
+
+                    $duplicateInvoice->document_path = $newFileName;
+                }
+
                 $duplicateInvoice->save();
 
                 foreach ($invoice->articles as $article) {
@@ -2386,11 +2406,14 @@ class CustomerController extends Controller
         }
         if ($request->has('tva_percentage'))   $product->tax_id = $validated['tva_percentage'];
         if ($request->has('quantity'))      $product->quantity = $validated['quantity'];
+        if ($request->has('type'))      $product->type = $validated['type'];
+        if ($request->has('customer_id'))      $product->customer_id = $validated['customer_id'];
+        if ($request->has('unit_id'))      $product->unit_id = $validated['unit_id'];
+        if ($request->has('category_id'))      $product->category_id = $validated['category_id'];
 
-        if ($request->has('category')) {
-            $product->type = $validated['category'];
-            $product->sale_chartaccount_id    = ($validated['category'] === 'Service') ? '4020' : '4010';
-            $product->expense_chartaccount_id = ($validated['category'] === 'Service') ? '5005' : '5010';
+        if ($request->has('type')) {
+            $product->sale_chartaccount_id    = ($validated['type'] === 'Service') ? '4020' : '4010';
+            $product->expense_chartaccount_id = ($validated['type'] === 'Service') ? '5005' : '5010';
         }
 
         $product->save();
@@ -2432,10 +2455,10 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $quotes = CustomerQuote::where('customer_id', $user->id)
-            ->where(function ($q) {
-                $q->where('review_status', '!=', 'CONVERTED')
-                    ->orWhereNull('review_status');
-            })
+            // ->where(function ($q) {
+            //     $q->where('review_status', '!=', 'CONVERTED')
+            //         ->orWhereNull('review_status');
+            // })
             ->with(['client:id,client_name', 'articles'])
             ->orderBy('date', 'desc')
             ->get();
@@ -2526,7 +2549,6 @@ class CustomerController extends Controller
                 $quote->update([
                     'document_path' => $documentPath
                 ]);
-
             }
 
 
@@ -2696,10 +2718,10 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $quotes = CustomerQuote::where('customer_id', $user->id)
-            ->where(function ($q) {
-                $q->where('review_status', '!=', 'CONVERTED')
-                    ->orWhereNull('review_status');
-            })
+            // ->where(function ($q) {
+            //     $q->where('review_status', '!=', 'CONVERTED')
+            //         ->orWhereNull('review_status');
+            // })
             ->with(['client:id,client_name', 'articles.tax'])
             ->orderBy('date', 'desc')
             ->get();
@@ -2845,10 +2867,10 @@ class CustomerController extends Controller
         $year  = $request->query('year');
 
         $query = CustomerQuote::where('customer_id', $user->id)
-            ->where(function ($q) {
-                $q->where('review_status', '!=', 'CONVERTED')
-                    ->orWhereNull('review_status');
-            })
+            // ->where(function ($q) {
+            //     $q->where('review_status', '!=', 'CONVERTED')
+            //         ->orWhereNull('review_status');
+            // })
             ->select(
                 'status as label',
                 DB::raw('COUNT(*) as value')
@@ -2908,6 +2930,21 @@ class CustomerController extends Controller
             return DB::transaction(function () use ($quote) {
                 $duplicateQuote = $quote->replicate();
                 $duplicateQuote->quote_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+
+                // ✅ Handle document duplication
+                if ($quote->document_path && Storage::disk('private')->exists($quote->document_path)) {
+
+                    $originalPath = $quote->document_path;
+
+                    $extension = pathinfo($originalPath, PATHINFO_EXTENSION);
+
+                    $newFileName = 'customer_quotes/' . Str::uuid() . '.' . $extension;
+
+                    Storage::disk('private')->copy($originalPath, $newFileName);
+
+                    $duplicateQuote->document_path = $newFileName;
+                }
+
                 $duplicateQuote->save();
 
                 foreach ($quote->articles as $article) {
@@ -2985,7 +3022,7 @@ class CustomerController extends Controller
 
                 $quote->review_status = 'CONVERTED';
                 $quote->save();
-                QuoteArticle::where('quotes_id', $quote->id)->delete();
+                // QuoteArticle::where('quotes_id', $quote->id)->delete();
 
                 return response()->json([
                     'success' => true,
