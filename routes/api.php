@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/export-invoices', [CustomerController::class, 'exportInvoices']);
     Route::get('/customer-invoices/download/{id}', [CustomerController::class, 'downloadInvoice']);
     Route::get('/customer-invoices/pdf/{id}', [CustomerController::class, 'downloadInvoicePdf']);
+    Route::post('/duplicate-invoice/{id}', [CustomerController::class, 'duplicateInvoice']);
 
 
     Route::get('/product-resources', [LookupController::class, 'getProductResources']);
@@ -123,6 +124,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/customer-quotes/download/{id}', [CustomerController::class, 'downloadQuote']);
     Route::get('/customer-quotes/pdf/{id}', [CustomerController::class, 'downloadQuotePdf']);
     Route::get('/customer-quotes/chart', [CustomerController::class, 'getQuoteStatusChart']);
+    Route::post('/duplicate-quote/{id}', [CustomerController::class, 'duplicateQuote']);
 
     Route::post('/quote-to-invoice/{id}', [CustomerController::class, 'quoteToInvoice']);
 
