@@ -2393,7 +2393,11 @@ class CustomerController extends Controller
             'quantity'      => 'nullable|integer|min:1',
             'description'   => 'nullable|string|max:255',
             'reference'     => 'nullable|string|max:255',
-            'category'      => 'nullable|string|max:255'
+            'category'      => 'nullable|string|max:255',
+            'type'          => 'nullable|string|max:255|in:Product,Service',
+            'customer_id'   => 'sometimes|required|exists:customers,id',
+            'unit_id'       => 'sometimes|required|exists:product_service_units,id',
+            'category_id'   => 'sometimes|required|exists:product_service_categories,id',
         ]);
 
         // 3. Apply updates only for provided fields
@@ -2412,8 +2416,8 @@ class CustomerController extends Controller
         if ($request->has('category_id'))      $product->category_id = $validated['category_id'];
 
         if ($request->has('type')) {
-            $product->sale_chartaccount_id    = ($validated['type'] === 'Service') ? '4020' : '4010';
-            $product->expense_chartaccount_id = ($validated['type'] === 'Service') ? '5005' : '5010';
+            $product->sale_chartaccount_id    = ($request->input('type') === 'Service') ? '4020' : '4010';
+            $product->expense_chartaccount_id = ($request->input('type') === 'Service') ? '5005' : '5010';
         }
 
         $product->save();
