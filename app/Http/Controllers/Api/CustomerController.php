@@ -1688,8 +1688,6 @@ class CustomerController extends Controller
 
     public function storeInvoice(Request $request)
     {
-        \Log::info('Invoice API Hit');
-        $startTime = microtime(true);
 
         // Optional preprocessing
         $this->mapBotInputs($request);
@@ -1715,8 +1713,6 @@ class CustomerController extends Controller
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
             'articles.*.discount'        => 'nullable|numeric|min:0|max:100',
         ]);
-
-        \Log::info('Validation done in: ' . (microtime(true) - $startTime) . 'for invoice number: ' . $validated['invoice_number']);
 
         try {
             // ✅ STEP 2: Prepare header data
@@ -1744,7 +1740,6 @@ class CustomerController extends Controller
                 }
             }
 
-            \Log::info('Data prepared in: ' . (microtime(true) - $startTime));
 
             // ✅ STEP 4: DB Transaction (FAST)
             $invoice = DB::transaction(function () use ($invoiceData, $articlesData, $request) {
@@ -1781,11 +1776,8 @@ class CustomerController extends Controller
                 return $invoice;
             });
 
-            \Log::info('DB Transaction done in: ' . (microtime(true) - $startTime));
-
             // ✅ STEP 5: File Upload AFTER DB (important)
             if ($request->hasFile('document')) {
-                $fileStart = microtime(true);
 
                 $documentPath = $request->file('document')->store('customer_invoices', 'private');
 
@@ -1793,7 +1785,6 @@ class CustomerController extends Controller
                     'document_path' => $documentPath
                 ]);
 
-                \Log::info('File upload done in: ' . (microtime(true) - $fileStart));
             }
 
             // ✅ STEP 6: Generate signed URL
@@ -1810,8 +1801,6 @@ class CustomerController extends Controller
 
             $invoice->download_url = $downloadUrl;
 
-            \Log::info('URL generation done in: ' . (microtime(true) - $urlStart));
-            \Log::info('Total execution time: ' . (microtime(true) - $startTime));
 
             // ✅ STEP 7: Return (no heavy reload)
             return response()->json([
@@ -1824,7 +1813,6 @@ class CustomerController extends Controller
             ], 201);
         } catch (\Exception $e) {
 
-            \Log::error('Invoice creation failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -2200,6 +2188,61 @@ class CustomerController extends Controller
     }
 
 
+    public function duplicateInvoice(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $invoice = CustomerInvoice::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with('articles')
+            ->first();
+
+        if (! $invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        try {
+            return DB::transaction(function () use ($invoice) {
+                $duplicateInvoice = $invoice->replicate();
+                $duplicateInvoice->invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+                $duplicateInvoice->save();
+
+                foreach ($invoice->articles as $article) {
+                    $duplicateArticle = $article->replicate();
+                    $duplicateArticle->invoice_id = $duplicateInvoice->id;
+                    $duplicateArticle->save();
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice duplicated successfully.',
+                    'data'    => $duplicateInvoice->load('articles')
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to duplicate invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    function invoiceNumber()
+    {
+        $company_id = auth()->user()->companyId();
+
+        $latest = Invoice::where('created_by', '=', $company_id)->latest()->first();
+        if (!$latest) {
+            return 1;
+        }
+
+        return $latest->invoice_id + 1;
+    }
+
+
     public function storeCustomerProduct(Request $request)
     {
         $this->mapBotInputs($request);
@@ -2245,13 +2288,13 @@ class CustomerController extends Controller
         $productService->purchase_price = $request->unit_price_ht;
         $productService->tax_id         = $request->tva_percentage;
         $productService->quantity       = $request->quantity ?? 0;
-        $productService->type           = $request->category;
-        $productService->sale_chartaccount_id       = ($request->category === 'Service') ? '4020' : '4010';
-        $productService->expense_chartaccount_id    = ($request->category === 'Service') ? '5005' : '5010';
+        $productService->type           = $request->type;
+        $productService->sale_chartaccount_id       = ($request->type === 'Service') ? '4020' : '4010';
+        $productService->expense_chartaccount_id    = ($request->type === 'Service') ? '5005' : '5010';
         $productService->customer_id     = $request->customer_id;
-        $productService->created_by     = $company_id;
         $productService->unit_id        = $request->unit_id;
-        $productService->category_id    = $categoryID;
+        $productService->category_id    = $request->category;
+        $productService->created_by     = $company_id;
         $productService->save();
 
         return response()->json([
@@ -2407,9 +2450,6 @@ class CustomerController extends Controller
 
     public function storeQuote(Request $request)
     {
-        \Log::info('Quote API Hit');
-
-        $startTime = microtime(true);
 
         // ✅ STEP 1: Validation
         $validated = $request->validate([
@@ -2436,8 +2476,6 @@ class CustomerController extends Controller
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
         ]);
 
-        \Log::info('Validation done in: ' . (microtime(true) - $startTime) . 'for quote number: ' . ($validated['quote_number'] ?? 'N/A'));
-
         try {
             // ✅ STEP 2: Prepare Data
             $quoteData = collect($validated)->except(['articles', 'document'])->toArray();
@@ -2461,7 +2499,6 @@ class CustomerController extends Controller
                 }
             }
 
-            \Log::info('Data prepared in: ' . (microtime(true) - $startTime));
 
             // ✅ STEP 3: DB Transaction (FAST)
             $quote = DB::transaction(function () use ($quoteData, $articlesData) {
@@ -2480,11 +2517,9 @@ class CustomerController extends Controller
                 return $quote;
             });
 
-            \Log::info('DB Transaction done in: ' . (microtime(true) - $startTime));
 
             // ✅ STEP 4: File Upload AFTER DB (non-blocking DB)
             if ($request->hasFile('document')) {
-                $fileStart = microtime(true);
 
                 $documentPath = $request->file('document')->store('customer_quotes', 'private');
 
@@ -2492,10 +2527,8 @@ class CustomerController extends Controller
                     'document_path' => $documentPath
                 ]);
 
-                \Log::info('File upload done in: ' . (microtime(true) - $fileStart));
             }
 
-            \Log::info('Total execution time: ' . (microtime(true) - $startTime));
 
             // ✅ STEP 5: Response (no extra DB query)
             return response()->json([
@@ -2508,7 +2541,6 @@ class CustomerController extends Controller
             ], 201);
         } catch (\Exception $e) {
 
-            \Log::error('Quote creation failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -2841,7 +2873,7 @@ class CustomerController extends Controller
         $rows = $query->groupBy('status')
             ->orderByDesc('value')
             ->get();
-        
+
         $convertedQuotes = CustomerQuote::where('customer_id', $user->id)->where('review_status', 'CONVERTED')->count();
 
         return response()->json([
@@ -2854,6 +2886,48 @@ class CustomerController extends Controller
             'labels'  => $rows->pluck('label'),
             'values'  => $rows->pluck('value'),
         ]);
+    }
+
+    public function duplicateQuote(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $quote = CustomerQuote::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with('articles')
+            ->first();
+
+        if (! $quote) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quote not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        try {
+            return DB::transaction(function () use ($quote) {
+                $duplicateQuote = $quote->replicate();
+                $duplicateQuote->quote_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+                $duplicateQuote->save();
+
+                foreach ($quote->articles as $article) {
+                    $duplicateArticle = $article->replicate();
+                    $duplicateArticle->quotes_id = $duplicateQuote->id;
+                    $duplicateArticle->save();
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote duplicated successfully.',
+                    'data'    => $duplicateQuote->load('articles')
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to duplicate quote: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 
