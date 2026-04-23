@@ -2032,17 +2032,24 @@ class CustomerController extends Controller
         ];
 
         foreach ($invoice->articles as $article) {
-            $priceHt = $article->total_price_ht ?? ($article->unit_price_ht * ($article->quantity ?? 1));
+            $priceHt = $article->unit_price_ht * ($article->quantity ?? 1);
             $discount = $article->discount ?? 0;
             $priceAfterDiscount = $priceHt - $discount;
 
             $taxRate = $article->tax ? $article->tax->rate : 0;
             $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
+            $totalTtc = $priceAfterDiscount + $taxAmount;
 
+            // ✅ attach per-article totals
+            $article->total_ht = $priceHt;
+            $article->tax_amount = $taxAmount;
+            $article->total_ttc = $totalTtc;
+
+            // existing global totals
             $totals['total_ht'] += $priceHt;
             $totals['total_discount'] += $discount;
             $totals['total_tva'] += $taxAmount;
-            $totals['total_ttc'] += $priceAfterDiscount + $taxAmount;
+            $totals['total_ttc'] += $totalTtc;
         }
 
         return response()->json([
@@ -2654,7 +2661,7 @@ class CustomerController extends Controller
             ], 404);
         }
 
-        
+
         $totals = [
             'total_ht' => 0,
             'total_discount' => 0,
@@ -2669,11 +2676,18 @@ class CustomerController extends Controller
 
             $taxRate = $article->tax ? $article->tax->rate : 0;
             $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
+            $totalTtc = $priceAfterDiscount + $taxAmount;
+
+            // ✅ attach per-article totals
+            $article->total_ht = $priceHt;
+            $article->tax_amount = $taxAmount;
+            $article->total_ttc = $totalTtc;
+
 
             $totals['total_ht'] += $priceHt;
             $totals['total_discount'] += $discount;
             $totals['total_tva'] += $taxAmount;
-            $totals['total_ttc'] += $priceAfterDiscount + $taxAmount;
+            $totals['total_ttc'] += $totalTtc;
         }
 
         return response()->json([
