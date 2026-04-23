@@ -1297,7 +1297,7 @@ class CustomerController extends Controller
             $newInvoice->category_id    = $categoryID;
             $newInvoice->ref_number     = $invoice->invoice_number;
             $newInvoice->discount_apply = isset($invoice->discount_apply) ? 1 : 0;
-            $newInvoice->created_by     = \Auth::user()->id;
+            $newInvoice->created_by     = \Auth::user()->creatorId();
 
             $newInvoice->save();
             Utility::starting_number($newInvoice->invoice_id + 1, 'invoice');
