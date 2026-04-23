@@ -94,6 +94,10 @@ class InvoiceController extends Controller
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $product_services->prepend('--', '');
 
+            // echo '<pre>';
+            // print_r($invoice_number);
+            // die('test');
+
             return view('invoice.create', compact('customers', 'invoice_number', 'product_services', 'category', 'customFields', 'customerId'));
         } else {
             return response()->json(['error' => __('Permission denied.')], 401);
@@ -166,7 +170,7 @@ class InvoiceController extends Controller
             $invoice->category_id    = $request->category_id;
             $invoice->ref_number     = $request->ref_number;
             $invoice->discount_apply = isset($request->discount_apply) ? 1 : 0;
-            $invoice->created_by     = \Auth::user()->id;
+            $invoice->created_by     = \Auth::user()->creatorId();
 
             $invoice->save();
             Utility::starting_number($invoice->invoice_id + 1, 'invoice');
