@@ -2345,14 +2345,22 @@ class CustomerController extends Controller
 
     function invoiceNumber()
     {
-        $company_id = auth()->user()->companyId();
-
-        $latest = Invoice::where('created_by', '=', $company_id)->latest()->first();
+        $latest = CustomerInvoice::where('customer_id', '=', auth()->id())->latest()->first();
         if (!$latest) {
             return 1;
         }
 
-        return $latest->invoice_id + 1;
+        return $latest->id + 1;
+    }
+
+    function quoteNumber()
+    {
+        $latest = CustomerQuote::where('customer_id', '=', auth()->id())->latest()->first();
+        if (!$latest) {
+            return 1;
+        }
+
+        return $latest->id + 1;
     }
 
 
@@ -3116,7 +3124,7 @@ class CustomerController extends Controller
         try {
             return DB::transaction(function () use ($quote) {
                 $duplicateQuote = $quote->replicate();
-                $duplicateQuote->quote_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+                $duplicateQuote->quote_number = \Auth::user()->invoiceNumberFormat($this->quoteNumber());
 
                 // ✅ Handle document duplication
                 if ($quote->document_path && Storage::disk('private')->exists($quote->document_path)) {
