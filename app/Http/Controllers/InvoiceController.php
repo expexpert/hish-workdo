@@ -54,7 +54,7 @@ class InvoiceController extends Controller
                 $creatorIds = [$auth->creatorId()];
             }
 
-            $query = Invoice::whereIn('created_by', $creatorIds);
+             $query = Invoice::where('created_by', '=', \Auth::user()->creatorId());
 
             if (!empty($request->customer)) {
                 $query->where('customer_id', '=', $request->customer);
