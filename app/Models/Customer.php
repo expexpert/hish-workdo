@@ -72,6 +72,7 @@ class Customer extends Authenticatable
         'bot_otp_expires_at',
         'bot_active',
         'bot_verified_at',
+        'bot_lang',
     ];
 
     protected $hidden = [
