@@ -2597,13 +2597,28 @@ class CustomerController extends Controller
         $user = $request->user();
 
         $quotes = CustomerQuote::where('customer_id', $user->id)
-            // ->where(function ($q) {
-            //     $q->where('review_status', '!=', 'CONVERTED')
-            //         ->orWhereNull('review_status');
-            // })
             ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
             ->orderBy('date', 'desc')
             ->get();
+
+        // ✅ add total_ttc per quote
+        $quotes->each(function ($quote) {
+
+            $totalTtc = 0;
+
+            foreach ($quote->articles as $article) {
+                $priceHt = $article->unit_price_ht * ($article->quantity ?? 1);
+                $discount = $article->discount ?? 0;
+                $priceAfterDiscount = $priceHt - $discount;
+
+                $taxRate = $article->tax ? $article->tax->rate : 0;
+                $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
+
+                $totalTtc += ($priceAfterDiscount + $taxAmount);
+            }
+
+            $quote->total_ttc = $totalTtc;
+        });
 
         return response()->json([
             'success' => true,
