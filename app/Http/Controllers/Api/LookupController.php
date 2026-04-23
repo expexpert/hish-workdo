@@ -7,7 +7,9 @@ use App\Models\BankAccount;
 use App\Models\CustomerCategory;
 use App\Models\ProductServiceCategory;
 use App\Models\CustomerClient;
+use App\Models\CustomerInvoice;
 use App\Models\CustomerSupplier;
+use App\Models\CustomerQuote;
 use App\Models\Tax;
 use App\Models\Invoice;
 use App\Models\ProductServiceUnit;
@@ -53,27 +55,37 @@ class LookupController extends Controller
         }
 
         $invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+        $quote_number = \Auth::user()->invoiceNumberFormat($this->quoteNumber());
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'clients' => $clientsQuery->get(),
                 'accounts' => BankAccount::where('created_by', $company_id)->select('id', 'holder_name as name')->get(),
-                'invoice_number' => $invoice_number
+                'invoice_number' => $invoice_number,
+                'quote_number' => $quote_number,
             ]
         ]);
     }
 
     function invoiceNumber()
     {
-        $company_id = auth()->user()->companyId();
-
-        $latest = Invoice::where('created_by', '=', $company_id)->latest()->first();
+        $latest = CustomerInvoice::where('customer_id', '=', auth()->id())->latest()->first();
         if (!$latest) {
             return 1;
         }
 
-        return $latest->invoice_id + 1;
+        return $latest->id + 1;
+    }
+
+    function quoteNumber()
+    {
+        $latest = CustomerQuote::where('customer_id', '=', auth()->id())->latest()->first();
+        if (!$latest) {
+            return 1;
+        }
+
+        return $latest->id + 1;
     }
 
 
