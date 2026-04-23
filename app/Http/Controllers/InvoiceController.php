@@ -94,10 +94,6 @@ class InvoiceController extends Controller
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $product_services->prepend('--', '');
 
-            // echo '<pre>';
-            // print_r($invoice_number);
-            // die('test');
-
             return view('invoice.create', compact('customers', 'invoice_number', 'product_services', 'category', 'customFields', 'customerId'));
         } else {
             return response()->json(['error' => __('Permission denied.')], 401);
