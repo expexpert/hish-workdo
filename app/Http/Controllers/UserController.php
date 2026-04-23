@@ -9,6 +9,9 @@ use App\Models\User;
 use App\Models\Utility;
 use App\Models\AdminActivityLog;
 use App\Models\Customer;
+use App\Models\ProductServiceCategory;
+use App\Models\ProductServiceUnit;
+use App\Models\Tax;
 use App\Services\AdminActivityLogger;
 use Auth;
 use Illuminate\Http\Request;
@@ -54,8 +57,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         if (\Auth::user()->can('create user')) {
-            $default_language = DB::table('settings')->select('value')->where('name', 'default_language')->where('created_by',\Auth::user()->id)->first();
-          
+            $default_language = DB::table('settings')->select('value')->where('name', 'default_language')->where('created_by', \Auth::user()->id)->first();
+
             $userpassword               = $request->input('password');
             if (\Auth::user()->type == 'super admin') {
                 $validator = \Validator::make(
@@ -72,15 +75,14 @@ class UserController extends Controller
                 }
 
                 $enableLogin       = 0;
-                if(!empty($request->password_switch) && $request->password_switch == 'on')
-                {
+                if (!empty($request->password_switch) && $request->password_switch == 'on') {
                     $enableLogin   = 1;
                     $validator = \Validator::make(
-                        $request->all(), ['password' => 'required|min:6']
+                        $request->all(),
+                        ['password' => 'required|min:6']
                     );
 
-                    if($validator->fails())
-                    {
+                    if ($validator->fails()) {
                         return redirect()->back()->with('error', $validator->errors()->first());
                     }
                 }
@@ -114,7 +116,35 @@ class UserController extends Controller
                 //     'password' => $psw,
                 // ];
 
-               
+
+
+
+                $rates = [0, 7, 10, 14, 20];
+
+                foreach ($rates as $rate) {
+                    Tax::firstOrCreate(
+                        ['rate' => $rate, 'created_by' => $user->id],
+                        ['name' => "VAT {$rate}%"]
+                    );
+                }
+
+                $units = ['u', 'pc', 'lot', 'pack', 'h', 'j', 'mois', 'kg', 'g', 'm', 'm²', 'L', 'ml', 'km', 'service', 'projet', 'abo', 'lic'];
+
+                foreach ($units as $unit) {
+                    ProductServiceUnit::firstOrCreate([
+                        'name' => $unit,
+                        'created_by' => $user->id
+                    ]);
+                }
+
+                $category = new ProductServiceCategory();
+                $category->name = 'Default Category';
+                $category->type = 'product & service';
+                $category->created_by = $user->id;
+                $category->save();
+
+
+                
             } else {
                 $validator = \Validator::make(
                     $request->all(),
@@ -131,15 +161,14 @@ class UserController extends Controller
                 }
 
                 $enableLogin       = 0;
-                if(!empty($request->password_switch) && $request->password_switch == 'on')
-                {
+                if (!empty($request->password_switch) && $request->password_switch == 'on') {
                     $enableLogin   = 1;
                     $validator = \Validator::make(
-                        $request->all(), ['password' => 'required|min:6']
+                        $request->all(),
+                        ['password' => 'required|min:6']
                     );
 
-                    if($validator->fails())
-                    {
+                    if ($validator->fails()) {
                         return redirect()->back()->with('error', $validator->errors()->first());
                     }
                 }
@@ -187,7 +216,6 @@ class UserController extends Controller
                 return redirect()->route('users.index')->with('success', __('Company successfully created.') . ((!empty($resp) && $resp['is_success'] == false && !empty($resp['error'])) ? '<br> <span class="text-danger">' . $resp['error'] . '</span>' : ''));
             } else {
                 return redirect()->route('users.index')->with('success', __('User successfully created.') . ((!empty($resp) && $resp['is_success'] == false && !empty($resp['error'])) ? '<br> <span class="text-danger">' . $resp['error'] . '</span>' : ''));
-
             }
             // return redirect()->route('users.index')->with('success', __('User successfully added.') . ((isset($smtp_error)) ? '<br> <span class="text-danger">' . $smtp_error . '</span>' : ''));
         } else {
@@ -284,7 +312,7 @@ class UserController extends Controller
 
                     $user->delete();
 
-                    return redirect()->back()->with('success' , __('Company Successfully deleted'));
+                    return redirect()->back()->with('success', __('Company Successfully deleted'));
 
                     // if ($user->delete_status == 0) {
                     //     $user->delete_status = 1;
@@ -532,10 +560,10 @@ class UserController extends Controller
             if ($user->allow_super_admin_login == 1 || \Auth::user()->type != 'super admin') {
                 $admin = $request->user();
                 Impersonate::take($admin, $user);
-                
+
                 // Store admin ID in session for activity logging
                 session(['admin_impersonating_company_id' => $admin->id]);
-                
+
                 // Log the login activity
                 AdminActivityLog::logActivity(
                     $user->id,
@@ -546,7 +574,7 @@ class UserController extends Controller
                     json_encode(['company_name' => $user->name, 'company_email' => $user->email]),
                     $admin->creatorId()
                 );
-                
+
                 return redirect('/');
             } else {
                 return redirect()->back()->with('error', __('This company does not allow super admin login.'));
@@ -558,7 +586,7 @@ class UserController extends Controller
     {
         $company = \Auth::user();
         $adminId = session('admin_impersonating_company_id');
-        
+
         if ($adminId && $company) {
             // Log the logout activity
             AdminActivityLog::logActivity(
@@ -571,12 +599,12 @@ class UserController extends Controller
                 $adminId
             );
         }
-        
+
         \Auth::user()->leaveImpersonation($request->user());
-        
+
         // Clear the admin impersonating session
         session()->forget('admin_impersonating_company_id');
-        
+
         return redirect('/');
     }
 
@@ -645,21 +673,21 @@ class UserController extends Controller
     {
         $eId = \Crypt::decrypt($id);
         $user = User::findOrFail($eId);
-    
+
         // 1. Determine the new status (the opposite of the current one)
         $newStatus = ($user->is_enable_login == 1) ? 0 : 1;
         $message = ($newStatus == 0) ? __('User login disable successfully.') : __('User login enable successfully.');
-    
+
         // 2. Update the main user
         $user->update(['is_enable_login' => $newStatus]);
-    
+
         // 3. Update all related users and their IDs
         $otherUserIds = User::where('created_by', $eId)->pluck('id');
-        
+
         // Perform mass updates (Super fast!)
         User::whereIn('id', $otherUserIds)->update(['is_enable_login' => $newStatus]);
         Customer::whereIn('created_by', $otherUserIds)->update(['is_enable_login' => $newStatus]);
-    
+
         return redirect()->back()->with('success', $message);
     }
 

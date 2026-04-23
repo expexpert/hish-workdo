@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use App\Models\ClientNotification;
 use Illuminate\Http\JsonResponse;
@@ -30,6 +31,7 @@ use App\Models\ProductServiceUnit;
 use App\Models\ProductServiceCategory;
 use App\Models\CustomerQuote;
 use App\Models\QuoteArticle;
+use App\Models\ChartOfAccountType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -2084,6 +2086,7 @@ class CustomerController extends Controller
             'articles.*.quantity'      => 'required_with:articles|integer|min:1',
             'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
+            'articles.*.discount'      => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
@@ -2312,14 +2315,27 @@ class CustomerController extends Controller
 
         $company_id = auth()->user()->companyId();
 
-        $unitID = ProductServiceUnit::where('created_by', $company_id)
-            ->first()
-            ?->id ?? 1;
+        $SaleName = $request->type === 'Service' ? 'Service Income' : 'Sales Income';
+        $Expensename = $request->type === 'Service' ? 'Cost of Sales- On Services' : 'Cost of Sales - Purchases';
 
-        $categoryID = ProductServiceCategory::where('created_by', $company_id)
-            ->where('type', 'product & service')
-            ->first()
-            ?->id ?? 1;
+        $chartAccountSaleID = ChartOfAccountType::where('created_by', $company_id)
+            ->where('name', 'Income')
+            ->value('id');
+
+        $sale_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
+            ->where('type', $chartAccountSaleID)
+            ->where('name', $SaleName)
+            ->value('id');
+
+
+        $chartAccountExpenseID = ChartOfAccountType::where('created_by', $company_id)
+            ->whereIn('name', ['Expenses', 'Costs of Goods Sold'])
+            ->value('id');
+
+        $expense_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
+            ->where('type', $chartAccountExpenseID)
+            ->where('name', $Expensename)
+            ->value('id');
 
 
         $productService = new ProductService();
@@ -2331,8 +2347,8 @@ class CustomerController extends Controller
         $productService->tax_id         = $request->tva_percentage;
         $productService->quantity       = $request->quantity ?? 0;
         $productService->type           = $request->type;
-        $productService->sale_chartaccount_id       = ($request->type === 'Service') ? '4020' : '4010';
-        $productService->expense_chartaccount_id    = ($request->type === 'Service') ? '5005' : '5010';
+        $productService->sale_chartaccount_id       = $sale_chartaccount_id ?? '1';
+        $productService->expense_chartaccount_id    = $expense_chartaccount_id ?? '1';
         $productService->customer_id     = $request->customer_id;
         $productService->unit_id        = $request->unit_id;
         $productService->category_id    = $request->category_id;
@@ -2422,6 +2438,30 @@ class CustomerController extends Controller
             'category_id'   => 'sometimes|required|exists:product_service_categories,id',
         ]);
 
+        $company_id = auth()->user()->companyId();
+
+        $SaleName = $request->type === 'Service' ? 'Service Income' : 'Sales Income';
+        $Expensename = $request->type === 'Service' ? 'Cost of Sales- On Services' : 'Cost of Sales - Purchases';
+
+        $chartAccountSaleID = ChartOfAccountType::where('created_by', $company_id)
+            ->where('name', 'Income')
+            ->value('id');
+
+        $sale_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
+            ->where('type', $chartAccountSaleID)
+            ->where('name', $SaleName)
+            ->value('id');
+
+
+        $chartAccountExpenseID = ChartOfAccountType::where('created_by', $company_id)
+            ->whereIn('name', ['Expenses', 'Costs of Goods Sold'])
+            ->value('id');
+
+        $expense_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
+            ->where('type', $chartAccountExpenseID)
+            ->where('name', $Expensename)
+            ->value('id');
+
         // 3. Apply updates only for provided fields
         if ($request->has('designation'))   $product->name = $validated['designation'];
         if ($request->has('description'))   $product->description = $validated['description'];
@@ -2438,8 +2478,8 @@ class CustomerController extends Controller
         if ($request->has('category_id'))      $product->category_id = $validated['category_id'];
 
         if ($request->has('type')) {
-            $product->sale_chartaccount_id    = ($request->input('type') === 'Service') ? '4020' : '4010';
-            $product->expense_chartaccount_id = ($request->input('type') === 'Service') ? '5005' : '5010';
+            $product->sale_chartaccount_id    = $sale_chartaccount_id ?? '1';
+            $product->expense_chartaccount_id = $expense_chartaccount_id ?? '1';
         }
 
         $product->save();
@@ -2614,10 +2654,33 @@ class CustomerController extends Controller
             ], 404);
         }
 
+        
+        $totals = [
+            'total_ht' => 0,
+            'total_discount' => 0,
+            'total_tva' => 0,
+            'total_ttc' => 0,
+        ];
+
+        foreach ($quote->articles as $article) {
+            $priceHt = $article->total_price_ht ?? ($article->unit_price_ht * ($article->quantity ?? 1));
+            $discount = $article->discount ?? 0;
+            $priceAfterDiscount = $priceHt - $discount;
+
+            $taxRate = $article->tax ? $article->tax->rate : 0;
+            $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
+
+            $totals['total_ht'] += $priceHt;
+            $totals['total_discount'] += $discount;
+            $totals['total_tva'] += $taxAmount;
+            $totals['total_ttc'] += $priceAfterDiscount + $taxAmount;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Quote retrieved successfully.',
-            'data'    => $quote
+            'data'    => $quote,
+            'totals'  => $totals
         ], 200);
     }
 
