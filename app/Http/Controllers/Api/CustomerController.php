@@ -2663,7 +2663,7 @@ class CustomerController extends Controller
         ];
 
         foreach ($quote->articles as $article) {
-            $priceHt = $article->total_price_ht ?? ($article->unit_price_ht * ($article->quantity ?? 1));
+            $priceHt = $article->unit_price_ht * ($article->quantity ?? 1);
             $discount = $article->discount ?? 0;
             $priceAfterDiscount = $priceHt - $discount;
 
