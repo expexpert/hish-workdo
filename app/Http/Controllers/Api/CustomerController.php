@@ -1037,7 +1037,7 @@ class CustomerController extends Controller
         }
 
         $clients = $clients->with(['invoices' => function ($q) {
-            $q->where('status', 'Issued')->with('articles', 'articles.taxes');
+            $q->where('status', 'Issued')->with('articles');
         }])
             ->get();
 
