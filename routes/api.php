@@ -168,6 +168,7 @@ Route::group(['prefix' => 'bot'], function () {
             Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
             Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
             Route::get('/product-resources', [LookupController::class, 'getProductResources']);
+            Route::get('/customer-products', [CustomerController::class, 'getCustomerProducts']);
 
             Route::get('/customer-invoices', [CustomerController::class, 'getInvoices']);
             Route::get('/customer-expenses', [CustomerController::class, 'getExpenses']);
@@ -175,6 +176,7 @@ Route::group(['prefix' => 'bot'], function () {
 
             // Profile check for Global Activation
             Route::get('/profile', [CustomerController::class, 'getProfile']);
+            Route::put('/profile', [CustomerController::class, 'updateProfile']);
         });
 
         // Add any other bot.auth routes here if needed

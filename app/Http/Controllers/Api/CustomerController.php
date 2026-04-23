@@ -84,6 +84,8 @@ class CustomerController extends Controller
             'billing_address'  => 'sometimes|required|string|max:255',
             'billing_zip'      => 'sometimes|required|string|max:20',
             'billing_city'     => 'sometimes|required|string|max:100',
+            'lang'             => 'sometimes|required|string|max:10',
+            'bot_lang'         => 'sometimes|required|string|max:10',
 
             // These can be present and empty (null), or missing entirely
             'website'          => 'nullable|string|max:255',
@@ -1706,7 +1708,6 @@ class CustomerController extends Controller
             'client_id'      => 'required|exists:customer_clients,id',
             'date'           => 'required|date',
             'due_date'       => 'required|date|after:date',
-            'invoice_number' => 'required|string|max:255',
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
             'notes'          => 'nullable|string',
@@ -1725,6 +1726,7 @@ class CustomerController extends Controller
         try {
             // ✅ STEP 2: Prepare header data
             $invoiceData = collect($validated)->except(['articles', 'document'])->toArray();
+            $invoiceData['invoice_number'] = auth()->user()->invoiceNumberFormat($this->invoiceNumber());
 
             $articlesData = [];
             $now = now();

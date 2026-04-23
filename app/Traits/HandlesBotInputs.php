@@ -36,29 +36,9 @@ trait HandlesBotInputs
             $categoryName = $request->input('category_name');
             $category = CustomerCategory::where('name', 'LIKE', $categoryName)
                 ->first();
-            if (!$category) {
-                $category = CustomerCategory::create([
-                    'name' => $categoryName
-                ]);
-            }
-            $request->merge(['category_id' => $category->id]);
-
-            // --- AUTO-SYNC TO STANDARD ACCOUNTING CATEGORY ---
-            // Determine type based on the request (fallback to Income)
-            $type = ($request->input('type') === 'expense') ? 'Expense' : 'Income';
-
-            $stCategory = \App\Models\ProductServiceCategory::where('created_by', $user->creatorId())
-                ->where('name', 'LIKE', $categoryName)
-                ->where('type', $type)
-                ->first();
             
-            if (!$stCategory) {
-                \App\Models\ProductServiceCategory::create([
-                    'name'       => $categoryName,
-                    'type'       => $type,
-                    'color'      => '#6777ef',
-                    'created_by' => $user->creatorId(),
-                ]);
+            if ($category) {
+                $request->merge(['category_id' => $category->id]);
             }
         }
 
