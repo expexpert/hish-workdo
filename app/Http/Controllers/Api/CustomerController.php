@@ -1346,7 +1346,7 @@ class CustomerController extends Controller
             $validated = $request->validate([
                 'customer_id'    => 'required|exists:customers,id',
                 'supplier_id'    => 'required|exists:customer_suppliers,id',
-                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
                 'date'           => 'required|date',
                 'ttc'            => 'required|numeric|min:0',
                 'tva'            => 'nullable|numeric|min:0',
@@ -1356,6 +1356,17 @@ class CustomerController extends Controller
                 'total_tva'      => 'nullable|numeric|min:0',
                 'notes'          => 'nullable|string',
             ]);
+
+            if (!empty($request->file)) {
+                $image_size = $request->file('file')->getSize();
+                $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+                if ($result != 1) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Storage limit exceeded. Cannot upload document.'
+                    ], 400);
+                }
+            }
 
             // Ensure metrics columns are populated for dashboard sync
             if (!isset($validated['total_ttc']) || empty($validated['total_ttc'])) {
@@ -1564,6 +1575,15 @@ class CustomerController extends Controller
 
         // Handle File Upload
         if ($request->hasFile('file')) {
+            $image_size = $request->file('file')->getSize();
+            $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+            if ($result != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Storage limit exceeded. Cannot upload document.'
+                ], 400);
+            }
+
             if ($expense->file) {
                 Storage::disk('private')->delete($expense->file);
             }
@@ -1711,7 +1731,7 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
 
             'articles'                    => 'sometimes|array',
             'articles.*.designation'     => 'required_with:articles|string|max:255',
@@ -1722,6 +1742,17 @@ class CustomerController extends Controller
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
             'articles.*.discount'        => 'nullable|numeric|min:0|max:100',
         ]);
+
+        if (!empty($request->document)) {
+            $image_size = $request->file('document')->getSize();
+            $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+            if ($result != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Storage limit exceeded. Cannot upload document.'
+                ], 400);
+            }
+        }
 
         try {
             // ✅ STEP 2: Prepare header data
@@ -1874,6 +1905,24 @@ class CustomerController extends Controller
 
         // Append signed download URLs for the bot
         $invoices->each(function ($invoice) {
+
+            $totalTtc = 0;
+
+            foreach ($invoice->articles as $article) {
+                $priceHt = $article->unit_price_ht * ($article->quantity ?? 1);
+                $discount = $article->discount ?? 0;
+                $priceAfterDiscount = $priceHt - $discount;
+
+                $taxRate = $article->tax ? $article->tax->rate : 0;
+                $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
+
+                $totalTtc += ($priceAfterDiscount + $taxAmount);
+            }
+
+            // ✅ attach total_ttc per invoice
+            $invoice->total_ttc = $totalTtc;
+
+            // existing download URL
             $invoice->download_url = URL::temporarySignedRoute(
                 'api.download.invoice.pdf.public',
                 now()->addHours(24),
@@ -2085,7 +2134,7 @@ class CustomerController extends Controller
             'payment_method' => 'sometimes|required|string|max:255',
             'status'         => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
 
             // Articles validation (optional during update)
             'articles'                 => 'sometimes|array',
@@ -2103,6 +2152,16 @@ class CustomerController extends Controller
 
                 // 1. Handle File Upload (and delete old file if a new one is uploaded)
                 if ($request->hasFile('document')) {
+
+                    $image_size = $request->file('document')->getSize();
+                    $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+                    if ($result != 1) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Storage limit exceeded. Cannot upload document.'
+                        ], 400);
+                    }
+
                     if ($invoice->document_path) {
                         Storage::disk('private')->delete($invoice->document_path);
                     }
@@ -2563,7 +2622,7 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
             'notes'       => 'nullable|string',
-            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
 
             'articles'                    => 'sometimes|array',
             'articles.*.designation'     => 'required_with:articles|string|max:255',
@@ -2574,6 +2633,17 @@ class CustomerController extends Controller
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
             'articles.*.discount'        => 'nullable|numeric|min:0|max:100',
         ]);
+
+        if (!empty($request->document)) {
+            $image_size = $request->file('document')->getSize();
+            $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+            if ($result != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Storage limit exceeded. Cannot upload document.'
+                ], 400);
+            }
+        }
 
         try {
             // ✅ STEP 2: Prepare Data
@@ -2726,7 +2796,7 @@ class CustomerController extends Controller
             'status'         => 'sometimes|required|string|max:50',
             'review_status'  => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
 
             // Articles validation
             'articles'                 => 'sometimes|array',
@@ -2744,6 +2814,15 @@ class CustomerController extends Controller
 
                 // 1. Handle File Upload
                 if ($request->hasFile('document')) {
+
+                    $image_size = $request->file('document')->getSize();
+                    $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+                    if ($result != 1) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Storage limit exceeded. Cannot upload document.'
+                        ], 400);
+                    }
                     if ($quote->document_path) {
                         Storage::disk('private')->delete($quote->document_path);
                     }
