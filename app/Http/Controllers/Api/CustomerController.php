@@ -2570,6 +2570,7 @@ class CustomerController extends Controller
             'articles.*.quantity'        => 'nullable|integer|min:1',
             'articles.*.total_price_ht'  => 'nullable|numeric|min:0',
             'articles.*.tva_percentage'  => 'required_with:articles|exists:taxes,id',
+            'articles.*.discount'        => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
@@ -2589,6 +2590,7 @@ class CustomerController extends Controller
                         'quantity'       => $quantity,
                         'total_price_ht' => $article['total_price_ht'] ?? ($article['unit_price_ht'] * $quantity),
                         'tva_percentage' => $article['tva_percentage'],
+                        'discount'       => $article['discount'] ?? 0,
                         'created_at'     => now(),
                         'updated_at'     => now(),
                     ];
@@ -2732,6 +2734,7 @@ class CustomerController extends Controller
             'articles.*.quantity'      => 'required_with:articles|integer|min:1',
             'articles.*.total_price_ht' => 'required_with:articles|numeric|min:0',
             'articles.*.tva_percentage' => 'required_with:articles|exists:taxes,id',
+            'articles.*.discount'      => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {

@@ -19,12 +19,14 @@ class QuoteArticle extends Model
         'quantity',
         'total_price_ht',
         'tva_percentage',
+        'discount',
     ];
 
     protected $casts = [
         'unit_price_ht' => 'decimal:2',
         'total_price_ht' => 'decimal:2',
         'tva_percentage' => 'integer',
+        'discount' => 'decimal:2',
     ];
 
     /*
