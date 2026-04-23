@@ -1037,7 +1037,7 @@ class CustomerController extends Controller
         }
 
         $clients = $clients->with(['invoices' => function ($q) {
-            $q->where('status', 'Issued')->with('articles');
+            $q->where('status', 'Issued')->with('articles', 'articles.taxes');
         }])
             ->get();
 
@@ -1838,7 +1838,7 @@ class CustomerController extends Controller
         $id = $request->query('id');
 
         $query = CustomerInvoice::where('customer_id', $user->id)
-            ->with(['client:id,client_name', 'articles'])
+            ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
             ->orderBy('date', 'desc');
 
         if ($id) {
@@ -2012,7 +2012,7 @@ class CustomerController extends Controller
 
         $invoice = CustomerInvoice::where('id', $id)
             ->where('customer_id', $user->id)
-            ->with(['client:id,client_name', 'articles'])
+            ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
             ->first();
 
         if (! $invoice) {
@@ -2022,10 +2022,32 @@ class CustomerController extends Controller
             ], 404);
         }
 
+        $totals = [
+            'total_ht' => 0,
+            'total_discount' => 0,
+            'total_tva' => 0,
+            'total_ttc' => 0,
+        ];
+
+        foreach ($invoice->articles as $article) {
+            $priceHt = $article->total_price_ht ?? ($article->unit_price_ht * ($article->quantity ?? 1));
+            $discount = $article->discount ?? 0;
+            $priceAfterDiscount = $priceHt - $discount;
+
+            $taxRate = $article->tax ? $article->tax->rate : 0;
+            $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
+
+            $totals['total_ht'] += $priceHt;
+            $totals['total_discount'] += $discount;
+            $totals['total_tva'] += $taxAmount;
+            $totals['total_ttc'] += $priceAfterDiscount + $taxAmount;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Invoice retrieved successfully.',
-            'data'    => $invoice
+            'data'    => $invoice,
+            'totals'  => $totals
         ], 200);
     }
 
@@ -2463,7 +2485,7 @@ class CustomerController extends Controller
             //     $q->where('review_status', '!=', 'CONVERTED')
             //         ->orWhereNull('review_status');
             // })
-            ->with(['client:id,client_name', 'articles'])
+            ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
             ->orderBy('date', 'desc')
             ->get();
 
@@ -2582,7 +2604,7 @@ class CustomerController extends Controller
 
         $quote = CustomerQuote::where('id', $id)
             ->where('customer_id', $user->id)
-            ->with(['client:id,client_name', 'articles'])
+            ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
             ->first();
 
         if (! $quote) {
