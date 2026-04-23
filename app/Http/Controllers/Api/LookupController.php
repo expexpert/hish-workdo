@@ -70,7 +70,7 @@ class LookupController extends Controller
 
     function invoiceNumber()
     {
-        $latest = CustomerInvoice::where('customer_id', '=', auth()->id())->latest()->first();
+        $latest = CustomerInvoice::latest()->first();
         if (!$latest) {
             return 1;
         }
@@ -80,7 +80,7 @@ class LookupController extends Controller
 
     function quoteNumber()
     {
-        $latest = CustomerQuote::where('customer_id', '=', auth()->id())->latest()->first();
+        $latest = CustomerQuote::latest()->first();
         if (!$latest) {
             return 1;
         }
