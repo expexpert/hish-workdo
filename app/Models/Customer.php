@@ -150,6 +150,14 @@ class Customer extends Authenticatable
         return $settings["invoice_prefix"] . sprintf("%05d", $number);
     }
 
+
+    public function quoteNumberFormat($number)
+    {
+        $settings = Utility::settings();
+
+        return $settings["quote_prefix"] . sprintf("%05d", $number);
+    }
+
     public static function retainerNumberFormat($number)
     {
         $settings = Utility::settings();

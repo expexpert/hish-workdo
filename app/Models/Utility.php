@@ -83,6 +83,7 @@ class Utility extends Model
             "company_email" => "",
             "company_email_from_name" => "",
             "invoice_prefix" => "#INVO",
+            "quote_prefix" => "#DEV",
             "journal_prefix" => "#JUR",
             "invoice_color" => "ffffff",
             "proposal_prefix" => "#PROP",

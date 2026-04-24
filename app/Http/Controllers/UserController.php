@@ -184,7 +184,7 @@ class UserController extends Controller
                         ],
                         [
                             'sku' => rand(100000, 999999),
-                            'type' => 'Service',
+                            'type' => 'Product',
                             'sale_price' => 0,
                             'purchase_price' => 0,
                             'quantity' => 1,

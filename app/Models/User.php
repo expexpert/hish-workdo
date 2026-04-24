@@ -179,6 +179,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $settings["invoice_prefix"] . sprintf("%05d", $number);
     }
 
+    public function quoteNumberFormat($number)
+    {
+        $settings = Utility::settings();
+
+        return $settings["quote_prefix"] . sprintf("%05d", $number);
+    }
+
     public function getProfileAttribute()
     {
         if (!empty($this->avatar) && \Storage::exists($this->avatar)) {

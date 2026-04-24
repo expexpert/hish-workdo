@@ -55,7 +55,7 @@ class LookupController extends Controller
         }
 
         $invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
-        $quote_number = \Auth::user()->invoiceNumberFormat($this->quoteNumber());
+        $quote_number = \Auth::user()->quoteNumberFormat($this->quoteNumber());
 
         return response()->json([
             'status' => 'success',
