@@ -1929,20 +1929,20 @@ class CustomerController extends Controller
             // --- Logic for Aggregates ---
             $totalAllInvoices += $totalTtc;
 
-            if ($invoice->status === 'paid') {
+            if ($invoice->status === 'Paid') {
                 $totalPaidInvoices += $totalTtc;
             }
 
-            if ($invoice->status === 'issued') {
+            if ($invoice->status === 'Issued') {
                 $totalIssuedInvoices += $totalTtc;
             }
 
-            if ($invoice->status === 'cancelled') {
+            if ($invoice->status === 'Cancelled') {
                 $totalCancelledInvoices += $totalTtc;
             }
 
             // Logic for "Issued" and "Overdue" (due_date < today)
-            if ($invoice->status === 'issued' && $invoice->due_date && Carbon::parse($invoice->due_date)->lt($today)) {
+            if ($invoice->status === 'Issued' && $invoice->due_date && Carbon::parse($invoice->due_date)->lt($today)) {
                 $totalOverdueInvoices += $totalTtc;
             }
 
@@ -2694,15 +2694,15 @@ class CustomerController extends Controller
             // --- Aggregation Logic ---
             $totalAllQuotes += $totalTtc;
 
-            if ($quote->status === 'accepted') {
+            if ($quote->status === 'Accepted') {
                 $totalAcceptedQuotes += $totalTtc;
             }
 
-            if ($quote->status === 'sent') {
+            if ($quote->status === 'Sent') {
                 $totalSentQuotes += $totalTtc;
             }
 
-            if ($quote->status === 'sent' && $quote->due_date && Carbon::parse($quote->due_date)->lt($today)) {
+            if ($quote->status === 'Sent' && $quote->due_date && Carbon::parse($quote->due_date)->lt($today)) {
                 $totalOverdueQuotes += $totalTtc;
             }
         });
