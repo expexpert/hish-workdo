@@ -156,7 +156,7 @@ class CustomerController extends Controller
         $monthEnd = now()->copy()->endOfMonth();
 
         $unpaidInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
-            ->where('status', 'ISSUED')
+            ->where('status', 'issued')
             ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
             ->count();
 
@@ -424,7 +424,7 @@ class CustomerController extends Controller
         }
 
         $pendingData = CustomerInvoice::where('customer_id', $user->id)
-            ->where('status', 'ISSUED')
+            ->where('status', 'issued')
             ->leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->selectRaw('COUNT(DISTINCT customer_invoices.id) as count, SUM(invoice_articles.total_price_ht) as amount')
             ->first();
@@ -1019,13 +1019,13 @@ class CustomerController extends Controller
             // 1. Sum of Issued Articles
             ->withSum(['articles as total_revenue_ht' => function ($q) {
                 $q->whereHas('invoice', function ($innerQ) {
-                    $innerQ->where('status', 'Issued');
+                    $innerQ->where('status', 'issued');
                 });
             }], 'total_price_ht')
             // 2. Count of Late Invoices (Date < Today AND Status != Paid)
             ->withCount(['invoices as late_invoices_count' => function ($q) use ($today) {
                 $q->where('due_date', '<', $today)
-                    ->where('status', '!=', 'Paid');
+                    ->where('status', '!=', 'paid');
             }]);
 
         if ($sort === 'recent') {
@@ -1041,7 +1041,7 @@ class CustomerController extends Controller
         }
 
         $clients = $clients->with(['invoices' => function ($q) {
-            $q->where('status', 'Issued')->with('articles');
+            $q->where('status', 'issued')->with('articles');
         }])
             ->get();
 
@@ -1929,20 +1929,20 @@ class CustomerController extends Controller
             // --- Logic for Aggregates ---
             $totalAllInvoices += $totalTtc;
 
-            if ($invoice->status === 'Paid') {
+            if ($invoice->status === 'paid') {
                 $totalPaidInvoices += $totalTtc;
             }
 
-            if ($invoice->status === 'Issued') {
+            if ($invoice->status === 'issued') {
                 $totalIssuedInvoices += $totalTtc;
             }
 
-            if ($invoice->status === 'Cancelled') {
+            if ($invoice->status === 'cancelled') {
                 $totalCancelledInvoices += $totalTtc;
             }
 
             // Logic for "Issued" and "Overdue" (due_date < today)
-            if ($invoice->status === 'Issued' && $invoice->due_date && Carbon::parse($invoice->due_date)->lt($today)) {
+            if ($invoice->status === 'issued' && $invoice->due_date && Carbon::parse($invoice->due_date)->lt($today)) {
                 $totalOverdueInvoices += $totalTtc;
             }
 
@@ -2694,15 +2694,15 @@ class CustomerController extends Controller
             // --- Aggregation Logic ---
             $totalAllQuotes += $totalTtc;
 
-            if ($quote->status === 'Accepted') {
+            if ($quote->status === 'accepted') {
                 $totalAcceptedQuotes += $totalTtc;
             }
 
-            if ($quote->status === 'Sent') {
+            if ($quote->status === 'sent') {
                 $totalSentQuotes += $totalTtc;
             }
 
-            if ($quote->status === 'Sent' && $quote->due_date && Carbon::parse($quote->due_date)->lt($today)) {
+            if ($quote->status === 'sent' && $quote->due_date && Carbon::parse($quote->due_date)->lt($today)) {
                 $totalOverdueQuotes += $totalTtc;
             }
         });
@@ -3304,7 +3304,7 @@ class CustomerController extends Controller
                 $invoice->due_date = $quote->due_date;
                 $invoice->invoice_number = $quote->quote_number;
                 $invoice->payment_method = $quote->payment_method;
-                $invoice->status = 'Issued';
+                $invoice->status = 'issued';
                 $invoice->review_status = 'PENDING';
                 $invoice->notes = $quote->notes;
                 $invoice->document_path = $quote->document_path;
