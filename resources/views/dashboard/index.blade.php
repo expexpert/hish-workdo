@@ -285,7 +285,7 @@
 @endsection
 @section('content')
     <div class="row">
-        @if (Auth::user()->type == 'accountant')
+      
             <!-- Accountant: Send notification to clients modal trigger -->
             <div class="d-flex gap-2 mb-3">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendClientsNotificationModal">{{ __('Send Notification to Clients') }}</button>
@@ -307,7 +307,7 @@
                                     <label class="form-label">{{ __('Recipients') }}</label>
                                     <select name="recipients" class="form-select">
                                         <option value="all">{{ __('All Clients') }}</option>
-                                        @foreach(\App\Models\Customer::whereIn('created_by', [Auth::user()->creatorId(), Auth::user()->id])->get() as $cust)
+                                        @foreach($customers as $cust)
                                             <option value="{{ $cust->id }}">{{ $cust->name }} — {{ $cust->email }}</option>
                                         @endforeach
                                     </select>
@@ -348,7 +348,7 @@
                                     <label class="form-label">{{ __('Recipients') }}</label>
                                     <select name="recipients" class="form-select">
                                         <option value="all">{{ __('All Clients') }}</option>
-                                        @foreach(\App\Models\Customer::whereIn('created_by', [Auth::user()->creatorId(), Auth::user()->id])->get() as $cust)
+                                        @foreach($customers as $cust)
                                             <option value="{{ $cust->id }}">{{ $cust->name }} — {{ $cust->email }}</option>
                                         @endforeach
                                     </select>
@@ -383,7 +383,7 @@
                     </div>
                 </div>
             </div>
-        @endif
+       
         <!-- [ sample-page ] start -->
         <div class="col-sm-12">
             <div class="row">

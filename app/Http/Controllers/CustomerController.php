@@ -244,61 +244,89 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
-
-        if (\Auth::user()->can('edit customer')) {
-
-            $rules = [
-                'name' => 'required',
-                'contact' => 'required|regex:/^\+\d{1,3}\d{9,13}$/',
-                'email' => 'required|email|unique:customers,email,' . $customer->id,
-            ];
-
-
-            $validator = \Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                $messages = $validator->getMessageBag();
-
-                return redirect()->route('customer.index')->with('error', $messages->first());
-            }
-
-            $customer->name             = $request->name;
-            $customer->contact          = $request->contact;
-            $customer->email            = $request->email;
-            $customer->tax_number       = $request->tax_number;
-            $customer->created_by       = $request->accountant;
-            $customer->billing_name     = $request->billing_name;
-            $customer->billing_country  = $request->billing_country;
-            $customer->billing_state    = $request->billing_state;
-            $customer->billing_city     = $request->billing_city;
-            $customer->billing_phone    = $request->billing_phone;
-            $customer->billing_zip      = $request->billing_zip;
-            $customer->billing_address  = $request->billing_address;
-            $customer->shipping_name    = $request->shipping_name;
-            $customer->shipping_country = $request->shipping_country;
-            $customer->shipping_state   = $request->shipping_state;
-            $customer->shipping_city    = $request->shipping_city;
-            $customer->shipping_phone   = $request->shipping_phone;
-            $customer->shipping_zip     = $request->shipping_zip;
-            $customer->shipping_address = $request->shipping_address;
-            $customer->company_type     = $request->company_type;
-            $customer->bio              = $request->bio;
-            $customer->address          = $request->address;
-            $customer->website          = $request->website;
-            $customer->vat_number       = $request->vat_number;
-            $customer->ice_number       = $request->ice_number;
-            $customer->rc_number        = $request->rc_number;
-            $customer->patent_number    = $request->patent_number;
-            $customer->if_number        = $request->if_number;
-            $customer->cnss      = $request->cnss;
-
-            $customer->save();
-
-            CustomField::saveData($customer, $request->customField);
-
-            return redirect()->route('customer.index')->with('success', __('Customer successfully updated.'));
-        } else {
+        if (!\Auth::user()->can('edit customer')) {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
+
+        // ✅ Validation
+        $rules = [
+            'name'      => 'required|string|max:255',
+            'contact'   => 'required|regex:/^\+\d{1,3}\d{9,13}$/',
+            'email'     => 'required|email|unique:customers,email,' . $customer->id,
+            'avatar'    => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            'signature' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        ];
+
+        $validator = \Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return redirect()->route('customer.index')
+                ->with('error', $validator->getMessageBag()->first());
+        }
+
+        // ✅ Assign fields
+        $customer->fill([
+            'name'             => $request->name,
+            'contact'          => $request->contact,
+            'email'            => $request->email,
+            'tax_number'       => $request->tax_number,
+            'created_by'       => $request->accountant,
+            'billing_name'     => $request->billing_name,
+            'billing_country'  => $request->billing_country,
+            'billing_state'    => $request->billing_state,
+            'billing_city'     => $request->billing_city,
+            'billing_phone'    => $request->billing_phone,
+            'billing_zip'      => $request->billing_zip,
+            'billing_address'  => $request->billing_address,
+            'shipping_name'    => $request->shipping_name,
+            'shipping_country' => $request->shipping_country,
+            'shipping_state'   => $request->shipping_state,
+            'shipping_city'    => $request->shipping_city,
+            'shipping_phone'   => $request->shipping_phone,
+            'shipping_zip'     => $request->shipping_zip,
+            'shipping_address' => $request->shipping_address,
+            'company_type'     => $request->company_type,
+            'bio'              => $request->bio,
+            'address'          => $request->address,
+            'website'          => $request->website,
+            'vat_number'       => $request->vat_number,
+            'ice_number'       => $request->ice_number,
+            'rc_number'        => $request->rc_number,
+            'patent_number'    => $request->patent_number,
+            'if_number'        => $request->if_number,
+            'cnss'             => $request->cnss,
+            'rib'              => $request->rib,
+        ]);
+
+        // ✅ Avatar Upload
+        if ($request->hasFile('avatar')) {
+            if (!empty($customer->avatar) && Storage::disk('public')->exists($customer->avatar)) {
+                Storage::disk('public')->delete($customer->avatar);
+            }
+
+            $customer->avatar = $request->file('avatar')
+                ->store('avatars', 'public');
+        }
+
+        // ✅ Signature Upload
+        if ($request->hasFile('signature')) {
+            if (!empty($customer->signature) && Storage::disk('public')->exists($customer->signature)) {
+                Storage::disk('public')->delete($customer->signature);
+            }
+
+            $customer->signature = $request->file('signature')
+                ->store('signatures', 'public');
+        }
+
+        $customer->save();
+
+        // ✅ Custom fields safe call
+        if ($request->has('customField')) {
+            CustomField::saveData($customer, $request->customField);
+        }
+
+        return redirect()->route('customer.index')
+            ->with('success', __('Customer successfully updated.'));
     }
 
 

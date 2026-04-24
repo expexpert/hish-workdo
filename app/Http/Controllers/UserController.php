@@ -11,7 +11,10 @@ use App\Models\AdminActivityLog;
 use App\Models\Customer;
 use App\Models\ProductServiceCategory;
 use App\Models\ProductServiceUnit;
+use App\Models\ProductService;
 use App\Models\Tax;
+use App\Models\ChartOfAccountType;
+use App\Models\ChartOfAccount;
 use App\Services\AdminActivityLogger;
 use Auth;
 use Illuminate\Http\Request;
@@ -144,7 +147,55 @@ class UserController extends Controller
                 $category->save();
 
 
-                
+                $tax = Tax::where('created_by', $user->id)->where('rate', 0)->first();
+                $unit = ProductServiceUnit::where('created_by', $user->id)->where('name', 'service')->first();
+
+                $accounts = ChartOfAccount::where('created_by', $user->id)
+                    ->pluck('id', 'type');
+
+                $products = [
+                    ['name' => 'Autres dépenses', 'expense' => '5790', 'income' => '4020'],
+                    ['name' => 'Banque / Assurance', 'expense' => '5690', 'income' => '4020'],
+                    ['name' => 'Transport', 'expense' => '5785', 'income' => '4020'],
+                    ['name' => 'Cloud Services', 'expense' => '5791', 'income' => '4020'],
+                    ['name' => 'Internet', 'expense' => '5780', 'income' => '4020'],
+                    ['name' => 'Logiciels / Abonnements', 'expense' => '5715', 'income' => '4020'],
+                    ['name' => 'Comptable / Juridiques', 'expense' => '5610', 'income' => '4020'],
+                    ['name' => 'Eau / Électricité', 'expense' => '5755', 'income' => '4020'],
+                    ['name' => 'Loyer', 'expense' => '5760', 'income' => '4020'],
+                    ['name' => 'Fournitures', 'expense' => '5700', 'income' => '4020'],
+                    ['name' => 'Office Supplies', 'expense' => '5700', 'income' => '4020'],
+                    ['name' => 'Marketing / Publicités', 'expense' => '5615', 'income' => '4020'],
+                    ['name' => 'Maintenance / Réparation', 'expense' => '5765', 'income' => '4020'],
+                    ['name' => 'Restaurant', 'expense' => '5786', 'income' => '4020'],
+                    ['name' => 'Impôts / Taxes', 'expense' => '5550', 'income' => '4020'],
+                    ['name' => 'Salaires', 'expense' => '5410', 'income' => '4020'],
+                ];
+
+                foreach ($products as $item) {
+
+                    $sale_chartaccount_id = $accounts[$item['income']] ?? 1;
+                    $expense_chartaccount_id = $accounts[$item['expense']] ?? 1;
+
+                    ProductService::firstOrCreate(
+                        [
+                            'name' => $item['name'],
+                            'created_by' => $user->id,
+                        ],
+                        [
+                            'sku' => rand(100000, 999999),
+                            'type' => 'Service',
+                            'sale_price' => 0,
+                            'purchase_price' => 0,
+                            'quantity' => 1,
+                            'tax_id' => $tax->id,
+                            'unit_id' => $unit->id,
+                            'category_id' => $category->id,
+                            'sale_chartaccount_id' => $sale_chartaccount_id,
+                            'expense_chartaccount_id' => $expense_chartaccount_id,
+                        ]
+                    );
+                }
             } else {
                 $validator = \Validator::make(
                     $request->all(),
