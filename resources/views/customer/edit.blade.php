@@ -1,8 +1,90 @@
-{{Form::model($customer,array('route' => array('customer.update', $customer->id), 'method' => 'PUT', 'class'=>'needs-validation','novalidate')) }}
+<style>
+    .upload-box {
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px dashed #ccc;
+        background: #f8f9fa;
+    }
+
+    /* Avatar (circle) */
+    .upload-box.circle {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+    }
+
+    /* Signature (rectangle) */
+    .upload-box.rectangle {
+        width: 220px;
+        height: 100px;
+        border-radius: 8px;
+    }
+
+    .upload-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Hover overlay */
+    .upload-box .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: 0.3s;
+    }
+
+    .upload-box:hover .overlay {
+        opacity: 1;
+    }
+</style>
+
+
+{{Form::model($customer,array('route' => array('customer.update', $customer->id), 'method' => 'PUT', 'class'=>'needs-validation','novalidate', 'enctype' => 'multipart/form-data')) }}
 <div class="modal-body">
 
     <h5 class="sub-title">{{__('Basic Info')}}</h5>
     <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <div class="form-group text-center">
+                {{ Form::label('avatar', __('Avatar'), ['class' => 'form-label']) }}<x-required></x-required>
+
+                {{ Form::file('avatar', ['class' => 'd-none', 'id' => 'avatarInput', 'accept' => 'image/*', 'onchange' => 'previewImage(event, "avatarPreviewImg")'
+            ]) }}
+
+                <label for="avatarInput" class="upload-box circle">
+                    <img id="avatarPreviewImg" src="{{ asset('storage/' . $customer->avatar) }}" alt="avatar">
+                    <div class="overlay">Change</div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <div class="form-group text-center">
+                {{ Form::label('signature', __('Signature'), ['class' => 'form-label']) }}
+
+                {{ Form::file('signature', ['class' => 'd-none', 'id' => 'signatureInput', 'accept' => 'image/*', 'onchange' => 'previewImage(event, "signaturePreviewImg")'
+            ]) }}
+
+                <label for="signatureInput" class="upload-box rectangle">
+                    <img id="signaturePreviewImg" src="{{ $customer->signature ? asset('storage/' . $customer->signature) : asset('images/signature-placeholder.png') }}" alt="signature">
+                    <div class="overlay">Upload</div>
+                </label>
+            </div>
+        </div>
+
         <div class="col-lg-6 col-md-6 col-sm-6">
             <div class="form-group">
                 {{Form::label('name',__('Name'),array('class'=>'form-label')) }}<x-required></x-required>
@@ -14,7 +96,7 @@
 
         <x-mobile div-class="col-md-6" name="contact" label="{{ __('Contact') }}" placeholder="{{ __('Enter Contact') }}" required></x-mobile>
 
-        <div class="col-lg-4 col-md-4 col-sm-6">
+        <div class="col-lg-6 col-md-6 col-sm-6">
             <div class="form-group">
                 {{Form::label('email',__('Email'),['class'=>'form-label'])}}<x-required></x-required>
                 <div class="form-icon-user">
@@ -22,7 +104,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 col-md-4 col-sm-6">
+        <div class="col-lg-6 col-md-6 col-sm-6">
             <div class="form-group">
                 {{Form::label('tax_number',__('Tax Number'),['class'=>'form-label'])}}
                 <div class="form-icon-user">
@@ -178,6 +260,15 @@
             </div>
         </div>
 
+        <div class="col-lg-6 col-md-6 col-sm-6">
+            <div class="form-group">`
+                {{Form::label('rib',__('RIB Number'),array('class'=>'form-label')) }}
+                <div class="input-group">
+                    {{Form::text('rib',null,array('class'=>'form-control', 'placeholder'=>__('Enter RIB Number') ))}}
+                </div>
+            </div>
+        </div>
+
 
     </div>
 
@@ -276,3 +367,13 @@
     <input type="submit" value="{{__('Update')}}" class="btn btn-primary">
 </div>
 {{Form::close()}}
+
+<script>
+    function previewImage(event, targetId) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            document.getElementById(targetId).src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>

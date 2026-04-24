@@ -120,7 +120,7 @@ class LandingPageController extends Controller
                 'mail.from.name' => $settings['mail_from_name'],
             ]);
 
-            Mail::to('contact@hish-workdo.com')->send(new \App\Mail\ContactFormMail($request->all()));
+            Mail::to('contact@simply-compta.com')->send(new \App\Mail\ContactFormMail($request->all()));
             return redirect()->back()->with('success', 'Votre demande a été envoyée avec succès !');
         } catch (\Exception $e) {
             Log::error('Mail sending failed: ' . $e->getMessage());

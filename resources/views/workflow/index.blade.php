@@ -6,7 +6,7 @@
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
-<li class="breadcrumb-item">{{ __('Workflow') }}</li>
+<li class="breadcrumb-item">{{ __('Bank Statement') }}</li>
 @endsection
 
 @section('action-btn')
