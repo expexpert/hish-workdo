@@ -41,7 +41,7 @@ class Utility extends Model
     {
         if (self::$getsettingsid == null) {
             $data = DB::table('settings');
-            
+
             $data = $data->where('created_by', '=', $id)->get();
             // dd($data);
             if (count($data) == 0) {
@@ -56,17 +56,16 @@ class Utility extends Model
     {
         if (is_null(self::$Setting)) {
 
-        if (\Auth::check()) {
+            if (\Auth::check()) {
                 $userId = \Auth::user()->creatorId();
                 $data = Utility::getSettingById($userId);
 
-            if (count($data) == 0) {
+                if (count($data) == 0) {
+                    $data = Utility::getSetting();
+                }
+            } else {
                 $data = Utility::getSetting();
             }
-        } else {
-            $data = Utility::getSetting();
-        }
-
         }
         $settings = [
             "site_currency" => "USD",
@@ -872,7 +871,6 @@ class Utility extends Model
 
             $user_id = 1;
             $data = $data->where('created_by', '=', $user_id);
-
         }
         $data = $data->get();
         foreach ($data as $row) {
@@ -1464,7 +1462,7 @@ class Utility extends Model
             if ($usr->type != 'super admin') {
                 // find template is exist or not in our record
                 $template = EmailTemplate::where('slug', $emailTemplate)->first();
-                
+
                 if (isset($template) && !empty($template)) {
                     // check template is active or not by company
                     $is_active = UserEmailTemplate::where('template_id', '=', $template->id)->where('user_id', '=', $usr->creatorId())->first();
@@ -1490,7 +1488,7 @@ class Utility extends Model
                             $settings = $setting;
                         }
 
-                       $arr[] =  config([
+                        $arr[] =  config([
                             'mail.default'                   => isset($settings['mail_driver'])       ? $settings['mail_driver']       : '',
                             'mail.mailers.smtp.host'         => isset($settings['mail_host'])         ? $settings['mail_host']         : '',
                             'mail.mailers.smtp.port'         => isset($settings['mail_port'])         ? $settings['mail_port']         : '',
@@ -1715,7 +1713,7 @@ class Utility extends Model
                 if (empty($extension) || !in_array($extension, $allowed_extensions)) {
                     return [
                         'flag' => 0,
-                            'msg' => 'The ' . $key_name . ' must be a file of type: ' . implode(', ', $allowed_extensions) . '.',
+                        'msg' => 'The ' . $key_name . ' must be a file of type: ' . implode(', ', $allowed_extensions) . '.',
                     ];
                 }
 
@@ -1811,19 +1809,17 @@ class Utility extends Model
                     $mimes =  !empty($settings['local_storage_validation']) ? $settings['local_storage_validation'] : '';
                 }
 
-                    $res = [
-                        'types'  => $mimes,
-                        'max_size'  => $max_size,
-                    ];
-                    return $res;
-
+                $res = [
+                    'types'  => $mimes,
+                    'max_size'  => $max_size,
+                ];
+                return $res;
             } else {
                 $res = [
                     'flag' => 0,
                     'msg' => __('Please set proper configuration for storage.'),
                 ];
                 return $res;
-
             }
         } catch (\Exception $e) {
             $res = [
@@ -1861,8 +1857,7 @@ class Utility extends Model
                 );
             }
 
-            return $settings['storage_setting'] == 'local' ? url('/') . Storage::disk('local')->url($path): Storage::disk($settings['storage_setting'])->url($path);
-
+            return $settings['storage_setting'] == 'local' ? url('/') . Storage::disk('local')->url($path) : Storage::disk($settings['storage_setting'])->url($path);
         } catch (\Throwable $th) {
             return '';
         }
@@ -2083,6 +2078,27 @@ class Utility extends Model
             if (\File::exists($file)) {
                 $status = \File::delete($file);
             }
+        }
+
+        return true;
+    }
+
+    public static function changeStorageLimitNew($company_id, $file_path)
+    {
+        $fullPath = storage_path('app/private/' . $file_path);
+
+        if (!file_exists($fullPath)) {
+            return false; // nothing to update
+        }
+
+        $fileSize = filesize($fullPath); // bytes
+        $fileSizeMB = $fileSize / 1048576; // convert to MB
+
+        $user = User::find($company_id);
+
+        if ($user) {
+            $user->storage_limit -= $fileSizeMB;
+            $user->save();
         }
 
         return true;
@@ -2584,7 +2600,8 @@ class Utility extends Model
             'name' => 'Purchase Tax',
             'type' => 2,
             'sub_type' => 4,
-        ], [
+        ],
+        [
             'code' => '2150',
             'name' => 'VAT Pay / Refund',
             'type' => 2,
@@ -2655,7 +2672,8 @@ class Utility extends Model
             'name' => 'Accr. Benefits - Central Provident Fund',
             'type' => 2,
             'sub_type' => 4,
-        ], [
+        ],
+        [
             'code' => '2320',
             'name' => 'Accr. Benefits - Stock Purchase',
             'type' => 2,
@@ -3259,7 +3277,8 @@ class Utility extends Model
             'name' => 'Purchase Tax',
             'type' => 'Liabilities',
             'sub_type' => 'Current Liabilities',
-        ], [
+        ],
+        [
             'code' => '2150',
             'name' => 'VAT Pay / Refund',
             'type' => 'Liabilities',
@@ -3330,7 +3349,8 @@ class Utility extends Model
             'name' => 'Accr. Benefits - Central Provident Fund',
             'type' => 'Liabilities',
             'sub_type' => 'Current Liabilities',
-        ], [
+        ],
+        [
             'code' => '2320',
             'name' => 'Accr. Benefits - Stock Purchase',
             'type' => 'Liabilities',
@@ -3848,17 +3868,17 @@ class Utility extends Model
         }
     }
 
-    public static function check_file($path){
-        if(!empty($path)){
+    public static function check_file($path)
+    {
+        if (!empty($path)) {
 
             $settings = Utility::settings();
-            if( $settings['storage_setting'] == 'local' || $settings['storage_setting'] == null){
+            if ($settings['storage_setting'] == 'local' || $settings['storage_setting'] == null) {
 
-                 return Storage::disk($settings['storage_setting'])->exists($path);
-            }else{
+                return Storage::disk($settings['storage_setting'])->exists($path);
+            } else {
 
-                if($settings['storage_setting'] == 's3')
-                {
+                if ($settings['storage_setting'] == 's3') {
                     config(
                         [
                             'filesystems.disks.s3.key' => $settings['s3_key'],
@@ -3869,9 +3889,7 @@ class Utility extends Model
                             'filesystems.disks.s3.endpoint' => $settings['s3_endpoint'],
                         ]
                     );
-                }
-                else if($settings['storage_setting'] == 'wasabi')
-                {
+                } else if ($settings['storage_setting'] == 'wasabi') {
                     config(
                         [
                             'filesystems.disks.wasabi.key' => $settings['wasabi_key'],
@@ -3885,14 +3903,13 @@ class Utility extends Model
                     );
                 }
 
-            try{
-                return Storage::disk($settings['storage_setting'])->exists($path);
-            } catch (\Exception $e) {
-                return 0;
+                try {
+                    return Storage::disk($settings['storage_setting'])->exists($path);
+                } catch (\Exception $e) {
+                    return 0;
+                }
             }
-
-            }
-        }else{
+        } else {
             return 0;
         }
     }
@@ -3902,9 +3919,9 @@ class Utility extends Model
         $data = DB::table('admin_payment_settings');
 
         if (Auth::check()) {
-            $data->where('name',$key)->where('created_by', '=', Auth::user()->creatorId());
+            $data->where('name', $key)->where('created_by', '=', Auth::user()->creatorId());
         } else {
-            $data->where('name',$key)->where('created_by', '=', 1);
+            $data->where('name', $key)->where('created_by', '=', 1);
         }
         return $data->pluck('value')->first();
     }
@@ -3918,23 +3935,19 @@ class Utility extends Model
         return $referralCode;
     }
 
-    public static function referralTransaction($plan , $company= '')
+    public static function referralTransaction($plan, $company = '')
     {
-        if($company != '')
-        {
+        if ($company != '') {
             $objUser = $company;
-        }
-        else
-        {
+        } else {
             $objUser = \Auth::user();
         }
 
-        $user = ReferralTransaction::where('company_id' , $objUser->id)->first();
+        $user = ReferralTransaction::where('company_id', $objUser->id)->first();
 
-        $referralSetting = ReferralSetting::where('created_by' , 1)->first();
+        $referralSetting = ReferralSetting::where('created_by', 1)->first();
 
-        if($objUser->used_referral_code != 0 && $user == null && (isset($referralSetting) && $referralSetting->is_enable == 1))
-        {
+        if ($objUser->used_referral_code != 0 && $user == null && (isset($referralSetting) && $referralSetting->is_enable == 1)) {
             $transaction         = new ReferralTransaction();
             $transaction->company_id    = $objUser->id;
             $transaction->plan_id       = $plan->id;
@@ -3942,7 +3955,6 @@ class Utility extends Model
             $transaction->commission    = $referralSetting->percentage;
             $transaction->referral_code = $objUser->used_referral_code;
             $transaction->save();
-
         }
     }
 

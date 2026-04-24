@@ -1617,6 +1617,8 @@ class CustomerController extends Controller
         }
 
         if ($expense->file) {
+            $file_path = $expense->file;
+            Utility::changeStorageLimitNew(auth()->user()->companyId(), $file_path);
             Storage::disk('private')->delete($expense->file);
         }
 
@@ -2247,6 +2249,8 @@ class CustomerController extends Controller
             return DB::transaction(function () use ($invoice) {
                 // 1. Delete the physical file from storage if it exists
                 if ($invoice->document_path) {
+                    $file_path = $invoice->document_path;
+                    Utility::changeStorageLimitNew(auth()->user()->companyId(), $file_path);
                     Storage::disk('private')->delete($invoice->document_path);
                 }
 
@@ -2999,6 +3003,8 @@ class CustomerController extends Controller
             return DB::transaction(function () use ($quote) {
                 // 1. Delete the physical file from storage if it exists
                 if ($quote->document_path) {
+                    $file_path = $quote->document_path;
+                    Utility::changeStorageLimitNew(auth()->user()->companyId(), $file_path);
                     Storage::disk('private')->delete($quote->document_path);
                 }
 

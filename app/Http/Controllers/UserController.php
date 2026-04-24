@@ -151,7 +151,7 @@ class UserController extends Controller
                 $unit = ProductServiceUnit::where('created_by', $user->id)->where('name', 'service')->first();
 
                 $accounts = ChartOfAccount::where('created_by', $user->id)
-                    ->pluck('id', 'type');
+                    ->pluck('id', 'code');
 
                 $products = [
                     ['name' => 'Autres dépenses', 'expense' => '5790', 'income' => '4020'],

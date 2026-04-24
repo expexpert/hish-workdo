@@ -12,12 +12,15 @@ class ProductService extends Model
         'sku',
         'sale_price',
         'purchase_price',
+        'quantity',
         'tax_id',
         'category_id',
         'unit_id',
         'type',
         'sale_chartaccount_id',
         'expense_chartaccount_id',
+        'description',
+        'customer_id',
         'created_by',
     ];
 
