@@ -1871,6 +1871,7 @@ class CustomerController extends Controller
         $status = $request->query('status');
         $clientId = $request->query('client_id');
         $id = $request->query('id');
+        $today = now()->startOfDay();
 
         $query = CustomerInvoice::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
@@ -1903,9 +1904,13 @@ class CustomerController extends Controller
 
         $invoices = $query->get();
 
-        // Append signed download URLs for the bot
-        $invoices->each(function ($invoice) {
+        $totalAllInvoices = 0;
+        $totalPaidInvoices = 0;
+        $totalIssuedInvoices = 0;
+        $totalCancelledInvoices = 0;
+        $totalOverdueInvoices = 0;
 
+        $invoices->each(function ($invoice) use ($today, &$totalAllInvoices, &$totalPaidInvoices, &$totalIssuedInvoices, &$totalCancelledInvoices, &$totalOverdueInvoices) {
             $totalTtc = 0;
 
             foreach ($invoice->articles as $article) {
@@ -1919,10 +1924,28 @@ class CustomerController extends Controller
                 $totalTtc += ($priceAfterDiscount + $taxAmount);
             }
 
-            // ✅ attach total_ttc per invoice
             $invoice->total_ttc = $totalTtc;
 
-            // existing download URL
+            // --- Logic for Aggregates ---
+            $totalAllInvoices += $totalTtc;
+
+            if ($invoice->status === 'paid') {
+                $totalPaidInvoices += $totalTtc;
+            }
+
+            if ($invoice->status === 'issued') {
+                $totalIssuedInvoices += $totalTtc;
+            }
+
+            if ($invoice->status === 'cancelled') {
+                $totalCancelledInvoices += $totalTtc;
+            }
+
+            // Logic for "Issued" and "Overdue" (due_date < today)
+            if ($invoice->status === 'issued' && $invoice->due_date && Carbon::parse($invoice->due_date)->lt($today)) {
+                $totalOverdueInvoices += $totalTtc;
+            }
+
             $invoice->download_url = URL::temporarySignedRoute(
                 'api.download.invoice.pdf.public',
                 now()->addHours(24),
@@ -1933,7 +1956,16 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Customer invoices retrieved successfully.',
-            'data'    => $invoices
+            'data'    => [
+                'invoices' => $invoices,
+                'stats' => [
+                    'total_sum_all' => round($totalAllInvoices, 2),
+                    'total_sum_paid' => round($totalPaidInvoices, 2),
+                    'total_sum_issued' => round($totalIssuedInvoices, 2),
+                    'total_sum_cancelled' => round($totalCancelledInvoices, 2),
+                    'total_sum_overdue' => round($totalOverdueInvoices, 2),
+                ]
+            ]
         ], 200);
     }
 
@@ -2596,14 +2628,53 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $quotes = CustomerQuote::where('customer_id', $user->id)
+        // Fetch filters from request
+        $month = $request->query('month');
+        $year = $request->query('year');
+        $status = $request->query('status');
+        $clientId = $request->query('client_id');
+        $id = $request->query('id');
+        $today = now()->startOfDay();
+
+        $query = CustomerQuote::where('customer_id', $user->id)
             ->with(['client:id,client_name', 'articles', 'articles.tax:id,rate,name'])
-            ->orderBy('date', 'desc')
-            ->get();
+            ->orderBy('date', 'desc');
 
-        // ✅ add total_ttc per quote
-        $quotes->each(function ($quote) {
+        // --- Apply Filters (Same logic as Invoices) ---
+        if ($id) {
+            $query->where('id', $id);
+        }
 
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($year && $month) {
+            $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($year) {
+            $start = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $end = $start->copy()->endOfYear();
+            $query->whereBetween('date', [$start, $end]);
+        } elseif ($month) {
+            $query->whereMonth('date', $month);
+        }
+
+        $quotes = $query->get();
+
+        // --- Initialize Totals ---
+        $totalAllQuotes = 0;
+        $totalAcceptedQuotes = 0;
+        $totalSentQuotes = 0;
+        $totalOverdueQuotes = 0;
+
+        // Calculate total_ttc per quote and update aggregates
+        $quotes->each(function ($quote) use (&$totalAllQuotes, &$totalAcceptedQuotes, &$totalSentQuotes, &$totalOverdueQuotes, $today) {
             $totalTtc = 0;
 
             foreach ($quote->articles as $article) {
@@ -2617,13 +2688,37 @@ class CustomerController extends Controller
                 $totalTtc += ($priceAfterDiscount + $taxAmount);
             }
 
+            // Attach total to the individual quote
             $quote->total_ttc = $totalTtc;
+
+            // --- Aggregation Logic ---
+            $totalAllQuotes += $totalTtc;
+
+            if ($quote->status === 'accepted') {
+                $totalAcceptedQuotes += $totalTtc;
+            }
+
+            if ($quote->status === 'sent') {
+                $totalSentQuotes += $totalTtc;
+            }
+
+            if ($quote->status === 'sent' && $quote->due_date && Carbon::parse($quote->due_date)->lt($today)) {
+                $totalOverdueQuotes += $totalTtc;
+            }
         });
 
         return response()->json([
             'success' => true,
             'message' => 'Customer quotes retrieved successfully.',
-            'data'    => $quotes
+            'data'    => [
+                'quotes' => $quotes,
+                'stats'  => [
+                    'total_sum_all'      => round($totalAllQuotes, 2),
+                    'total_sum_accepted' => round($totalAcceptedQuotes, 2),
+                    'total_sum_sent'     => round($totalSentQuotes, 2),
+                    'total_sum_overdue'  => round($totalOverdueQuotes, 2),
+                ]
+            ]
         ], 200);
     }
 
