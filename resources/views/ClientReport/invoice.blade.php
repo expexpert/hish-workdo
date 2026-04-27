@@ -293,81 +293,81 @@
                                                     <th class="text-end">{{ __('Total HT') }}</th>
                                                 </tr>
                                             </thead>
-                                           <tbody>
-    @php
-        $grandTotalHT = 0;
-        $grandTotalDiscount = 0;
-        $grandAfterDiscount = 0;
-        $grandTotalTVA = 0;
-    @endphp
+                                            <tbody>
+                                                @php
+                                                $grandTotalHT = 0;
+                                                $grandTotalDiscount = 0;
+                                                $grandAfterDiscount = 0;
+                                                $grandTotalTVA = 0;
+                                                @endphp
 
-    @foreach ($invoice->articles as $article)
-        @php
-            $lineHT = (float) $article->total_price_ht;
-            $discount = (float) $article->discount;
+                                                @foreach ($invoice->articles as $article)
+                                                @php
+                                                $lineHT = (float) $article->total_price_ht;
+                                                $discount = (float) $article->discount;
 
-            // Step 1: After discount
-            $afterDiscount = $lineHT - $discount;
+                                                // Step 1: After discount
+                                                $afterDiscount = $lineHT - $discount;
 
-            // Step 2: VAT on discounted value
-            $lineTvaPct = (float) ($article->tax ? $article->tax->rate : 0);
-            $lineTva = $afterDiscount * ($lineTvaPct / 100);
+                                                // Step 2: VAT on discounted value
+                                                $lineTvaPct = (float) ($article->tax ? $article->tax->rate : 0);
+                                                $lineTva = $afterDiscount * ($lineTvaPct / 100);
 
-            // Totals
-            $grandTotalHT += $lineHT;
-            $grandTotalDiscount += $discount;
-            $grandAfterDiscount += $afterDiscount;
-            $grandTotalTVA += $lineTva;
-        @endphp
+                                                // Totals
+                                                $grandTotalHT += $lineHT;
+                                                $grandTotalDiscount += $discount;
+                                                $grandAfterDiscount += $afterDiscount;
+                                                $grandTotalTVA += $lineTva;
+                                                @endphp
 
-        <tr>
-            <td>{{ $article->designation }}</td>
-            <td class="text-end">{{ $article->quantity }}</td>
-            <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
-            <td class="text-end">{{ number_format($lineTvaPct, 2) }}</td>
-            <td class="text-end">{{ number_format($lineHT, 2) }}</td>
-        </tr>
-    @endforeach
+                                                <tr>
+                                                    <td>{{ $article->designation }}</td>
+                                                    <td class="text-end">{{ $article->quantity }}</td>
+                                                    <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
+                                                    <td class="text-end">{{ number_format($lineTvaPct, 2) }}</td>
+                                                    <td class="text-end">{{ number_format($lineHT, 2) }}</td>
+                                                </tr>
+                                                @endforeach
 
-    @php
-        // ✅ Correct TTC
-        $grandTotalTTC = $grandAfterDiscount + $grandTotalTVA;
+                                                @php
+                                                // ✅ Correct TTC
+                                                $grandTotalTTC = $grandAfterDiscount + $grandTotalTVA;
 
-        // ✅ Correct Average VAT (based on AFTER DISCOUNT, not HT)
-        $avgTvaPct = $grandAfterDiscount > 0
-            ? ($grandTotalTVA / $grandAfterDiscount) * 100
-            : 0;
-    @endphp
-</tbody> 
+                                                // ✅ Correct Average VAT (based on AFTER DISCOUNT, not HT)
+                                                $avgTvaPct = $grandAfterDiscount > 0
+                                                ? ($grandTotalTVA / $grandAfterDiscount) * 100
+                                                : 0;
+                                                @endphp
+                                            </tbody>
                                             <tfoot>
-    <tr class="fw-bold">
-        <td colspan="4" class="text-end">{{ __('Total HT') }}</td>
-        <td class="text-end">{{ number_format($grandTotalHT, 2) }}</td>
-    </tr>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('Total HT') }}</td>
+                                                    <td class="text-end">{{ number_format($grandTotalHT, 2) }}</td>
+                                                </tr>
 
-    <tr class="fw-bold">
-        <td colspan="4" class="text-end">{{ __('Discount') }}</td>
-        <td class="text-end">-{{ number_format($grandTotalDiscount, 2) }}</td>
-    </tr>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('Discount') }}</td>
+                                                    <td class="text-end">-{{ number_format($grandTotalDiscount, 2) }}</td>
+                                                </tr>
 
-    <tr class="fw-bold">
-        <td colspan="4" class="text-end">{{ __('Net HT (After Discount)') }}</td>
-        <td class="text-end">{{ number_format($grandAfterDiscount, 2) }}</td>
-    </tr>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('Net HT (After Discount)') }}</td>
+                                                    <td class="text-end">{{ number_format($grandAfterDiscount, 2) }}</td>
+                                                </tr>
 
-    <tr class="fw-bold">
-        <td colspan="4" class="text-end">
-            {{ __('TVA') }} 
-            ({{ number_format($avgTvaPct, 2) }}%)
-        </td>
-        <td class="text-end">{{ number_format($grandTotalTVA, 2) }}</td>
-    </tr>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">
+                                                        {{ __('TVA') }}
+                                                        ({{ number_format($avgTvaPct, 2) }}%)
+                                                    </td>
+                                                    <td class="text-end">{{ number_format($grandTotalTVA, 2) }}</td>
+                                                </tr>
 
-    <tr class="fw-bold">
-        <td colspan="4" class="text-end">{{ __('Total TTC') }}</td>
-        <td class="text-end">{{ number_format($grandTotalTTC, 2) }}</td>
-    </tr>
-</tfoot>
+                                                <tr class="fw-bold">
+                                                    <td colspan="4" class="text-end">{{ __('Total TTC') }}</td>
+                                                    <td class="text-end">{{ number_format($grandTotalTTC, 2) }}</td>
+                                                </tr>
+                                            </tfoot>
                                         </table>
                                     </div>
                                 </div>
@@ -436,7 +436,8 @@
 
                     if (data.success) {
                         console.log("Status updated");
-                        show_toastr('success', '{{ __('Action performed successfully ') }}');
+                        show_toastr('success', '{{ __('
+                            Action performed successfully ') }}');
                         const styleMap = {
                             'VALIDATED': 'bg-light text-success border-success',
                             'EDIT_REQUESTED': 'bg-light text-warning border-warning',
@@ -453,7 +454,8 @@
 
                     } else {
                         alert("Something went wrong");
-                        show_toastr('error', '{{ __('Failed to perform action ') }}');
+                        show_toastr('error', '{{ __('
+                            Failed to perform action ') }}');
                     }
                 })
                 .catch(err => console.error(err));
