@@ -143,7 +143,7 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
 Route::group(['prefix' => 'bot'], function () {
 
     // 1. Secure Bot Identity Routes (Require X-Bot-Secret)
-    Route::group(['middleware' => 'bot.auth'], function () {
+    Route::group(['middleware' => ['bot.auth', 'bot.inputs']], function () {
 
         // A. Customer Contextual Routes (Require X-Customer-Phone)
         Route::group(['prefix' => 'customer'], function () {
