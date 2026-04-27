@@ -341,15 +341,20 @@
                 simplement en envoyant un message."</p>
               <div class="two-ai-columns">
                 <div class="left-ai-column-wraper">
+                  <div class="new-image-container-wraper">
+                    <img src="{{ asset('storage/uploads/new-landing-page/new-whatsap-one (1).png')}}">
+                  </div>
                   <h6>Demander une facture</h6>
                   <p>Ils écrivent. L’IA exécute.
                   </p>
                 </div>
                 <div class="left-ai-column-wraper">
+                  <div class="new-image-container-wraper">
+                    <img src="{{ asset('storage/uploads/new-landing-page/new-whatsapp-two.png')}}">
+                  </div>
                   <h6>Récupérer leurs documents
                   </h6>
                   <p>Zéro friction, accès immédiat.
-
                   </p>
                 </div>
               </div>
@@ -392,7 +397,7 @@
           </div>
           <div class="col-md-3">
             <div class="transformation-box1">
-              <img src="{{ asset('storage/uploads/new-landing-page/section_logo3.png')}}" alt="Icon 3" class="transformation-icon1">
+              <img src="{{ asset('storage/uploads/new-landing-page/new-section_logo3.png')}}" alt="Icon 3" class="transformation-icon1">
               <h3 class="application-heading">Suivi financier en temps réel</h3>
               <p class="application-text">Visualisez vos revenus dépensés et déclarations en un clin d'oeil</p>
             </div>
@@ -554,7 +559,7 @@
       </section>
 
       <!-- Business Section -->
-      <section class="business-section" style="background-image: url('{{ asset('storage/uploads/new-landing-page/banner_image.png') }}')">
+      <section class="business-section" style="background-image: url('{{ asset('storage/uploads/new-landing-page/new-ai-img.png') }}')">
         <div class="bussiness-container">
           <div class="business-overlay">
             <div class="business-content">
@@ -755,97 +760,97 @@
             </ul>
           </div>
           <div class="control-image">
-            <img src="{{ asset('storage/uploads/new-landing-page/control_img.jpg')}}" alt="Control Image" />
+            <img src="{{ asset('storage/uploads/new-landing-page/new-mobile-img.png')}}" alt="Control Image" />
           </div>
         </div>
       </section>
 
       <!-- Form Section -->
       <section class="main-container">
-           <h2 class="form-section-title text-center">Prêt à moderniser votre cabinet ?</h2>
-           <p class="text-center">Demandez votre devis gratuit ou planifiez une démonstration</p>
-           <div id="contact-us" class="form-container">
-               @if(session('success'))
-               <div class="alert alert-success">
-                   {{ session('success') }}
-               </div>
-               @endif
-               @if($errors->any())
-               <div class="alert alert-danger">
-                   <ul>
-                       @foreach($errors->all() as $error)
-                       <li>{{ $error }}</li>
-                       @endforeach
-                   </ul>
-               </div>
-               @endif
-               <form action="{{ route('landingpage.sendmail') }}" method="POST">
-                   @csrf
-                   <div class="row">
-                       <div class="col-md-6 top-row-form">
-                           <label for="cabinet-name" class="form-label">Nom du cabinet <span class="requires">*</span></label>
-                           <input type="text" class="form-control" id="cabinet-name" name="cabinet-name" placeholder="Nom de votre cabinet" required>
-                       </div>
-                       <div class="col-md-6 sec-row-form">
-                           <label for="contact-name" class="form-label">Nom du contact <span class="requires">*</span></label>
-                           <input type="text" class="form-control" id="contact-name" name="contact-name" placeholder="Votre nom" required>
-                       </div>
-                   </div>
-                   <div class="row">
-                       <div class="col-md-6 top-row-form">
-                           <label for="email" class="form-label">Email <span class="requires">*</span></label>
-                           <input type="email" class="form-control" id="email" name="email" placeholder="Votre email" required>
-                       </div>
-                       <div class="col-md-6 sec-row-form">
-                           <label for="phone" class="form-label">Téléphone <span class="requires">*</span></label>
-                           <input type="tel" class="form-control" id="phone" name="phone" placeholder="+212" required>
-                       </div>
-                   </div>
-                   <div class="mb-3 form-check-boxes">
-                       <label class="form-label">Type de demande <span class="requires">*</span></label>
-                       <div class="checkbox-group">
-                           <div class="form-check">
-                               <input class="form-check-input" type="checkbox" value="demo" id="demo" name="request-type[]">
-                               <label class="form-check-label" for="demo">
-                                   Démonstration
-                               </label>
-                           </div>
-                           <div class="form-check">
-                               <input class="form-check-input" type="checkbox" value="info" id="info" name="request-type[]">
-                               <label class="form-check-label" for="info">
-                                   Informations complémentaires
-                               </label>
-                           </div>
-                           <div class="form-check">
-                               <input class="form-check-input" type="checkbox" value="devis" id="devis" name="request-type[]">
-                               <label class="form-check-label" for="devis">
-                                   Devis
-                               </label>
-                           </div>
-                           <div class="form-check">
-                               <input class="form-check-input" type="checkbox" value="trial" id="trial" name="request-type[]">
-                               <label class="form-check-label" for="trial">
-                                   Essai de 7 jours
-                               </label>
-                           </div>
-                       </div>
-                   </div>
-                   <div class="mb-3">
-                       <label for="message" class="form-label">Message <span class="requires">*</span></label>
-                       <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
-                   </div>
-                   <div class="form-check mb-3">
-                       <input class="form-check-input" type="checkbox" id="data-usage" name="data-usage" required>
-                       <label class="form-check-label" for="data-usage">
-                           J'accepte que mes données soient utilisées pour traiter ma demande.
-                       </label>
-                   </div>
-                   <div class="form-btn">
-                       <button type="submit" class="btn btn-primary w-20">Demandez un rdv</button>
-                   </div>
-               </form>
-           </div>
-       </section>
+        <h2 class="form-section-title text-center">Prêt à moderniser votre cabinet ?</h2>
+        <p class="text-center">Demandez votre devis gratuit ou planifiez une démonstration</p>
+        <div id="contact-us" class="form-container">
+          @if(session('success'))
+          <div class="alert alert-success">
+            {{ session('success') }}
+          </div>
+          @endif
+          @if($errors->any())
+          <div class="alert alert-danger">
+            <ul>
+              @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+              @endforeach
+            </ul>
+          </div>
+          @endif
+          <form action="{{ route('landingpage.sendmail') }}" method="POST">
+            @csrf
+            <div class="row">
+              <div class="col-md-6 top-row-form">
+                <label for="cabinet-name" class="form-label">Nom du cabinet <span class="requires">*</span></label>
+                <input type="text" class="form-control" id="cabinet-name" name="cabinet-name" placeholder="Nom de votre cabinet" required>
+              </div>
+              <div class="col-md-6 sec-row-form">
+                <label for="contact-name" class="form-label">Nom du contact <span class="requires">*</span></label>
+                <input type="text" class="form-control" id="contact-name" name="contact-name" placeholder="Votre nom" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 top-row-form">
+                <label for="email" class="form-label">Email <span class="requires">*</span></label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Votre email" required>
+              </div>
+              <div class="col-md-6 sec-row-form">
+                <label for="phone" class="form-label">Téléphone <span class="requires">*</span></label>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+212" required>
+              </div>
+            </div>
+            <div class="mb-3 form-check-boxes">
+              <label class="form-label">Type de demande <span class="requires">*</span></label>
+              <div class="checkbox-group">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="demo" id="demo" name="request-type[]">
+                  <label class="form-check-label" for="demo">
+                    Démonstration
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="info" id="info" name="request-type[]">
+                  <label class="form-check-label" for="info">
+                    Informations complémentaires
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="devis" id="devis" name="request-type[]">
+                  <label class="form-check-label" for="devis">
+                    Devis
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="trial" id="trial" name="request-type[]">
+                  <label class="form-check-label" for="trial">
+                    Essai de 7 jours
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="message" class="form-label">Message <span class="requires">*</span></label>
+              <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="data-usage" name="data-usage" required>
+              <label class="form-check-label" for="data-usage">
+                J'accepte que mes données soient utilisées pour traiter ma demande.
+              </label>
+            </div>
+            <div class="form-btn">
+              <button type="submit" class="btn btn-primary w-20">Demandez un rdv</button>
+            </div>
+          </form>
+        </div>
+      </section>
 
       <!-- Contact Section -->
       <section class="new-cont">
@@ -927,7 +932,7 @@
 
 
   <script>
-    window.addEventListener("scroll", function () {
+    window.addEventListener("scroll", function() {
       const header = document.querySelector("header");
 
       if (window.scrollY > 0) {
@@ -938,7 +943,7 @@
     });
   </script>
   <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
       var $slider = $('.custom-slider');
 
       $slider.slick({
@@ -954,22 +959,33 @@
       });
 
       // Page load pe prev arrow hide (instant)
-      $('.custom-prev').css({ opacity: 0, pointerEvents: 'none' });
+      $('.custom-prev').css({
+        opacity: 0,
+        pointerEvents: 'none'
+      });
 
       // Smooth fade transition after slide change
-      $slider.on('afterChange', function (event, slick, currentSlide) {
+      $slider.on('afterChange', function(event, slick, currentSlide) {
         if (currentSlide === 0) {
-          $('.custom-prev').stop().animate({ opacity: 0 }, 300, function () {
+          $('.custom-prev').stop().animate({
+            opacity: 0
+          }, 300, function() {
             $(this).css('pointer-events', 'none'); // click disable
           });
-          $('.custom-next').stop().animate({ opacity: 1 }, 300, function () {
+          $('.custom-next').stop().animate({
+            opacity: 1
+          }, 300, function() {
             $(this).css('pointer-events', 'auto'); // click enable
           });
         } else {
-          $('.custom-prev').stop().animate({ opacity: 1 }, 300, function () {
+          $('.custom-prev').stop().animate({
+            opacity: 1
+          }, 300, function() {
             $(this).css('pointer-events', 'auto');
           });
-          $('.custom-next').stop().animate({ opacity: 0 }, 300, function () {
+          $('.custom-next').stop().animate({
+            opacity: 0
+          }, 300, function() {
             $(this).css('pointer-events', 'none');
           });
         }
