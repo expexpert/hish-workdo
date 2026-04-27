@@ -1162,8 +1162,7 @@ class CustomerController extends Controller
             'customer:id,name,created_by',
             'customer.accountant:id,name',
             'client:id,client_name',
-            'articles:id,invoice_id,designation,unit_price_ht,quantity,total_price_ht,tva_percentage',
-            'articles.tax'
+            'articles'
         ])
             ->orderBy('date', 'desc');
 
