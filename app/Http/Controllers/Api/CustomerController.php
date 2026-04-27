@@ -35,7 +35,6 @@ use App\Models\ChartOfAccountType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
-use App\Traits\HandlesBotInputs;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
@@ -44,7 +43,6 @@ use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
-    use HandlesBotInputs;
 
     public function getProfile(Request $request): JsonResponse
     {
@@ -756,7 +754,6 @@ class CustomerController extends Controller
 
     public function storeTransaction(Request $request)
     {
-        $this->mapBotInputs($request);
         $validated = $request->validate([
             'type'             => 'required|in:expense,revenue',
             'transaction_date' => 'required|date',
@@ -838,7 +835,6 @@ class CustomerController extends Controller
 
     public function storeStatement(Request $request)
     {
-        $this->mapBotInputs($request);
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:1024',
@@ -976,7 +972,6 @@ class CustomerController extends Controller
 
     public function storeCustomerClient(Request $request)
     {
-        // $this->mapBotInputs($request);
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
@@ -1166,7 +1161,6 @@ class CustomerController extends Controller
 
     public function storeCustomerSupplier(Request $request)
     {
-        // $this->mapBotInputs($request);
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
@@ -1341,7 +1335,6 @@ class CustomerController extends Controller
 
     public function storeExpense(Request $request)
     {
-        $this->mapBotInputs($request);
         try {
             $validated = $request->validate([
                 'customer_id'    => 'required|exists:customers,id',
@@ -1722,7 +1715,6 @@ class CustomerController extends Controller
     {
 
         // Optional preprocessing
-        $this->mapBotInputs($request);
 
         // ✅ STEP 1: Validation
         $validated = $request->validate([
@@ -2402,7 +2394,6 @@ class CustomerController extends Controller
 
     public function storeCustomerProduct(Request $request)
     {
-        $this->mapBotInputs($request);
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'designation' => [

@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'XSS' => \App\Http\Middleware\XSS::class,
             'revalidate' => \App\Http\Middleware\RevalidateBackHistory::class,
             'bot.auth' => \App\Http\Middleware\BotAuthMiddleware::class,
+            'bot.inputs' => \App\Http\Middleware\ProcessBotInputs::class,
         ]);
 
         // middlewareGroups / Group Middleware
@@ -58,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', [
              'throttle:api',
              \Illuminate\Routing\Middleware\SubstituteBindings::class,
+             \App\Http\Middleware\EnsureCustomerId::class,
         ]);
 
         // Exclude specific routes from CSRF protection

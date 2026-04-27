@@ -1,24 +1,43 @@
 <?php
 
-namespace App\Traits;
+namespace App\Http\Middleware;
 
+use Closure;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 use App\Models\CustomerCategory;
 use App\Models\CustomerSupplier;
 use App\Models\CustomerClient;
 use App\Models\Tax;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
-trait HandlesBotInputs
+class ProcessBotInputs
 {
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = Auth::user();
+        
+        // Only run if a user is authenticated (BotAuthMiddleware should have run first)
+        if ($user) {
+            $this->mapBotInputs($request, $user);
+        }
+
+        return $next($request);
+    }
+
     /**
      * Map bot-specific name inputs to database IDs
      */
-    protected function mapBotInputs(Request $request)
+    protected function mapBotInputs(Request $request, $user)
     {
-        $user = \Auth::user();
-        if (!$user) return;
-
         // 0. Normalize Month Year (for Bank Statements)
         if ($request->has('month_year')) {
             try {
@@ -51,7 +70,8 @@ trait HandlesBotInputs
                       ->orWhere('supplier_name', 'LIKE', $supplierName);
                 })->first();
 
-            if (!$supplier) {
+            // 🛡️ PROTECTION: Do NOT auto-create if we are on the formal "Create Supplier" route
+            if (!$supplier && !$request->is('*/customer-supplier')) {
                 $supplier = CustomerSupplier::create([
                     'customer_id'   => $user->id,
                     'company_name'  => $supplierName,
@@ -61,7 +81,9 @@ trait HandlesBotInputs
                     'city'          => 'Bot City',
                 ]);
             }
-            $request->merge(['supplier_id' => $supplier->id]);
+            if ($supplier) {
+                $request->merge(['supplier_id' => $supplier->id]);
+            }
         }
 
         // 3. Map Client (Invoice)
@@ -73,7 +95,8 @@ trait HandlesBotInputs
                       ->orWhere('client_name', 'LIKE', $clientName);
                 })->first();
 
-            if (!$client) {
+            // 🛡️ PROTECTION: Do NOT auto-create if we are on the formal "Create Client" route
+            if (!$client && !$request->is('*/customer-client')) {
                 $client = CustomerClient::create([
                     'customer_id'   => $user->id,
                     'company_name'  => $clientName,
@@ -83,82 +106,80 @@ trait HandlesBotInputs
                     'city'          => 'Bot City',
                 ]);
             }
-            $request->merge(['client_id' => $client->id]);
+            
+            if ($client) {
+                $request->merge(['client_id' => $client->id]);
 
-            // --- AUTO-SYNC TO STANDARD CUSTOMER ---
-            // Ensure the portal has this client as a standard Customer for validation
-            $stCustomer = \App\Models\Customer::where('email', $client->email)->first();
-            if (!$stCustomer) {
-                \App\Models\Customer::create([
-                    'name'          => $client->client_name,
-                    'email'         => $client->email,
-                    'contact'       => $client->telephone,
-                    'password'      => \Hash::make('customer_bot_pass'),
-                    'billing_city'  => $client->city,
-                    'billing_name'  => $client->company_name ?: $client->client_name,
-                    'created_by'    => $user->creatorId(),
-                    'is_active'     => 1,
-                ]);
+                // --- AUTO-SYNC TO STANDARD CUSTOMER ---
+                $stCustomer = \App\Models\Customer::where('email', $client->email)->first();
+                if (!$stCustomer) {
+                    \App\Models\Customer::create([
+                        'name'          => $client->client_name,
+                        'email'         => $client->email,
+                        'contact'       => $client->telephone,
+                        'password'      => \Hash::make('customer_bot_pass'),
+                        'billing_city'  => $client->city,
+                        'billing_name'  => $client->company_name ?: $client->client_name,
+                        'created_by'    => $user->creatorId(),
+                        'is_active'     => 1,
+                    ]);
+                }
             }
         }
         
         // 4. Map Tax (TVA) for Articles
-        // Now receiving tax ID directly - no conversion needed
         if ($request->has('articles') && is_array($request->input('articles'))) {
             $articles = $request->input('articles');
-            $company_id = auth()->user()->companyId();
-            foreach ($articles as $key => $article) {
-                if (isset($article['tva_percentage'])) {
-                    // tva_percentage now contains tax ID - validate it exists
-                    $taxId = $article['tva_percentage'];
-                    $tax = \App\Models\Tax::where('id', $taxId)
-                        ->where('created_by', $company_id)
-                        ->first();
-                    
-                    if (!$tax) {
-                        // Tax ID invalid - try to find by rate as fallback
-                        $rate = (float) $taxId;
-                        $tax = \App\Models\Tax::where('created_by', $company_id)
-                            ->where('rate', $rate)
+            $company_id = Auth::user() ? Auth::user()->companyId() : null;
+            
+            if ($company_id) {
+                foreach ($articles as $key => $article) {
+                    if (isset($article['tva_percentage'])) {
+                        $taxId = $article['tva_percentage'];
+                        $tax = Tax::where('id', $taxId)
+                            ->where('created_by', $company_id)
                             ->first();
                         
-                        if (!$tax) {
-                            $tax = \App\Models\Tax::create([
-                                'name'       => 'VAT ' . $rate . '%',
-                                'rate'       => $rate,
-                                'created_by' => $company_id,
-                            ]);
+                        if (!$tax && is_numeric($taxId)) {
+                            $rate = (float) $taxId;
+                            $tax = Tax::where('created_by', $company_id)
+                                ->where('rate', $rate)
+                                ->first();
+                            
+                            if (!$tax) {
+                                $tax = Tax::create([
+                                    'name'       => 'VAT ' . $rate . '%',
+                                    'rate'       => $rate,
+                                    'created_by' => $company_id,
+                                ]);
+                            }
+                            $articles[$key]['tva_percentage'] = $tax->id;
                         }
-                        $articles[$key]['tva_percentage'] = $tax->id;
                     }
-                    // else: tax ID is valid, keep as-is
                 }
+                $request->merge(['articles' => $articles]);
             }
-            $request->merge(['articles' => $articles]);
         }
 
         // 5. Top-level Tax (Fallback for quick invoices)
-        // Now receiving tax ID directly - validate or create from rate
         $taxInput = $request->input('vat') ?: $request->input('tva_percentage');
-        $company_id = auth()->user()->companyId();
-        if (isset($taxInput) && is_numeric($taxInput)) {
-            // Check if it's already a valid tax ID
-            $tax = \App\Models\Tax::where('id', $taxInput)
+        $company_id = Auth::user() ? Auth::user()->companyId() : null;
+        
+        if ($company_id && isset($taxInput) && is_numeric($taxInput)) {
+            $tax = Tax::where('id', $taxInput)
                 ->where('created_by', $company_id)
                 ->first();
             
             if ($tax) {
-                // Valid tax ID - use as-is
                 $request->merge(['tva_percentage' => $tax->id, 'vat' => $tax->id]);
             } else {
-                // Not a valid ID - treat as rate and create tax
                 $rate = (float) $taxInput;
-                $tax = \App\Models\Tax::where('created_by', $company_id)
+                $tax = Tax::where('created_by', $company_id)
                     ->where('rate', $rate)
                     ->first();
 
                 if (!$tax) {
-                    $tax = \App\Models\Tax::create([
+                    $tax = Tax::create([
                         'name'       => 'VAT ' . $rate . '%',
                         'rate'       => $rate,
                         'created_by' => $company_id,
@@ -168,7 +189,7 @@ trait HandlesBotInputs
             }
         }
 
-        // 6. Inject Customer ID if missing (for bot requests targeting shared APIs)
+        // 6. Inject Customer ID if missing
         if (!$request->has('customer_id')) {
             $request->merge(['customer_id' => $user->id]);
         }
