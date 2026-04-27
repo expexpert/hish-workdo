@@ -217,8 +217,9 @@
                                 if ($invoice->articles && $invoice->articles->count()) {
                                 $totalTtc=$invoice->articles->sum(function ($article) {
                                 $ht = floatval($article->total_price_ht ?? 0);
+                                $afterDiscount = $ht - $article->discount;
                                 $tvaPct = floatval($article->tax ? $article->tax->rate : 0) / 100;
-                                return $ht + ($ht * $tvaPct);
+                                return $afterDiscount + ($afterDiscount * $tvaPct);
                                 });
                                 }
                                 @endphp
@@ -292,45 +293,81 @@
                                                     <th class="text-end">{{ __('Total HT') }}</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
-                                                @php
-                                                $grandTotalHT = 0;
-                                                $grandTotalTVA = 0;
-                                                @endphp
-                                                @foreach ($invoice->articles as $article)
-                                                @php
-                                                $lineHT = (float) $article->total_price_ht;
-                                                $lineTvaPct = (float) ($article->tax ? $article->tax->rate : 0);
-                                                $lineTva = $lineHT * ($lineTvaPct / 100);
-                                                $grandTotalHT += $lineHT;
-                                                $grandTotalTVA += $lineTva;
-                                                @endphp
-                                                <tr>
-                                                    <td>{{ $article->designation }}</td>
-                                                    <td class="text-end">{{ $article->quantity }}</td>
-                                                    <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
-                                                    <td class="text-end">{{ number_format($lineTvaPct, 2) }}</td>
-                                                    <td class="text-end">{{ number_format($lineHT, 2) }}</td>
-                                                </tr>
-                                                @endforeach
-                                                @php
-                                                $grandTotalTTC = $grandTotalHT + $grandTotalTVA;
-                                                $avgTvaPct = $grandTotalHT > 0 ? ($grandTotalTVA / $grandTotalHT) * 100 : 0;
-                                                @endphp
+                                           <tbody>
+    @php
+        $grandTotalHT = 0;
+        $grandTotalDiscount = 0;
+        $grandAfterDiscount = 0;
+        $grandTotalTVA = 0;
+    @endphp
+
+    @foreach ($invoice->articles as $article)
+        @php
+            $lineHT = (float) $article->total_price_ht;
+            $discount = (float) $article->discount;
+
+            // Step 1: After discount
+            $afterDiscount = $lineHT - $discount;
+
+            // Step 2: VAT on discounted value
+            $lineTvaPct = (float) ($article->tax ? $article->tax->rate : 0);
+            $lineTva = $afterDiscount * ($lineTvaPct / 100);
+
+            // Totals
+            $grandTotalHT += $lineHT;
+            $grandTotalDiscount += $discount;
+            $grandAfterDiscount += $afterDiscount;
+            $grandTotalTVA += $lineTva;
+        @endphp
+
+        <tr>
+            <td>{{ $article->designation }}</td>
+            <td class="text-end">{{ $article->quantity }}</td>
+            <td class="text-end">{{ number_format((float) $article->unit_price_ht, 2) }}</td>
+            <td class="text-end">{{ number_format($lineTvaPct, 2) }}</td>
+            <td class="text-end">{{ number_format($lineHT, 2) }}</td>
+        </tr>
+    @endforeach
+
+    @php
+        // ✅ Correct TTC
+        $grandTotalTTC = $grandAfterDiscount + $grandTotalTVA;
+
+        // ✅ Correct Average VAT (based on AFTER DISCOUNT, not HT)
+        $avgTvaPct = $grandAfterDiscount > 0
+            ? ($grandTotalTVA / $grandAfterDiscount) * 100
+            : 0;
+    @endphp
+</tbody> 
                                             <tfoot>
-                                                <tr class="fw-bold">
-                                                    <td colspan="4" class="text-end">{{ __('Total HT') }}</td>
-                                                    <td class="text-end">{{ number_format($grandTotalHT, 2) }}</td>
-                                                </tr>
-                                                <tr class="fw-bold">
-                                                    <td colspan="4" class="text-end">{{ __('TVA') }} ({{ number_format($avgTvaPct, 2) }}%)</td>
-                                                    <td class="text-end">{{ number_format($grandTotalTVA, 2) }}</td>
-                                                </tr>
-                                                <tr class="fw-bold">
-                                                    <td colspan="4" class="text-end">{{ __('Total TTC') }}</td>
-                                                    <td class="text-end">{{ number_format($grandTotalTTC, 2) }}</td>
-                                                </tr>
-                                            </tfoot>
+    <tr class="fw-bold">
+        <td colspan="4" class="text-end">{{ __('Total HT') }}</td>
+        <td class="text-end">{{ number_format($grandTotalHT, 2) }}</td>
+    </tr>
+
+    <tr class="fw-bold">
+        <td colspan="4" class="text-end">{{ __('Discount') }}</td>
+        <td class="text-end">-{{ number_format($grandTotalDiscount, 2) }}</td>
+    </tr>
+
+    <tr class="fw-bold">
+        <td colspan="4" class="text-end">{{ __('Net HT (After Discount)') }}</td>
+        <td class="text-end">{{ number_format($grandAfterDiscount, 2) }}</td>
+    </tr>
+
+    <tr class="fw-bold">
+        <td colspan="4" class="text-end">
+            {{ __('TVA') }} 
+            ({{ number_format($avgTvaPct, 2) }}%)
+        </td>
+        <td class="text-end">{{ number_format($grandTotalTVA, 2) }}</td>
+    </tr>
+
+    <tr class="fw-bold">
+        <td colspan="4" class="text-end">{{ __('Total TTC') }}</td>
+        <td class="text-end">{{ number_format($grandTotalTTC, 2) }}</td>
+    </tr>
+</tfoot>
                                         </table>
                                     </div>
                                 </div>
