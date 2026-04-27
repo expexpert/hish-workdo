@@ -976,7 +976,7 @@ class CustomerController extends Controller
 
     public function storeCustomerClient(Request $request)
     {
-        $this->mapBotInputs($request);
+        // $this->mapBotInputs($request);
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
@@ -1166,7 +1166,7 @@ class CustomerController extends Controller
 
     public function storeCustomerSupplier(Request $request)
     {
-        $this->mapBotInputs($request);
+        // $this->mapBotInputs($request);
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'supplier_name' => 'required|string|max:255',
