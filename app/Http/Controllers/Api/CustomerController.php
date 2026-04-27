@@ -2416,7 +2416,7 @@ class CustomerController extends Controller
             'unit_price_ht' => 'required|numeric|min:0',
             'tva_percentage' => 'required|exists:taxes,id',
             'unit_id' => 'required|exists:product_service_units,id',
-            'category_id' => 'required|exists:	product_service_categories,id',
+            'category_id' => 'required|exists:product_service_categories,id',
             'reference' => 'required|string|max:255',
             'quantity' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:255',
