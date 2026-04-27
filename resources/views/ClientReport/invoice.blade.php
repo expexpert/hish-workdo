@@ -436,8 +436,7 @@
 
                     if (data.success) {
                         console.log("Status updated");
-                        show_toastr('success', '{{ __('
-                            Action performed successfully ') }}');
+                        show_toastr('success', '{{ __('Action performed successfully') }}');
                         const styleMap = {
                             'VALIDATED': 'bg-light text-success border-success',
                             'EDIT_REQUESTED': 'bg-light text-warning border-warning',
@@ -454,8 +453,7 @@
 
                     } else {
                         alert("Something went wrong");
-                        show_toastr('error', '{{ __('
-                            Failed to perform action ') }}');
+                        show_toastr('error', '{{ __('Failed to perform action') }}');
                     }
                 })
                 .catch(err => console.error(err));
