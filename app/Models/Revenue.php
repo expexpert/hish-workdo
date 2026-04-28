@@ -35,6 +35,11 @@ class Revenue extends Model
         return $this->hasOne('App\Models\BankAccount', 'id', 'account_id');
     }
 
+    public function account()
+    {
+        return $this->hasOne('App\Models\BankAccount', 'id', 'account_id');
+    }
+
     public static function accounts($account)
     {
         $categoryArr  = explode(',', $account);
@@ -45,8 +50,7 @@ class Revenue extends Model
             } else {
                 $account        = BankAccount::find($account);
                 // $unitRate   = ($account->bank_name ?? '');
-                $unitRate    = ($account->bank_name.'  '.$account->holder_name);
-
+                $unitRate    = ($account->bank_name . '  ' . $account->holder_name);
             }
         }
 
