@@ -3347,15 +3347,21 @@ class CustomerController extends Controller
 
                 if ($result == 1) {
                     $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
-                    $revenueData['add_receipt'] = $fileName;
+                    $revenueData['add_receipt'] = 'uploads/revenue/' . $fileName;
                     $dir        = 'uploads/revenue';
                     $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
 
                     if ($path['flag'] == 0) {
-                        return redirect()->back()->with('error', __($path['msg']));
+                        return response()->json([
+                            'success' => false,
+                            'message' => __($path['msg'])
+                        ], 400);
                     }
                 } else {
-                    return redirect()->back()->with('error', $result);
+                    return response()->json([
+                        'success' => false,
+                        'message' => $result
+                    ], 400);
                 }
             }
 
@@ -3455,31 +3461,35 @@ class CustomerController extends Controller
 
         try {
             if ($request->hasFile('add_receipt')) {
-                if ($validated['add_receipt']) {
+                $image_size = $request->file('add_receipt')->getSize();
 
-                    $file_path = 'uploads/revenue/' . $validated['add_receipt'];
-                    $image_size = $request->file('add_receipt')->getSize();
+                $result = Utility::updateStorageLimit(\Auth::user()->companyId(), $image_size);
 
-                    $result = Utility::updateStorageLimit(\Auth::user()->creatorId(), $image_size);
-
-                    if ($result == 1) {
-
-                        Utility::changeStorageLimit(\Auth::user()->creatorId(), $file_path);
-                        $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
-                        $validated['add_receipt'] = $fileName;
-                        $path = storage_path('uploads/revenue/' . $validated['add_receipt']);
-                        if (file_exists($path)) {
-                            \File::delete($path);
+                if ($result == 1) {
+                    // Delete old file if exists
+                    if ($revenue->add_receipt) {
+                        $oldFilePath = storage_path($revenue->add_receipt);
+                        if (file_exists($oldFilePath)) {
+                            \File::delete($oldFilePath);
                         }
-
-                        $dir        = 'uploads/revenue';
-                        $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
-                        if ($path['flag'] == 0) {
-                            return redirect()->back()->with('error', __($path['msg']));
-                        }
-                    } else {
-                        return redirect()->back()->with('error', $result);
                     }
+
+                    $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
+                    $validated['add_receipt'] = 'uploads/revenue/' . $fileName;
+
+                    $dir        = 'uploads/revenue';
+                    $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
+                    if ($path['flag'] == 0) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => __($path['msg'])
+                        ], 400);
+                    }
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $result
+                    ], 400);
                 }
             }
 
@@ -3522,7 +3532,10 @@ class CustomerController extends Controller
 
         try {
             if ($revenue->add_receipt) {
-                Storage::disk('private')->delete($revenue->add_receipt);
+                $filePath = storage_path($revenue->add_receipt);
+                if (file_exists($filePath)) {
+                    \File::delete($filePath);
+                }
             }
 
             $revenue->delete();
