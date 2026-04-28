@@ -20,6 +20,8 @@ class Revenue extends Model
         'add_receipt',
     ];
 
+    protected $appends = ['add_receipt'];
+
     public function category()
     {
         return $this->hasOne('App\Models\ProductServiceCategory', 'id', 'category_id');
@@ -87,5 +89,14 @@ class Revenue extends Model
         }
 
         return $unitRate;
+    }
+
+    public function getAddReceiptAttribute()
+    {
+        if (!$this->attributes['add_receipt']) {
+            return null;
+        }
+
+        return asset('storage/uploads/revenue/' . $this->attributes['add_receipt']);
     }
 }
