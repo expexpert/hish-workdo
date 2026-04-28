@@ -196,6 +196,15 @@ class UserController extends Controller
                         ]
                     );
                 }
+
+                $incomeID = $accounts->get('4010') ?? null;
+
+                ProductServiceCategory::create([
+                    'name' => 'Default Category',
+                    'type' => 'income',
+                    'chart_account_id' => $incomeID,
+                    'created_by' => $user->id,
+                ]);
             } else {
                 $validator = \Validator::make(
                     $request->all(),

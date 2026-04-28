@@ -29,6 +29,9 @@ use App\Models\CustomerInvoice;
 use App\Models\InvoiceArticle;
 use App\Models\InvoiceProduct;
 use App\Models\CustomerQuote;
+use App\Models\ChartOfAccount;
+use App\Models\BankAccount;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -149,6 +152,38 @@ class CustomerController extends Controller
 
                 $customer->save();
                 CustomField::saveData($customer, $request->customField);
+
+
+                $randomStr = Str::random(10);
+                $creatorId = \Auth::user()->creatorId();
+
+                $accounts = [
+                    ['code' => '5141', 'bank_name' => 'Banque principale'],
+                    ['code' => '5161', 'bank_name' => 'Caisse'],
+                ];
+
+                foreach ($accounts as $acc) {
+
+                    $chartOfAccount = ChartOfAccount::where('created_by', $creatorId)
+                        ->where('code', $acc['code'])
+                        ->latest()
+                        ->first();
+
+                    if (!$chartOfAccount) {
+                        continue;
+                    }
+
+                    BankAccount::create([
+                        'chart_account_id' => $chartOfAccount->id,
+                        'customer_id'      => $customer->id,
+                        'holder_name'      => $customer->name,
+                        'bank_name'        => $acc['bank_name'],
+                        'account_number'   => $randomStr,
+                        'opening_balance'  => 0,
+                        'contact_number'   => $customer->contact,
+                        'created_by'       => $creatorId,
+                    ]);
+                }
             } else {
                 return redirect()->back()->with('error', __('Your user limit is over, Please upgrade plan.'));
             }

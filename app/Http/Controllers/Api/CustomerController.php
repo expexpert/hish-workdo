@@ -32,6 +32,8 @@ use App\Models\ProductServiceCategory;
 use App\Models\CustomerQuote;
 use App\Models\QuoteArticle;
 use App\Models\ChartOfAccountType;
+use App\Models\Revenue;
+use App\Models\BankAccount;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -194,7 +196,7 @@ class CustomerController extends Controller
         $notificationScore = $unreadNotificationsCount > 0 ? 30 : 0;
 
         $unpaidInvoiceSum = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
-            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id') 
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->where('customer_invoices.customer_id', $user->id)
             ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
             ->selectRaw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_unpaid_sum")
@@ -1324,7 +1326,7 @@ class CustomerController extends Controller
                 'total_ttc'      => 'nullable|numeric|min:0',
                 'total_tva'      => 'nullable|numeric|min:0',
                 'notes'          => 'nullable|string',
-                'reference'          => 'nullable|string',
+                'reference'      => 'nullable|string',
             ]);
 
             if (!empty($request->file)) {
@@ -3315,6 +3317,224 @@ class CustomerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to convert quote to invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function storeRevenue(Request $request)
+    {
+
+        $validated = $request->validate([
+            'date'           => 'required|date',
+            'amount'         => 'required|numeric|min:0',
+            'account_id'     => 'nullable|exists:bank_accounts,id',
+            'category_id'    => 'nullable|exists:categories,id',
+            'reference'      => 'nullable|string|max:255',
+            'description'    => 'nullable|string',
+            'payment_method' => 'nullable|string',
+            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+        ]);
+
+        try {
+            $revenueData = collect($validated)->except('add_receipt')->toArray();
+
+            if (!empty($request->add_receipt)) {
+
+                $image_size = $request->file('add_receipt')->getSize();
+
+                $result = Utility::updateStorageLimit(\Auth::user()->companyId(), $image_size);
+
+                if ($result == 1) {
+                    $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
+                    $revenueData['add_receipt'] = $fileName;
+                    $dir        = 'uploads/revenue';
+                    $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
+
+                    if ($path['flag'] == 0) {
+                        return redirect()->back()->with('error', __($path['msg']));
+                    }
+                } else {
+                    return redirect()->back()->with('error', $result);
+                }
+            }
+
+            $categoryID = ProductServiceCategory::where('created_by', auth()->user()->companyId())->where('type', 'income')->first();
+
+            if ($request->payment_method == 'cash') {
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Caisse%')->first();
+            } else {
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Banque principale%')->first();
+            }
+
+
+            $revenueData['account_id'] = $bankAccountID ? $bankAccountID->id : null;
+            $revenueData['category_id'] = $categoryID ? $categoryID->id : null;
+            $revenueData['customer_id'] = $request->user()->id;
+            $revenueData['created_by'] = $request->user()->id;
+            $revenue = Revenue::create($revenueData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Revenue entry created successfully.',
+                'data'    => $revenue
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create revenue entry: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function getRevenues(Request $request)
+    {
+        $user = $request->user();
+
+        $revenues = Revenue::where('customer_id', $user->id)
+            ->with(['category:id,name', 'account:id,bank_name'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Revenue entries retrieved successfully.',
+            'data'    => $revenues
+        ], 200);
+    }
+
+    public function viewSingleRevenue(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $revenue = Revenue::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->with(['category:id,name', 'account:id,bank_name'])
+            ->first();
+
+        if (! $revenue) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Revenue entry not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Revenue entry retrieved successfully.',
+            'data'    => $revenue
+        ], 200);
+    }
+
+    public function updateRevenue(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $revenue = Revenue::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $revenue) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Revenue entry not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'date'           => 'sometimes|required|date',
+            'amount'         => 'sometimes|required|numeric|min:0',
+            'account_id'     => 'nullable|exists:bank_accounts,id',
+            'category_id'    => 'nullable|exists:categories,id',
+            'reference'      => 'nullable|string|max:255',
+            'description'    => 'nullable|string',
+            'payment_method' => 'nullable|string',
+            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+        ]);
+
+        try {
+            if ($request->hasFile('add_receipt')) {
+                if ($validated['add_receipt']) {
+
+                    $file_path = 'uploads/revenue/' . $validated['add_receipt'];
+                    $image_size = $request->file('add_receipt')->getSize();
+
+                    $result = Utility::updateStorageLimit(\Auth::user()->creatorId(), $image_size);
+
+                    if ($result == 1) {
+
+                        Utility::changeStorageLimit(\Auth::user()->creatorId(), $file_path);
+                        $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
+                        $validated['add_receipt'] = $fileName;
+                        $path = storage_path('uploads/revenue/' . $validated['add_receipt']);
+                        if (file_exists($path)) {
+                            \File::delete($path);
+                        }
+
+                        $dir        = 'uploads/revenue';
+                        $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
+                        if ($path['flag'] == 0) {
+                            return redirect()->back()->with('error', __($path['msg']));
+                        }
+                    } else {
+                        return redirect()->back()->with('error', $result);
+                    }
+                }
+            }
+
+            if ($request->payment_method == 'cash') {
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Caisse%')->first();
+            } else {
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Banque principale%')->first();
+            }
+            $validated['account_id'] = $bankAccountID ? $bankAccountID->id : null;
+
+            $revenue->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Revenue entry updated successfully.',
+                'data'    => $revenue
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update revenue entry: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteRevenue(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $revenue = Revenue::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->first();
+
+        if (! $revenue) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Revenue entry not found or does not belong to the customer.'
+            ], 404);
+        }
+
+        try {
+            if ($revenue->add_receipt) {
+                Storage::disk('private')->delete($revenue->add_receipt);
+            }
+
+            $revenue->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Revenue entry and associated receipt deleted successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete revenue entry: ' . $e->getMessage()
             ], 500);
         }
     }
