@@ -132,15 +132,16 @@ class DashboardController extends Controller
                         ->whereIn('customer_invoices.status', ['issued', 'paid'])
                         ->whereMonth('customer_invoices.date', date('m'))
                         ->whereYear('customer_invoices.date', date('Y'))
-                        ->selectRaw('SUM(invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)) as total')
+                        ->selectRaw('SUM((invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)) as total')
                         ->value('total');
+
 
                     $data['TodayRevenue'] = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
                         ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
                         ->whereIn('customer_invoices.customer_id', \Auth::user()->getAccountantCustomersIds())
                         ->whereIn('customer_invoices.status', ['issued', 'paid'])
                         ->whereDate('customer_invoices.date', date('Y-m-d'))
-                        ->selectRaw('SUM(invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)) as total')
+                        ->selectRaw('SUM((invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)) as total')
                         ->value('total');
 
                     $data['currentMonthExpense'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())
@@ -161,7 +162,8 @@ class DashboardController extends Controller
                         ->whereIn('customer_invoices.status', ['issued', 'paid'])
                         ->whereMonth('customer_invoices.date', date('m'))
                         ->whereYear('customer_invoices.date', date('Y'))
-                        ->sum(DB::raw('ROUND((invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100), 2)'));
+                        ->selectRaw('ROUND(SUM((invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0))* COALESCE(taxes.rate, 0) / 100), 2) as total')
+                        ->value('total');
 
                     $data['totalVatDeductible'] = CustomerExpense::whereIn('customer_id', \Auth::user()->getAccountantCustomersIds())->whereMonth('date', date('m'))
                         ->whereYear('date', date('Y'))
@@ -185,14 +187,18 @@ class DashboardController extends Controller
                         ->whereIn('customer_invoices.customer_id', $companyCustomerIds)
                         ->whereIn('customer_invoices.status', ['issued', 'paid']);
 
+                    $priceFormula = '(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)';
+
                     $data['currentMonthRevenue'] = (clone $baseQuery)
                         ->whereMonth('customer_invoices.date', date('m'))
                         ->whereYear('customer_invoices.date', date('Y'))
-                        ->sum(DB::raw('invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)'));
+                        ->selectRaw("SUM($priceFormula) as total")
+                        ->value('total');
 
                     $data['TodayRevenue'] = (clone $baseQuery)
                         ->whereDate('customer_invoices.date', date('Y-m-d'))
-                        ->sum(DB::raw('invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)'));
+                        ->selectRaw("SUM($priceFormula) as total")
+                        ->value('total');
 
                     $data['currentMonthExpense'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)
                         ->whereMonth('date', date('m'))
@@ -212,7 +218,8 @@ class DashboardController extends Controller
                         ->whereIn('customer_invoices.status', ['issued', 'paid'])
                         ->whereMonth('customer_invoices.date', date('m'))
                         ->whereYear('customer_invoices.date', date('Y'))
-                        ->sum(DB::raw('ROUND((invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100), 2)'));
+                        ->selectRaw('ROUND(SUM((invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * COALESCE(taxes.rate, 0) / 100), 2) as total')
+                        ->value('total');
 
                     $data['totalVatDeductible'] = CustomerExpense::whereIn('customer_id', $companyCustomerIds)->sum('ttc');
 
@@ -317,14 +324,17 @@ class DashboardController extends Controller
             $customerIds = [intval($customerId)];
         }
         $months = array_map(fn($m) => __(date('F', mktime(0, 0, 0, $m, 1))), range(1, 12));
+        $priceFormula = '(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)';
+
         $monthlyRevenueData = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->whereIn('customer_invoices.customer_id', $customerIds)
             ->whereIn('customer_invoices.status', ['issued', 'paid'])
             ->whereYear('customer_invoices.date', $year)
-            ->selectRaw('MONTH(customer_invoices.date) as month, SUM(invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)) as total')
+            ->selectRaw("MONTH(customer_invoices.date) as month, SUM($priceFormula) as total")
             ->groupBy('month')
             ->pluck('total', 'month');
+
         $monthlyExpenseData = CustomerExpense::whereIn('customer_id', $customerIds)
             ->whereYear('date', $year)
             ->selectRaw('month(date) as month, sum(ttc) as total')
@@ -366,28 +376,37 @@ class DashboardController extends Controller
             ->whereIn('customer_invoices.customer_id', $customerIds)
             ->whereIn('customer_invoices.status', ['issued', 'paid']);
 
+        $priceFormula = '(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)';
+
         $todayRevenue = (clone $baseQuery)
             ->whereDate('customer_invoices.date', date('Y-m-d'))
-            ->sum(DB::raw('invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)'));
-        $todayExpense = CustomerExpense::whereIn('customer_id', $customerIds)
-            ->whereDate('date', date('Y-m-d'))
-            ->sum('ttc');
+            ->selectRaw("SUM($priceFormula) as total")
+            ->value('total');
+
         $currentMonthRevenue = (clone $baseQuery)
             ->whereMonth('customer_invoices.date', date('m'))
             ->whereYear('customer_invoices.date', date('Y'))
-            ->sum(DB::raw('invoice_articles.total_price_ht * (1 + COALESCE(taxes.rate, 0) / 100)'));
+            ->selectRaw("SUM($priceFormula) as total")
+            ->value('total');
+        $todayExpense = CustomerExpense::whereIn('customer_id', $customerIds)
+            ->whereDate('date', date('Y-m-d'))
+            ->sum('ttc');
+
         $currentMonthExpense = CustomerExpense::whereIn('customer_id', $customerIds)
             ->whereMonth('date', date('m'))
             ->whereYear('date', date('Y'))
             ->sum('ttc');
         $netResult = $currentMonthRevenue - $currentMonthExpense;
+        $vatFormula = '(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * COALESCE(taxes.rate, 0) / 100';
+
         $totalVatCollected = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->whereIn('customer_invoices.customer_id', $customerIds)
             ->whereIn('customer_invoices.status', ['issued', 'paid'])
             ->whereMonth('customer_invoices.date', date('m'))
             ->whereYear('customer_invoices.date', date('Y'))
-            ->sum(DB::raw('ROUND((invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100), 2)'));
+            ->selectRaw("ROUND(SUM($vatFormula), 2) as total")
+            ->value('total');
         $totalVatDeductible = CustomerExpense::whereIn('customer_id', $customerIds)
             ->whereMonth('date', date('m'))
             ->whereYear('date', date('Y'))
