@@ -129,6 +129,13 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::post('/quote-to-invoice/{id}', [CustomerController::class, 'quoteToInvoice']);
 
 
+    Route::post('/customer-revenue', [CustomerController::class, 'storeRevenue']);
+    Route::get('/customer-revenues', [CustomerController::class, 'getRevenues']);
+    Route::get('/customer-revenue/{id}', [CustomerController::class, 'viewSingleRevenue']);
+    Route::put('/customer-revenue/{id}', [CustomerController::class, 'updateRevenue']);
+    Route::delete('/customer-revenue/{id}', [CustomerController::class, 'deleteRevenue']);
+
+
     Route::post('/send-accountant-email', [CustomerController::class, 'sendToAccountant']);
 
     Route::get('/bot/activation-status', [CustomerController::class, 'getBotActivationStatus']);

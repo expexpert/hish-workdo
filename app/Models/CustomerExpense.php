@@ -25,6 +25,7 @@ class CustomerExpense extends Model
         'total_ttc',
         'total_tva',
         'notes',
+        'reference',
     ];
 
     /**
