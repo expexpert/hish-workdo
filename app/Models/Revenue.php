@@ -17,6 +17,7 @@ class Revenue extends Model
         'reference',
         'description',
         'created_by',
+        'add_receipt',
     ];
 
     public function category()
