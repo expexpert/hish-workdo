@@ -3347,7 +3347,7 @@ class CustomerController extends Controller
 
                 if ($result == 1) {
                     $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
-                    $revenueData['add_receipt'] = 'uploads/revenue/' . $fileName;
+                    $revenueData['add_receipt'] = $fileName;
                     $dir        = 'uploads/revenue';
                     $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
 
@@ -3475,7 +3475,7 @@ class CustomerController extends Controller
                     }
 
                     $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
-                    $validated['add_receipt'] = 'uploads/revenue/' . $fileName;
+                    $validated['add_receipt'] = $fileName;
 
                     $dir        = 'uploads/revenue';
                     $path = Utility::upload_file($request, 'add_receipt', $fileName, $dir, []);
