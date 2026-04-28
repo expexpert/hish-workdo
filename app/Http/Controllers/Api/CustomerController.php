@@ -153,6 +153,12 @@ class CustomerController extends Controller
         $monthStart = now()->copy()->startOfMonth();
         $monthEnd = now()->copy()->endOfMonth();
 
+        // 🔥 COMMON FORMULAS
+        $net = "(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0))";
+        $vat = "($net * COALESCE(taxes.rate, 0) / 100)";
+        $ttc = "($net + $vat)";
+
+        // Counts
         $unpaidInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
             ->where('status', 'issued')
             ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
@@ -188,13 +194,12 @@ class CustomerController extends Controller
         $notificationScore = $unreadNotificationsCount > 0 ? 30 : 0;
 
         $unpaidInvoiceSum = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id') 
             ->where('customer_invoices.customer_id', $user->id)
             ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
-            ->select(
-                DB::raw("SUM(CASE WHEN status = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_unpaid_sum")
-            )->first();
+            ->selectRaw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_unpaid_sum")
+            ->first();
 
-        // 1. Global Stats (Based on Filter)
         $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->where('customer_invoices.customer_id', $user->id)
@@ -202,28 +207,27 @@ class CustomerController extends Controller
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_invoices.date', '<=', $dt))
             ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
             ->select(
-                DB::raw("SUM(CASE WHEN UPPER(status) IN ('ISSUED', 'PAID') THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_paid_sum"),
-                DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN invoice_articles.total_price_ht ELSE 0 END) as total_paid_sum"),
-                DB::raw("SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN invoice_articles.total_price_ht ELSE 0 END) as total_issued_sum"),
-                DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN (invoice_articles.total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat_collected"),
+                DB::raw("ROUND(SUM(CASE WHEN UPPER(status) IN ('ISSUED','PAID') THEN $ttc ELSE 0 END), 2) as total_issued_paid_sum"),
+                DB::raw("ROUND(SUM(CASE WHEN UPPER(status) = 'PAID' THEN $ttc ELSE 0 END), 2) as total_paid_sum"),
+                DB::raw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_issued_sum"),
+                DB::raw("ROUND(SUM(CASE WHEN UPPER(status) = 'PAID' THEN $vat ELSE 0 END), 2) as vat_collected"),
                 DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'PAID' THEN customer_invoices.id END) as total_paid_count"),
                 DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count")
-            )->first();
+            )
+            ->first();
 
         $quoteStats = CustomerQuote::leftJoin('quotes_articles', 'customer_quotes.id', '=', 'quotes_articles.quotes_id')
-            // ->where(function ($q) {
-            //     $q->where('customer_quotes.review_status', '!=', 'CONVERTED')
-            //         ->orWhereNull('customer_quotes.review_status');
-            // })
+            ->leftJoin('taxes', 'quotes_articles.tva_percentage', '=', 'taxes.id')
             ->where('customer_quotes.customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('customer_quotes.date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('customer_quotes.date', '<=', $dt))
             ->select(
-                DB::raw("SUM(quotes_articles.total_price_ht) as total_quote_sum"),
+                DB::raw("ROUND(SUM((quotes_articles.total_price_ht - COALESCE(quotes_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)), 2) as total_quote_sum"),
                 DB::raw("COUNT(DISTINCT customer_quotes.id) as total_quote_count")
             )
             ->first();
 
+        // Expenses
         $expenseStats = CustomerExpense::where('customer_id', $user->id)
             ->when($dateFrom, fn($q, $df) => $q->whereDate('date', '>=', $df))
             ->when($dateTo, fn($q, $dt) => $q->whereDate('date', '<=', $dt))
@@ -235,50 +239,15 @@ class CustomerController extends Controller
 
         $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_tva ?? 0);
 
-        // Added metrics for WhatsApp Bot (Filtered by date if provided)
-        $expensesCount = CustomerExpense::where('customer_id', $user->id)
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('date', '<=', $dateTo);
-            })
-            ->when($supplierId, function ($query, $supplierId) {
-                $query->where('supplier_id', $supplierId);
-            })
-            ->count();
-
-        $statementsCount = ClientBankStatement::where('customer_id', $user->id)
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->where('month_year', Carbon::parse($dateFrom)->format('m-Y'));
-            })
-            ->count();
-
-        $pendingReviewCount = CustomerInvoice::where('customer_id', $user->id)
-            ->where('review_status', 'PENDING')
-            ->when($dateFrom, function ($query, $dateFrom) {
-                $query->whereDate('date', '>=', $dateFrom);
-            })
-            ->when($dateTo, function ($query, $dateTo) {
-                $query->whereDate('date', '<=', $dateTo);
-            })
-            ->when($clientId, function ($query, $clientId) {
-                $query->where('client_id', $clientId);
-            })
-            ->count();
-        // 2. Month-over-Month Comparison Logic
-        $currentRange = [now()->startOfMonth(), now()->endOfMonth()];
-        $previousRange = [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()];
-
-        // Helper to get periodic stats
-        $getPeriodicStats = function ($range) use ($user) {
+        // 🔁 Period comparison (FIXED)
+        $getPeriodicStats = function ($range) use ($user, $ttc, $net, $vat) {
             $inv = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
                 ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
                 ->where('customer_invoices.customer_id', $user->id)
                 ->whereBetween('customer_invoices.date', $range)
                 ->select(
-                    DB::raw("SUM(CASE WHEN status = 'PAID' THEN total_price_ht ELSE 0 END) as paid"),
-                    DB::raw("SUM(CASE WHEN status = 'PAID' THEN (total_price_ht * COALESCE(taxes.rate, 0) / 100) ELSE 0 END) as vat")
+                    DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN $ttc ELSE 0 END) as paid"),
+                    DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN $vat ELSE 0 END) as vat")
                 )->first();
 
             $exp = CustomerExpense::where('customer_id', $user->id)
@@ -293,10 +262,9 @@ class CustomerController extends Controller
             ];
         };
 
-        $current = $getPeriodicStats($currentRange);
-        $previous = $getPeriodicStats($previousRange);
+        $current = $getPeriodicStats([now()->startOfMonth(), now()->endOfMonth()]);
+        $previous = $getPeriodicStats([now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]);
 
-        // 3. Percentage Calculation Logic
         $calcTrend = function ($cur, $prev) {
             if ($prev == 0) return $cur > 0 ? 100 : 0;
             return round((($cur - $prev) / $prev) * 100, 2);
@@ -306,7 +274,7 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Dashboard data retrieved successfully.',
             'data' => [
-                'userName'            => $userName,
+                'userName' => $userName,
                 'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
                 'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
@@ -314,23 +282,22 @@ class CustomerController extends Controller
                 'total_issued_count' => $invoiceStats->total_issued_count,
                 'total_paid_count' => $invoiceStats->total_paid_count,
                 'total_quote_count' => $quoteStats->total_quote_count,
-                'total_expenses_count' => $expensesCount,
-                'bank_statements_count' => $statementsCount,
-                'total_pending_review_count' => $pendingReviewCount,
+                'total_expenses_count' => $currentMonthExpense,
+                'bank_statements_count' => ClientBankStatement::where('customer_id', $user->id)->count(),
+                'total_pending_review_count' => CustomerInvoice::where('customer_id', $user->id)->where('review_status', 'PENDING')->count(),
                 'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
                 'total_quote_sum' => (float) ($quoteStats->total_quote_sum ?? 0),
                 'total_expenses_vat' => (float) ($expenseStats->total_tva ?? 0),
 
-                // Trends
-                'total_paid_percentage_change'        => $calcTrend($current->paid, $previous->paid),
-                'total_expenses_percentage_change'    => $calcTrend($current->expense, $previous->expense),
+                'total_paid_percentage_change' => $calcTrend($current->paid, $previous->paid),
+                'total_expenses_percentage_change' => $calcTrend($current->expense, $previous->expense),
                 'total_vat_payable_percentage_change' => $calcTrend($current->vat, $previous->vat),
 
                 'hasStatement' => $hasStatement,
                 'unpaidInvoicesCount' => $unpaidInvoicesCount,
                 'unpaidInvoiceSum' => (float) ($unpaidInvoiceSum->total_unpaid_sum ?? 0),
                 'unreadDocumentsCount' => $unreadDocumentsCount,
-                'total_pending_actions'  => $missingBankStatementCount + $unpaidInvoicesCount + $unreadDocumentsCount,
+                'total_pending_actions' => $missingBankStatementCount + $unpaidInvoicesCount + $unreadDocumentsCount,
                 'total_progress_score' => $statementScore + $invoiceExpenseScore + $notificationScore,
 
                 'is_enable_login' => $is_enable_login,
@@ -344,23 +311,23 @@ class CustomerController extends Controller
         $user = $request->user();
         $year = $request->get('year', date('Y'));
 
-        // Use whereBetween for better performance
         $startDate = Carbon::createFromDate($year, 1, 1)->startOfYear();
         $endDate = $startDate->copy()->endOfYear();
 
-        // 1. Fetch Invoices (CA) grouped by month
+        $ttc = "(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)";
+
         $invoices = CustomerInvoice::join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->where('customer_invoices.customer_id', $user->id)
-            ->whereIn('customer_invoices.status', ['ISSUED', 'PAID'])
+            ->whereIn('customer_invoices.status', ['issued', 'paid'])
             ->whereBetween('customer_invoices.date', [$startDate, $endDate])
             ->select(
                 DB::raw('MONTH(customer_invoices.date) as month'),
-                DB::raw('SUM(invoice_articles.total_price_ht) as total')
+                DB::raw("ROUND(SUM($ttc), 2) as total")
             )
             ->groupBy('month')
             ->pluck('total', 'month');
 
-        // 2. Fetch Expenses grouped by month
         $expenses = CustomerExpense::where('customer_id', $user->id)
             ->whereBetween('date', [$startDate, $endDate])
             ->select(
@@ -370,7 +337,6 @@ class CustomerController extends Controller
             ->groupBy('month')
             ->pluck('total', 'month');
 
-        // 3. Build the formatted arrays
         $caFormatted = [];
         $expensesFormatted = [];
 
@@ -402,12 +368,15 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        // Dates Setup
         $now = Carbon::now();
         $startOfCurrentMonth = $now->copy()->startOfMonth();
         $startOfPreviousMonth = $now->copy()->subMonth()->startOfMonth();
         $endOfPreviousMonth = $now->copy()->subMonth()->endOfMonth();
 
+        // 🔥 COMMON FORMULA (TTC)
+        $ttc = "(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)";
+
+        // Expenses (already TTC ✔)
         $currentMonthExpenses = CustomerExpense::where('customer_id', $user->id)
             ->whereBetween('date', [$startOfCurrentMonth, $now])
             ->sum('total_ttc');
@@ -416,32 +385,36 @@ class CustomerController extends Controller
             ->whereBetween('date', [$startOfPreviousMonth, $endOfPreviousMonth])
             ->sum('total_ttc');
 
-        $expenseVariation = 0;
-        if ($previousMonthExpenses > 0) {
-            $expenseVariation = (($currentMonthExpenses - $previousMonthExpenses) / $previousMonthExpenses) * 100;
-        }
+        $expenseVariation = $previousMonthExpenses > 0
+            ? (($currentMonthExpenses - $previousMonthExpenses) / $previousMonthExpenses) * 100
+            : 0;
 
+        // ✅ Pending invoices (TTC)
         $pendingData = CustomerInvoice::where('customer_id', $user->id)
             ->where('status', 'issued')
             ->leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
-            ->selectRaw('COUNT(DISTINCT customer_invoices.id) as count, SUM(invoice_articles.total_price_ht) as amount')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
+            ->selectRaw("COUNT(DISTINCT customer_invoices.id) as count, ROUND(SUM($ttc), 2) as amount")
             ->first();
 
-        // 3. GOOD PERFORMANCE (REVENUE) ALERT
-        $currentRevenue = InvoiceArticle::whereHas('invoice', function ($q) use ($user, $startOfCurrentMonth, $now) {
-            $q->where('customer_id', $user->id)
-                ->whereBetween('date', [$startOfCurrentMonth, $now]);
-        })->sum('total_price_ht');
+        // ✅ Revenue (TTC after discount)
+        $currentRevenue = InvoiceArticle::join('customer_invoices', 'invoice_articles.invoice_id', '=', 'customer_invoices.id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->whereBetween('customer_invoices.date', [$startOfCurrentMonth, $now])
+            ->selectRaw("ROUND(SUM($ttc), 2) as total")
+            ->value('total');
 
-        $previousRevenue = InvoiceArticle::whereHas('invoice', function ($q) use ($user, $startOfPreviousMonth, $endOfPreviousMonth) {
-            $q->where('customer_id', $user->id)
-                ->whereBetween('date', [$startOfPreviousMonth, $endOfPreviousMonth]);
-        })->sum('total_price_ht');
+        $previousRevenue = InvoiceArticle::join('customer_invoices', 'invoice_articles.invoice_id', '=', 'customer_invoices.id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->whereBetween('customer_invoices.date', [$startOfPreviousMonth, $endOfPreviousMonth])
+            ->selectRaw("ROUND(SUM($ttc), 2) as total")
+            ->value('total');
 
-        $revenueVariation = 0;
-        if ($previousRevenue > 0) {
-            $revenueVariation = (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
-        }
+        $revenueVariation = $previousRevenue > 0
+            ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100
+            : 0;
 
         return response()->json([
             'success' => true,
@@ -459,8 +432,8 @@ class CustomerController extends Controller
                 'performance_alert' => [
                     'is_good' => $revenueVariation > 0,
                     'variation_percentage' => round($revenueVariation, 2),
-                    'current_revenue' => $currentRevenue,
-                    'previous_revenue' => $previousRevenue,
+                    'current_revenue' => $currentRevenue ?? 0,
+                    'previous_revenue' => $previousRevenue ?? 0,
                 ]
             ]
         ]);
@@ -1011,25 +984,26 @@ class CustomerController extends Controller
         }
 
         $clients = $query
-            // 1. Sum of Issued Articles
-            ->withSum(['articles as total_revenue_ht' => function ($q) {
-                $q->whereHas('invoice', function ($innerQ) {
-                    $innerQ->where('status', 'issued');
-                });
-            }], 'total_price_ht')
-            // 2. Count of Late Invoices (Date < Today AND Status != Paid)
+            ->addSelect([
+                'total_revenue_ht' => function ($q) {
+                    $q->from('invoice_articles')
+                        ->join('customer_invoices', 'invoice_articles.invoice_id', '=', 'customer_invoices.id')
+                        ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
+                        ->whereColumn('customer_invoices.client_id', 'customer_clients.id')
+                        ->where('customer_invoices.status', 'issued')
+                        ->selectRaw("ROUND(SUM((invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)), 2)");
+                }
+            ])
+
             ->withCount(['invoices as late_invoices_count' => function ($q) use ($today) {
                 $q->where('due_date', '<', $today)
                     ->where('status', '!=', 'paid');
             }]);
 
         if ($sort === 'recent') {
-            // Sort by the creation date of the most recent invoice
             $clients->withMax('invoices', 'created_at')
                 ->orderByRaw('invoices_max_created_at IS NULL, invoices_max_created_at DESC');
         } else {
-            // Default Sorting Logic (Matches Main exactly)
-            // Priority 1: Clients with ANY overdue invoices first (1 if count > 0, else 0)
             $clients->orderByRaw('CASE WHEN late_invoices_count > 0 THEN 0 ELSE 1 END')
                 ->orderBy('late_invoices_count', 'desc')
                 ->orderBy('total_revenue_ht', 'desc');
@@ -1066,7 +1040,9 @@ class CustomerController extends Controller
 
         $totalPriceHt = $client->invoices()
             ->join('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
-            ->sum('invoice_articles.total_price_ht');
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
+            ->selectRaw("ROUND(SUM((invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0))* (1 + COALESCE(taxes.rate, 0) / 100)), 2) as total")
+            ->value('total');
 
         return response()->json([
             'success' => true,
@@ -1166,8 +1142,8 @@ class CustomerController extends Controller
             'supplier_name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:customer_suppliers,email',
             'telephone' => 'nullable|string|max:20',
-            'postal_code' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'city' => 'nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
             'ice' => 'nullable|string|max:255',
         ]);
@@ -1348,6 +1324,7 @@ class CustomerController extends Controller
                 'total_ttc'      => 'nullable|numeric|min:0',
                 'total_tva'      => 'nullable|numeric|min:0',
                 'notes'          => 'nullable|string',
+                'reference'          => 'nullable|string',
             ]);
 
             if (!empty($request->file)) {
@@ -2409,7 +2386,7 @@ class CustomerController extends Controller
             'unit_id' => 'required|exists:product_service_units,id',
             'category_id' => 'required|exists:product_service_categories,id',
             'reference' => 'required|string|max:255',
-            'quantity' => 'nullable|integer|min:1',
+            'quantity' => 'nullable|integer',
             'description' => 'nullable|string|max:255',
         ], [
             'designation.unique' => 'This product designation already exists for this customer.',
@@ -2441,15 +2418,16 @@ class CustomerController extends Controller
             ->where('name', $Expensename)
             ->value('id');
 
+        $randomNumber = Str::random(6);
 
         $productService = new ProductService();
         $productService->name           = $request->designation;
         $productService->description    = $request->description;
-        $productService->sku            = $request->reference;
+        $productService->sku            = $request->reference ?? 'REF-' . $randomNumber;
         $productService->sale_price     = $request->unit_price_ht;
         $productService->purchase_price = $request->unit_price_ht;
         $productService->tax_id         = $request->tva_percentage;
-        $productService->quantity       = $request->quantity ?? 0;
+        $productService->quantity       = $request->quantity ?? 1;
         $productService->type           = $request->type;
         $productService->sale_chartaccount_id       = $sale_chartaccount_id ?? '1';
         $productService->expense_chartaccount_id    = $expense_chartaccount_id ?? '1';
