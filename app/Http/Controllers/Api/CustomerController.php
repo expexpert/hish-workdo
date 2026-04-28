@@ -3371,7 +3371,7 @@ class CustomerController extends Controller
             $revenueData['account_id'] = $bankAccountID ? $bankAccountID->id : null;
             $revenueData['category_id'] = $categoryID ? $categoryID->id : null;
             $revenueData['customer_id'] = $request->user()->id;
-            $revenueData['created_by'] = $request->user()->id;
+            $revenueData['created_by'] = \Auth::user()->companyId();
             $revenue = Revenue::create($revenueData);
 
             return response()->json([
