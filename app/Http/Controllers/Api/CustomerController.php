@@ -959,10 +959,10 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customer_clients,email',
+            'email' => 'nullable|email|unique:customer_clients,email',
             'telephone' => 'nullable|string|max:20',
-            'postal_code' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'city' => 'nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
             'ice' => 'nullable|string|max:255',
         ]);
