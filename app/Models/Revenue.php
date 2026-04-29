@@ -93,7 +93,7 @@ class Revenue extends Model
 
     public function getPdfReceiptAttribute()
     {
-        if (!$this->attributes['add_receipt']) {
+        if (empty($this->attributes['add_receipt'] ?? null)) {
             return null;
         }
 
