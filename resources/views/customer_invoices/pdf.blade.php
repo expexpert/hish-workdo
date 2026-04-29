@@ -267,6 +267,13 @@
         </tr>
 
         <tr>
+            <td><strong>After Discount</strong></td>
+            <td>
+               MAD {{ number_format($totals['afterDiscount'],2,',',' ') }}               
+            </td>
+        </tr>
+
+        <tr>
             <td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
             <td>
                MAD {{ number_format($totals['total_tva'],2,',',' ') }}               
