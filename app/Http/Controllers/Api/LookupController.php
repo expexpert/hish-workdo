@@ -20,7 +20,7 @@ class LookupController extends Controller
     {
         $company_id = auth()->user()->companyId();
 
-        $suppliersQuery = CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name');
+        $suppliersQuery = CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name', 'company_name');
 
         if (request()->query('sort') === 'recent') {
             $suppliersQuery->withMax('expenses', 'created_at')
