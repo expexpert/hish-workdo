@@ -256,13 +256,18 @@ class CustomerController extends Controller
                     DB::raw("SUM(CASE WHEN UPPER(status) = 'PAID' THEN $vat ELSE 0 END) as vat")
                 )->first();
 
+            $rev = Revenue::where('customer_id', $user->id)
+                ->whereBetween('date', $range)
+                ->selectRaw("SUM(amount) as total")
+                ->first();    
+
             $exp = CustomerExpense::where('customer_id', $user->id)
                 ->whereBetween('date', $range)
                 ->selectRaw("SUM(total_ttc) as total, SUM(total_tva) as tva")
                 ->first();
 
             return (object)[
-                'paid' => (float)($inv->paid ?? 0),
+                'paid' => (float)($inv->paid ?? 0) + (float)($rev->total ?? 0),
                 'expense' => (float)($exp->total ?? 0),
                 'vat' => (float)($inv->vat ?? 0) - (float)($exp->tva ?? 0)
             ];
@@ -282,7 +287,7 @@ class CustomerController extends Controller
             'data' => [
                 'userName' => $userName,
                 'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
-                'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0),
+                'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0) + (float) ($totalRevenue ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
                 'total_issued_count' => $invoiceStats->total_issued_count,
