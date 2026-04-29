@@ -20,7 +20,7 @@ class Revenue extends Model
         'add_receipt',
     ];
 
-    protected $appends = ['add_receipt'];
+    protected $appends = ['pdf_receipt'];
 
     public function category()
     {
@@ -91,7 +91,7 @@ class Revenue extends Model
         return $unitRate;
     }
 
-    public function getAddReceiptAttribute()
+    public function getPdfReceiptAttribute()
     {
         if (!$this->attributes['add_receipt']) {
             return null;
