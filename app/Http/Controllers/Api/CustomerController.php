@@ -2140,6 +2140,7 @@ class CustomerController extends Controller
             'status'         => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'remove_document' => 'nullable|boolean',
 
             // Articles validation (optional during update)
             'articles'                 => 'sometimes|array',
@@ -2154,6 +2155,14 @@ class CustomerController extends Controller
 
         try {
             return DB::transaction(function () use ($request, $validated, $invoice) {
+
+                if ($request->remove_document) {
+                    if ($invoice->document_path) {
+                        Utility::changeStorageLimitNew(auth()->user()->companyId(), $invoice->document_path);
+                        Storage::disk('private')->delete($invoice->document_path);
+                    }
+                    $validated['document_path'] = null;
+                }
 
                 // 1. Handle File Upload (and delete old file if a new one is uploaded)
                 if ($request->hasFile('document')) {
@@ -2891,6 +2900,7 @@ class CustomerController extends Controller
             'review_status'  => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'remove_document' => 'nullable|boolean',
 
             // Articles validation
             'articles'                 => 'sometimes|array',
@@ -2905,6 +2915,14 @@ class CustomerController extends Controller
 
         try {
             return DB::transaction(function () use ($request, $validated, $quote) {
+
+                if ($request->remove_document) {
+                    if ($quote->document_path) {
+                        Utility::changeStorageLimitNew(auth()->user()->companyId(), $quote->document_path);
+                        Storage::disk('private')->delete($quote->document_path);
+                    }
+                    $validated['document_path'] = null;
+                }
 
                 // 1. Handle File Upload
                 if ($request->hasFile('document')) {
@@ -3457,9 +3475,24 @@ class CustomerController extends Controller
             'description'    => 'nullable|string',
             'payment_method' => 'nullable|string',
             'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'remove_document' => 'nullable|boolean',
         ]);
 
         try {
+            if ($request->remove_document) {
+                if ($revenue->add_receipt) {
+                    $file_path = 'uploads/revenue/' . $revenue->add_receipt;
+                    Utility::changeStorageLimit(\Auth::user()->companyId(), $file_path);
+                    
+                    $path = storage_path('uploads/revenue/' . $revenue->add_receipt);
+                    if (file_exists($path)) {
+                        \File::delete($path);
+                    }
+                }
+
+                $validated['add_receipt'] = null;
+            }
+
             if ($request->hasFile('add_receipt')) {
                 $image_size = $request->file('add_receipt')->getSize();
 
