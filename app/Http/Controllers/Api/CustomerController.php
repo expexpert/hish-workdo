@@ -34,6 +34,8 @@ use App\Models\QuoteArticle;
 use App\Models\ChartOfAccountType;
 use App\Models\Revenue;
 use App\Models\BankAccount;
+use App\Models\Transaction;
+use App\Models\InvoicePayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -217,6 +219,8 @@ class CustomerController extends Controller
                 DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count")
             )
             ->first();
+
+        $totalRevenue = Revenue::where('customer_id', $user->id)->sum('amount');
 
         $quoteStats = CustomerQuote::leftJoin('quotes_articles', 'customer_quotes.id', '=', 'quotes_articles.quotes_id')
             ->leftJoin('taxes', 'quotes_articles.tva_percentage', '=', 'taxes.id')
@@ -3398,6 +3402,84 @@ class CustomerController extends Controller
             $revenueData['created_by'] = \Auth::user()->companyId();
             $revenue = Revenue::create($revenueData);
 
+
+            $category            = ProductServiceCategory::where('id', $categoryID->id)->first();
+            $revenue->payment_id = $revenue->id;
+            $revenue->type       = 'Revenue';
+            $revenue->category   = $category->name;
+            $revenue->user_id    = $revenue->customer_id;
+            $revenue->user_type  = 'Customer';
+            $revenue->account    = $request->account_id;
+            Transaction::addTransaction($revenue);
+
+
+            $customer         = Customer::where('id', $request->customer_id)->first();
+            $payment          = new InvoicePayment();
+            $payment->name    = !empty($customer) ? $customer['name'] : '';
+            $payment->date    = \Auth::user()->dateFormat($request->date);
+            $payment->amount  = \Auth::user()->priceFormat($request->amount);
+            $payment->invoice = '';
+
+            if (!empty($customer)) {
+                Utility::userBalance('customer', $customer->id, $revenue->amount, 'debit');
+            }
+
+            Utility::bankAccountBalance($request->account_id, $revenue->amount, 'credit');
+
+            $accountId = BankAccount::find($revenue->account_id);
+            $data = [
+                'account_id' => $accountId->chart_account_id,
+                'transaction_type' => 'Credit',
+                'transaction_amount' => $revenue->amount,
+                'reference' => 'Revenue',
+                'reference_id' => $revenue->id,
+                'reference_sub_id' => 0,
+                'date' => $revenue->date,
+            ];
+            Utility::addTransactionLines($data);
+
+            $uArr = [
+                'payment_name' => $payment->name,
+                'payment_amount' => $payment->amount,
+                'invoice_number' => $revenue->type,
+                'payment_date' => $payment->date,
+                'payment_dueAmount' => '-',
+
+            ];
+            try {
+                $resp = Utility::sendEmailTemplate('new_invoice_payment', [$customer->id => $customer->email], $uArr);
+            } catch (\Exception $e) {
+                $smtp_error = __('E-Mail has been not sent due to SMTP configuration');
+            }
+
+            // Twilio Notification
+            $setting  = Utility::settings(\Auth::user()->companyId());
+            $customer = Customer::find($request->customer_id);
+            if (isset($setting['revenue_notification']) && $setting['revenue_notification'] == 1) {
+                $uArr = [
+                    'payment_name' => $payment->name,
+                    'payment_amount' => $payment->amount,
+                    'payment_date' => $payment->date,
+                    'user_name' => \Auth::user()->name,
+
+                ];
+                Utility::send_twilio_msg($customer->contact, 'new_revenue', $uArr);
+            }
+
+            // webhook
+            $module = 'New Revenue';
+            $webhook =  Utility::webhookSetting($module);
+            if ($webhook) {
+                $parameter = json_encode($revenue);
+                // 1 parameter is  URL , 2 parameter is data , 3 parameter is method
+                $status = Utility::WebhookCall($webhook['url'], $parameter, $webhook['method']);
+                if ($status == true) {
+                    return redirect()->route('revenue.index')->with('success', __('Revenue successfully created.'));
+                } else {
+                    return redirect()->back()->with('error', __('Webhook call failed.'));
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Revenue entry created successfully.',
@@ -3483,7 +3565,7 @@ class CustomerController extends Controller
                 if ($revenue->add_receipt) {
                     $file_path = 'uploads/revenue/' . $revenue->add_receipt;
                     Utility::changeStorageLimit(\Auth::user()->companyId(), $file_path);
-                    
+
                     $path = storage_path('uploads/revenue/' . $revenue->add_receipt);
                     if (file_exists($path)) {
                         \File::delete($path);
@@ -3534,6 +3616,27 @@ class CustomerController extends Controller
             $validated['account_id'] = $bankAccountID ? $bankAccountID->id : null;
 
             $revenue->update($validated);
+
+
+
+            $category            = ProductServiceCategory::where('id', $revenue->category_id)->first();
+            $revenue->category   = $category->name;
+            $revenue->payment_id = $revenue->id;
+            $revenue->type       = 'Revenue';
+            $revenue->account    = $request->account_id;
+            Transaction::editTransaction($revenue);
+
+            $accountId = BankAccount::find($revenue->account_id);
+            $data = [
+                'account_id' => $accountId->chart_account_id,
+                'transaction_type' => 'Credit',
+                'transaction_amount' => $revenue->amount,
+                'reference' => 'Revenue',
+                'reference_id' => $revenue->id,
+                'reference_sub_id' => 0,
+                'date' => $revenue->date,
+            ];
+            Utility::addTransactionLines($data);
 
             return response()->json([
                 'success' => true,
