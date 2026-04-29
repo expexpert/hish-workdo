@@ -1080,11 +1080,11 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'company_name' => 'sometimes|required|string|max:255',
-            'client_name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:customer_clients,email,' . $client->id,
+            'client_name' => 'sometimes|nullable|string|max:255',
+            'email' => 'sometimes|nullable|email|unique:customer_clients,email,' . $client->id,
             'telephone' => 'nullable|string|max:20',
-            'postal_code' => 'sometimes|required|string|max:20',
-            'city' => 'sometimes|required|string|max:100',
+            'postal_code' => 'sometimes|nullable|string|max:20',
+            'city' => 'sometimes|nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
             'ice' => 'nullable|string|max:255',
         ]);
@@ -1150,7 +1150,7 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
-            'supplier_name' => 'required|string|max:255',
+            'supplier_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:customer_suppliers,email',
             'telephone' => 'nullable|string|max:20',
             'postal_code' => 'nullable|string|max:20',
@@ -1254,11 +1254,11 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'company_name' => 'sometimes|required|string|max:255',
-            'supplier_name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:customer_suppliers,email,' . $supplier->id,
+            'supplier_name' => 'sometimes|nullable|string|max:255',
+            'email' => 'sometimes|nullable|email|unique:customer_suppliers,email,' . $supplier->id,
             'telephone' => 'nullable|string|max:20',
-            'postal_code' => 'sometimes|required|string|max:20',
-            'city' => 'sometimes|required|string|max:100',
+            'postal_code' => 'sometimes|nullable|string|max:20',
+            'city' => 'sometimes|nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
             'ice' => 'nullable|string|max:255',
         ]);
