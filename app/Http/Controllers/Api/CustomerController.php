@@ -2426,24 +2426,18 @@ class CustomerController extends Controller
         $SaleName = $request->type === 'Service' ? 'Service Income' : 'Sales Income';
         $Expensename = $request->type === 'Service' ? 'Cost of Sales- On Services' : 'Cost of Sales - Purchases';
 
-        $chartAccountSaleID = ChartOfAccountType::where('created_by', $company_id)
-            ->where('name', 'Income')
-            ->value('id');
-
-        $sale_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
-            ->where('type', $chartAccountSaleID)
-            ->where('name', $SaleName)
-            ->value('id');
+        $sale_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
+            ->where('chart_of_accounts.created_by', $company_id)
+            ->where('chart_of_accounts.name', $SaleName)
+            ->where('t.name', 'Income')
+            ->value('chart_of_accounts.id');
 
 
-        $chartAccountExpenseID = ChartOfAccountType::where('created_by', $company_id)
-            ->whereIn('name', ['Expenses', 'Costs of Goods Sold'])
-            ->value('id');
-
-        $expense_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
-            ->where('type', $chartAccountExpenseID)
-            ->where('name', $Expensename)
-            ->value('id');
+        $expense_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
+            ->where('chart_of_accounts.created_by', $company_id)
+            ->where('chart_of_accounts.name', $Expensename)
+            ->whereIn('t.name', ['Expenses', 'Costs of Goods Sold'])
+            ->value('chart_of_accounts.id');
 
         $randomNumber = Str::random(6);
 
@@ -2552,24 +2546,18 @@ class CustomerController extends Controller
         $SaleName = $request->type === 'Service' ? 'Service Income' : 'Sales Income';
         $Expensename = $request->type === 'Service' ? 'Cost of Sales- On Services' : 'Cost of Sales - Purchases';
 
-        $chartAccountSaleID = ChartOfAccountType::where('created_by', $company_id)
-            ->where('name', 'Income')
-            ->value('id');
-
-        $sale_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
-            ->where('type', $chartAccountSaleID)
-            ->where('name', $SaleName)
-            ->value('id');
+        $sale_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
+            ->where('chart_of_accounts.created_by', $company_id)
+            ->where('chart_of_accounts.name', $SaleName)
+            ->where('t.name', 'Income')
+            ->value('chart_of_accounts.id');
 
 
-        $chartAccountExpenseID = ChartOfAccountType::where('created_by', $company_id)
-            ->whereIn('name', ['Expenses', 'Costs of Goods Sold'])
-            ->value('id');
-
-        $expense_chartaccount_id = ChartOfAccount::where('created_by', $company_id)
-            ->where('type', $chartAccountExpenseID)
-            ->where('name', $Expensename)
-            ->value('id');
+        $expense_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
+            ->where('chart_of_accounts.created_by', $company_id)
+            ->where('chart_of_accounts.name', $Expensename)
+            ->whereIn('t.name', ['Expenses', 'Costs of Goods Sold'])
+            ->value('chart_of_accounts.id');
 
         // 3. Apply updates only for provided fields
         if ($request->has('designation'))   $product->name = $validated['designation'];
@@ -3380,7 +3368,7 @@ class CustomerController extends Controller
             $revenueData = collect($validated)->toArray();
             $revenueData['add_receipt'] = null;
 
-            if ($request->hasFile('add_receipt')){
+            if ($request->hasFile('add_receipt')) {
 
                 $image_size = $request->file('add_receipt')->getSize();
 
