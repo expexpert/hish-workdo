@@ -3378,6 +3378,7 @@ class CustomerController extends Controller
 
         try {
             $revenueData = collect($validated)->toArray();
+            $revenueData['add_receipt'] = null;
 
             if ($request->hasFile('add_receipt')){
 
