@@ -3377,7 +3377,6 @@ class CustomerController extends Controller
         ]);
 
         try {
-            $revenueData = collect($validated)->except('add_receipt')->toArray();
 
             if ($request->hasFile('add_receipt')){
 
