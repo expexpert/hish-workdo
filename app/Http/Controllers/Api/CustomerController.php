@@ -259,7 +259,7 @@ class CustomerController extends Controller
             $rev = Revenue::where('customer_id', $user->id)
                 ->whereBetween('date', $range)
                 ->selectRaw("SUM(amount) as total")
-                ->first();    
+                ->first();
 
             $exp = CustomerExpense::where('customer_id', $user->id)
                 ->whereBetween('date', $range)
@@ -1634,7 +1634,7 @@ class CustomerController extends Controller
             $file = fopen('php://output', 'w');
 
             // Add CSV Headers
-            fputcsv($file, ['Date', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
+            fputcsv($file, ['Date', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Discount', 'Total TTC', 'Total TVA']);
 
             foreach ($expenses as $expense) {
                 fputcsv($file, [
@@ -1643,6 +1643,7 @@ class CustomerController extends Controller
                     $expense->tva,
                     $expense->payment_method,
                     $expense->category->name ?? 'N/A',
+                    $expense->discount ?? 0,
                     $expense->total_ttc,
                     $expense->total_tva
                 ]);
@@ -2007,13 +2008,18 @@ class CustomerController extends Controller
 
         $totals = [
             'total_ht' => $invoice->articles->sum('total_price_ht'),
+            'discount' => $invoice->articles->sum('discount'),
+            'afterDiscount' => $invoice->articles->sum(function ($a) {
+                return $a->total_price_ht - ($a->discount ?? 0);
+            }),
             'total_tva' => $invoice->articles->sum(function ($a) {
                 $taxRate = $a->tax ? $a->tax->rate : 0;
-                return round($a->total_price_ht * ($taxRate / 100), 2);
+                $afterDiscount = $a->total_price_ht - ($a->discount ?? 0);
+                return round($afterDiscount * ($taxRate / 100), 2);
             }),
         ];
-        $totals['total_ttc'] = round($totals['total_ht'] + $totals['total_tva'], 2);
-        $totals['average_tva_percentage'] = $totals['total_ht'] > 0 ? round(($totals['total_tva'] / $totals['total_ht']) * 100, 2) : 0;
+        $totals['total_ttc'] = round($totals['afterDiscount'] + $totals['total_tva'], 2);
+        $totals['average_tva_percentage'] = $totals['afterDiscount'] > 0 ? round(($totals['total_tva'] / $totals['afterDiscount']) * 100, 2) : 0;
 
         $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
         $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
@@ -2283,7 +2289,7 @@ class CustomerController extends Controller
             $file = fopen('php://output', 'w');
 
             // Add Headers
-            fputcsv($file, ['Invoice#', 'Date', 'Client', 'Status', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
+            fputcsv($file, ['Invoice#', 'Date', 'Client', 'Status', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Discount', 'Total TTC', 'Total TVA']);
 
             foreach ($invoices as $invoice) {
                 $clientName = $invoice->client->client_name ?? 'N/A';
@@ -2299,6 +2305,7 @@ class CustomerController extends Controller
                         $taxRate,
                         $invoice->payment_method,
                         $article->designation ?? '',
+                        $article->discount ?? 0,
                         $article->total_price_ht,
                         $taxRate
                     ]);
@@ -3050,7 +3057,7 @@ class CustomerController extends Controller
             $file = fopen('php://output', 'w');
 
             // Add Headers
-            fputcsv($file, ['Quote#', 'Date', 'Client', 'Status', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Total TTC', 'Total TVA']);
+            fputcsv($file, ['Quote#', 'Date', 'Client', 'Status', 'Article', 'Amount TTC', 'TVA', 'Payment Method', 'Category', 'Discount', 'Total TTC', 'Total TVA']);
 
             foreach ($quotes as $quote) {
                 $clientName = $quote->client->client_name ?? 'N/A';
@@ -3066,6 +3073,7 @@ class CustomerController extends Controller
                         $taxRate,
                         $quote->payment_method,
                         $article->designation ?? '',
+                        $article->discount ?? 0,
                         $article->total_price_ht,
                         $taxRate
                     ]);
@@ -3103,13 +3111,18 @@ class CustomerController extends Controller
 
         $totals = [
             'total_ht' => $quote->articles->sum('total_price_ht'),
+            'discount' => $quote->articles->sum('discount'),
+            'afterDiscount' => $quote->articles->sum(function ($a) {
+                return $a->total_price_ht - ($a->discount ?? 0);
+            }),
             'total_tva' => $quote->articles->sum(function ($a) {
                 $taxRate = $a->tax ? $a->tax->rate : 0;
-                return round($a->total_price_ht * ($taxRate / 100), 2);
+                $afterDiscount = $a->total_price_ht - ($a->discount ?? 0);
+                return round($afterDiscount * ($taxRate / 100), 2);
             }),
         ];
-        $totals['total_ttc'] = round($totals['total_ht'] + $totals['total_tva'], 2);
-        $totals['average_tva_percentage'] = $totals['total_ht'] > 0 ? round(($totals['total_tva'] / $totals['total_ht']) * 100, 2) : 0;
+        $totals['total_ttc'] = round($totals['afterDiscount'] + $totals['total_tva'], 2);
+        $totals['average_tva_percentage'] = $totals['afterDiscount'] > 0 ? round(($totals['total_tva'] / $totals['afterDiscount']) * 100, 2) : 0;
 
         $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
         $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
@@ -3366,7 +3379,7 @@ class CustomerController extends Controller
         try {
             $revenueData = collect($validated)->except('add_receipt')->toArray();
 
-            if (!empty($request->add_receipt)) {
+            if ($request->hasFile('add_receipt')){
 
                 $image_size = $request->file('add_receipt')->getSize();
 
