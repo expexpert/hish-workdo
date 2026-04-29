@@ -3409,7 +3409,7 @@ class CustomerController extends Controller
             $revenue->category   = $category->name;
             $revenue->user_id    = $revenue->customer_id;
             $revenue->user_type  = 'Customer';
-            $revenue->account    = $request->account_id;
+            $revenue->account    = $bankAccountID->id;
             Transaction::addTransaction($revenue);
 
 
