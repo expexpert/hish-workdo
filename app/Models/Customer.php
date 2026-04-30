@@ -21,6 +21,9 @@ class Customer extends Authenticatable
     protected $appends = ['avatar_url', 'signature_url'];
     protected $casts = [
         'password_changed_at' => 'datetime',
+        'is_b2c' => 'boolean',
+        'app_access_enabled' => 'boolean',
+        'storage_used_mb' => 'integer',
     ];
 
     protected $fillable = [
@@ -43,6 +46,11 @@ class Customer extends Authenticatable
         'website',
         'notes',
         'customer_type',
+        'is_b2c',
+        'mobile_user_plan_id',
+        'storage_used_mb',
+        'app_access_enabled',
+        'subscription_status',
         'password',
         'password_changed_at',
         'contact',
@@ -109,6 +117,45 @@ class Customer extends Authenticatable
     public function companyId()
     {
         return $this->accountant?->creatorId() ?? $this->created_by;
+    }
+
+    public function mobilePlan()
+    {
+        return $this->belongsTo(MobileUserPlan::class, 'mobile_user_plan_id');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(MobileUserSubscription::class);
+    }
+
+    public function activeSubscription()
+    {
+        return $this->hasOne(MobileUserSubscription::class)
+            ->where('status', 'active')
+            ->latest();
+    }
+
+
+    // Helpers
+
+    public function isB2C()
+    {
+        return $this->is_b2c;
+    }
+
+    public function hasActiveSubscription()
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    public function hasStorageAvailable($sizeMb)
+    {
+        if (!$this->mobilePlan) {
+            return true;
+        }
+
+        return ($this->storage_used_mb + $sizeMb) <= $this->mobilePlan->storage_limit_mb;
     }
 
     public function currentLanguage()
