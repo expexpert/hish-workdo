@@ -77,7 +77,7 @@ class CustomerController extends Controller
             'cnss'             => 'sometimes|required|string|max:255',
             'rib'              => 'sometimes|required|string|max:255',
             'company_type'     => 'sometimes|required|string|max:255',
-            'company_color'   => 'sometimes|required|string|max:7',
+            'company_color'   => 'sometimes|required|string|max:255',
             'contact'          => 'sometimes|required|string|max:20',
             'address'          => 'sometimes|required|string|max:255',
             'billing_name'     => 'sometimes|required|string|max:255',
