@@ -197,7 +197,7 @@ class UserController extends Controller
                     );
                 }
 
-                $incomeID = $accounts->get('4010') ?? null;
+                $incomeID = $accounts->get('7111') ?? null;
 
                 ProductServiceCategory::create([
                     'name' => 'Default Category',
