@@ -2423,19 +2423,19 @@ class CustomerController extends Controller
 
         $company_id = auth()->user()->companyId();
 
-        $SaleName = $request->type === 'Service' ? 'Service Income' : 'Sales Income';
-        $Expensename = $request->type === 'Service' ? 'Cost of Sales- On Services' : 'Cost of Sales - Purchases';
+        $SaleCode = $request->type === 'Service' ? '4020' : '4010';
+        $ExpenseCode = $request->type === 'Service' ? '5005' : '5010';
 
         $sale_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
             ->where('chart_of_accounts.created_by', $company_id)
-            ->where('chart_of_accounts.name', $SaleName)
+            ->where('chart_of_accounts.code', $SaleCode)
             ->where('t.name', 'Income')
             ->value('chart_of_accounts.id');
 
 
         $expense_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
             ->where('chart_of_accounts.created_by', $company_id)
-            ->where('chart_of_accounts.name', $Expensename)
+            ->where('chart_of_accounts.code', $ExpenseCode)
             ->whereIn('t.name', ['Expenses', 'Costs of Goods Sold'])
             ->value('chart_of_accounts.id');
 
