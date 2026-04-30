@@ -2479,45 +2479,44 @@ class Utility extends Model
         ['code' => '5161', 'name' => 'Caisse', 'type' => 1, 'sub_type' => 1],
         ['code' => '3421', 'name' => 'Clients', 'type' => 1, 'sub_type' => 1],
         ['code' => '3111', 'name' => 'Marchandises', 'type' => 1, 'sub_type' => 2],
-        ['code' => '2350', 'name' => 'Matériel et outillage', 'type' => 1, 'sub_type' => 3],
+        ['code' => '2350', 'name' => 'Matériel', 'type' => 1, 'sub_type' => 3],
 
         ['code' => '4411', 'name' => 'Fournisseurs', 'type' => 2, 'sub_type' => 4],
-
-        ['code' => '3455', 'name' => 'TVA récupérable', 'type' => 1, 'sub_type' => 1],
         ['code' => '4455', 'name' => 'TVA facturée', 'type' => 2, 'sub_type' => 4],
+        ['code' => '3455', 'name' => 'TVA récupérable', 'type' => 1, 'sub_type' => 1],
 
-        ['code' => '1111', 'name' => 'Capital social', 'type' => 3, 'sub_type' => 8],
-        ['code' => '1191', 'name' => 'Résultat net', 'type' => 3, 'sub_type' => 7],
+        ['code' => '1111', 'name' => 'Capital', 'type' => 3, 'sub_type' => 8],
+        ['code' => '1191', 'name' => 'Résultat', 'type' => 3, 'sub_type' => 7],
 
-        // 🔥 REVENUS
-        ['code' => '7111', 'name' => 'Ventes de marchandises', 'type' => 4, 'sub_type' => 9],
-        ['code' => '71243', 'name' => 'Prestations de services', 'type' => 4, 'sub_type' => 9],
-        ['code' => '7188', 'name' => 'Autres produits', 'type' => 4, 'sub_type' => 10],
+        // Income
+        ['code' => '7111', 'name' => 'Ventes marchandises', 'type' => 4, 'sub_type' => 9],
+        ['code' => '71243', 'name' => 'Prestations services', 'type' => 4, 'sub_type' => 9],
+        ['code' => '7188', 'name' => 'Autres revenus', 'type' => 4, 'sub_type' => 10],
 
-        // 🔥 COGS
-        ['code' => '6111', 'name' => 'Achats marchandises', 'type' => 5, 'sub_type' => 11],
-        ['code' => '61263', 'name' => 'Achats prestations', 'type' => 5, 'sub_type' => 11],
+        // COGS
+        ['code' => '6111', 'name' => 'Coût marchandises', 'type' => 5, 'sub_type' => 11],
+        ['code' => '61263', 'name' => 'Coût services', 'type' => 5, 'sub_type' => 11],
 
-        // 🔥 CHARGES
+        // Expenses
         ['code' => '61711', 'name' => 'Salaires', 'type' => 6, 'sub_type' => 12],
         ['code' => '61678', 'name' => 'Impôts et taxes', 'type' => 6, 'sub_type' => 13],
         ['code' => '61365', 'name' => 'Honoraires', 'type' => 6, 'sub_type' => 13],
-        ['code' => '61441', 'name' => 'Publicité', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61441', 'name' => 'Marketing et publicité', 'type' => 6, 'sub_type' => 13],
         ['code' => '61341', 'name' => 'Assurances', 'type' => 6, 'sub_type' => 13],
         ['code' => '61473', 'name' => 'Frais bancaires', 'type' => 6, 'sub_type' => 13],
         ['code' => '61254', 'name' => 'Fournitures de bureau', 'type' => 6, 'sub_type' => 13],
         ['code' => '61378', 'name' => 'Logiciels et abonnements', 'type' => 6, 'sub_type' => 13],
         ['code' => '61251', 'name' => 'Eau et électricité', 'type' => 6, 'sub_type' => 13],
         ['code' => '61312', 'name' => 'Loyer', 'type' => 6, 'sub_type' => 13],
-        ['code' => '61335', 'name' => 'Maintenance', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61335', 'name' => 'Maintenance et réparation', 'type' => 6, 'sub_type' => 13],
         ['code' => '61223', 'name' => 'Carburant', 'type' => 6, 'sub_type' => 13],
         ['code' => '61455', 'name' => 'Internet et téléphone', 'type' => 6, 'sub_type' => 13],
-        ['code' => '61431', 'name' => 'Transport', 'type' => 6, 'sub_type' => 13],
-        ['code' => '61436', 'name' => 'Restauration', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61431', 'name' => 'Transport et déplacement', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61436', 'name' => 'Restauration et réception', 'type' => 6, 'sub_type' => 13],
         ['code' => '6148', 'name' => 'Charges diverses', 'type' => 6, 'sub_type' => 13],
         ['code' => '61315', 'name' => 'Frais informatiques', 'type' => 6, 'sub_type' => 13],
 
-        ['code' => '9990', 'name' => 'Résultat / pertes et profits', 'type' => 6, 'sub_type' => 13],
+        ['code' => '9990', 'name' => 'Résultat', 'type' => 6, 'sub_type' => 13],
     ];
 
 
@@ -2543,13 +2542,28 @@ class Utility extends Model
         ['code' => '61263', 'name' => 'Coût services', 'type' => 'Costs of Goods Sold', 'sub_type' => 'Costs of Goods Sold'],
 
         ['code' => '61711', 'name' => 'Salaires', 'type' => 'Expenses', 'sub_type' => 'Payroll Expenses'],
+
         ['code' => '61365', 'name' => 'Honoraires', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
         ['code' => '61473', 'name' => 'Frais bancaires', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61341', 'name' => 'Assurances', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
         ['code' => '61312', 'name' => 'Loyer', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
         ['code' => '6148', 'name' => 'Charges diverses', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
 
+        ['code' => '61431', 'name' => 'Transport et déplacement', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61315', 'name' => 'Cloud services / matériel informatique', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61455', 'name' => 'Internet et téléphone', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61378', 'name' => 'Logiciels et abonnements', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61251', 'name' => 'Eau et électricité', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61254', 'name' => 'Fournitures de bureau', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61441', 'name' => 'Marketing et publicité', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61335', 'name' => 'Maintenance et réparation', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61436', 'name' => 'Restauration et réception', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61678', 'name' => 'Impôts et taxes', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61223', 'name' => 'Carburant', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+
         ['code' => '9990', 'name' => 'Résultat', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
     ];
+
 
 
     // chart of account for new company
