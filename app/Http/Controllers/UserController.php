@@ -154,22 +154,22 @@ class UserController extends Controller
                     ->pluck('id', 'code');
 
                 $products = [
-                    ['name' => 'Autres dépenses', 'expense' => '5790', 'income' => '4020'],
-                    ['name' => 'Banque / Assurance', 'expense' => '5690', 'income' => '4020'],
-                    ['name' => 'Transport', 'expense' => '5785', 'income' => '4020'],
-                    ['name' => 'Cloud Services', 'expense' => '5791', 'income' => '4020'],
-                    ['name' => 'Internet', 'expense' => '5780', 'income' => '4020'],
-                    ['name' => 'Logiciels / Abonnements', 'expense' => '5715', 'income' => '4020'],
-                    ['name' => 'Comptable / Juridiques', 'expense' => '5610', 'income' => '4020'],
-                    ['name' => 'Eau / Électricité', 'expense' => '5755', 'income' => '4020'],
-                    ['name' => 'Loyer', 'expense' => '5760', 'income' => '4020'],
-                    ['name' => 'Fournitures', 'expense' => '5700', 'income' => '4020'],
-                    ['name' => 'Office Supplies', 'expense' => '5700', 'income' => '4020'],
-                    ['name' => 'Marketing / Publicités', 'expense' => '5615', 'income' => '4020'],
-                    ['name' => 'Maintenance / Réparation', 'expense' => '5765', 'income' => '4020'],
-                    ['name' => 'Restaurant', 'expense' => '5786', 'income' => '4020'],
-                    ['name' => 'Impôts / Taxes', 'expense' => '5550', 'income' => '4020'],
-                    ['name' => 'Salaires', 'expense' => '5410', 'income' => '4020'],
+                    ['name' => 'Autres dépenses', 'expense' => '6148', 'income' => '71243'],
+                    ['name' => 'Banque / Assurance', 'expense' => '61473', 'income' => '71243'],
+                    ['name' => 'Transport', 'expense' => '61431', 'income' => '71243'],
+                    ['name' => 'Cloud Services', 'expense' => '61315', 'income' => '71243'],
+                    ['name' => 'Internet', 'expense' => '61455', 'income' => '71243'],
+                    ['name' => 'Logiciels / Abonnements', 'expense' => '61378', 'income' => '71243'],
+                    ['name' => 'Comptable / Juridiques', 'expense' => '61365', 'income' => '71243'],
+                    ['name' => 'Eau / Électricité', 'expense' => '61251', 'income' => '71243'],
+                    ['name' => 'Loyer', 'expense' => '61312', 'income' => '71243'],
+                    ['name' => 'Fournitures', 'expense' => '61254', 'income' => '71243'],
+                    ['name' => 'Office Supplies', 'expense' => '61254', 'income' => '71243'],
+                    ['name' => 'Marketing / Publicités', 'expense' => '61441', 'income' => '71243'],
+                    ['name' => 'Maintenance / Réparation', 'expense' => '61335', 'income' => '71243'],
+                    ['name' => 'Restaurant', 'expense' => '61436', 'income' => '71243'],
+                    ['name' => 'Impôts / Taxes', 'expense' => '61678', 'income' => '71243'],
+                    ['name' => 'Salaires', 'expense' => '61711', 'income' => '71243'],
                 ];
 
                 foreach ($products as $item) {

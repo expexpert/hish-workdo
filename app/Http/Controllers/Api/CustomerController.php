@@ -2423,8 +2423,8 @@ class CustomerController extends Controller
 
         $company_id = auth()->user()->companyId();
 
-        $SaleCode = $request->type === 'Service' ? '4020' : '4010';
-        $ExpenseCode = $request->type === 'Service' ? '5005' : '5010';
+        $SaleCode = $request->type === 'Service' ? '71243' : '7111';
+        $ExpenseCode = $request->type === 'Service' ? '61263' : '6111';
 
         $sale_chartaccount_id = ChartOfAccount::join('chart_of_account_types as t', 't.id', '=', 'chart_of_accounts.type')
             ->where('chart_of_accounts.created_by', $company_id)

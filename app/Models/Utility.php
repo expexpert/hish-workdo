@@ -2475,342 +2475,81 @@ class Utility extends Model
     }
 
     public static $chartOfAccount = [
-        [
-            'code' => '5141',
-            'name' => 'Banque',
-            'type' => 1,
-            'sub_type' => 1,
-        ],
-        [
-            'code' => '5161',
-            'name' => 'Caisse',
-            'type' => 1,
-            'sub_type' => 1,
-        ],
-        [
-            'code' => '3411',
-            'name' => 'Clients',
-            'type' => 1,
-            'sub_type' => 1,
-        ],
-        [
-            'code' => '3111',
-            'name' => 'Marchandises',
-            'type' => 1,
-            'sub_type' => 2,
-        ],
-        [
-            'code' => '2350',
-            'name' => 'Matériel et outillage',
-            'type' => 1,
-            'sub_type' => 3,
-        ],
-        [
-            'code' => '4411',
-            'name' => 'Fournisseurs',
-            'type' => 2,
-            'sub_type' => 4,
-        ],
-        [
-            'code' => '3455',
-            'name' => 'État - TVA récupérable',
-            'type' => 1,
-            'sub_type' => 1,
-        ],
-        [
-            'code' => '4455',
-            'name' => 'État - TVA facturée',
-            'type' => 2,
-            'sub_type' => 4,
-        ],
-        [
-            'code' => '1111',
-            'name' => 'Capital social',
-            'type' => 3,
-            'sub_type' => 8,
-        ],
-        [
-            'code' => '1191',
-            'name' => 'Résultat net de l’exercice',
-            'type' => 3,
-            'sub_type' => 7,
-        ],
-        [
-            'code' => '4010',
-            'name' => 'Ventes de marchandises',
-            'type' => 4,
-            'sub_type' => 9,
-        ],
-        [
-            'code' => '4020',
-            'name' => 'Prestations de services',
-            'type' => 4,
-            'sub_type' => 9,
-        ],
-        [
-            'code' => '7110',
-            'name' => 'Autres produits',
-            'type' => 4,
-            'sub_type' => 10,
-        ],
-        [
-            'code' => '5010',
-            'name' => 'Coût d’achat des marchandises vendues',
-            'type' => 5,
-            'sub_type' => 11,
-        ],
-        [
-            'code' => '5005',
-            'name' => 'Coût des services vendus',
-            'type' => 5,
-            'sub_type' => 11,
-        ],
-        [
-            'code' => '5410',
-            'name' => 'Salaires',
-            'type' => 6,
-            'sub_type' => 12,
-        ],
-        [
-            'code' => '5550',
-            'name' => 'Impôts et taxes',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5610',
-            'name' => 'Honoraires comptables et juridiques',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5615',
-            'name' => 'Publicité et marketing',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5685',
-            'name' => 'Assurances',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5690',
-            'name' => 'Frais bancaires',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5700',
-            'name' => 'Fournitures de bureau',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5715',
-            'name' => 'Logiciels et abonnements',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5755',
-            'name' => 'Eau et électricité',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5760',
-            'name' => 'Loyer',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5765',
-            'name' => 'Maintenance et réparation',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5771',
-            'name' => 'Carburant',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5780',
-            'name' => 'Télécom et internet',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5785',
-            'name' => 'Transport et déplacement',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5786',
-            'name' => 'Restauration et réception',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5790',
-            'name' => 'Charges diverses',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '5791',
-            'name' => 'Frais informatiques',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
-        [
-            'code' => '9990',
-            'name' => 'Résultat / pertes et profits',
-            'type' => 6,
-            'sub_type' => 13,
-        ],
+        ['code' => '5141', 'name' => 'Banque', 'type' => 1, 'sub_type' => 1],
+        ['code' => '5161', 'name' => 'Caisse', 'type' => 1, 'sub_type' => 1],
+        ['code' => '3421', 'name' => 'Clients', 'type' => 1, 'sub_type' => 1],
+        ['code' => '3111', 'name' => 'Marchandises', 'type' => 1, 'sub_type' => 2],
+        ['code' => '2350', 'name' => 'Matériel et outillage', 'type' => 1, 'sub_type' => 3],
+
+        ['code' => '4411', 'name' => 'Fournisseurs', 'type' => 2, 'sub_type' => 4],
+
+        ['code' => '3455', 'name' => 'TVA récupérable', 'type' => 1, 'sub_type' => 1],
+        ['code' => '4455', 'name' => 'TVA facturée', 'type' => 2, 'sub_type' => 4],
+
+        ['code' => '1111', 'name' => 'Capital social', 'type' => 3, 'sub_type' => 8],
+        ['code' => '1191', 'name' => 'Résultat net', 'type' => 3, 'sub_type' => 7],
+
+        // 🔥 REVENUS
+        ['code' => '7111', 'name' => 'Ventes de marchandises', 'type' => 4, 'sub_type' => 9],
+        ['code' => '71243', 'name' => 'Prestations de services', 'type' => 4, 'sub_type' => 9],
+        ['code' => '7188', 'name' => 'Autres produits', 'type' => 4, 'sub_type' => 10],
+
+        // 🔥 COGS
+        ['code' => '6111', 'name' => 'Achats marchandises', 'type' => 5, 'sub_type' => 11],
+        ['code' => '61263', 'name' => 'Achats prestations', 'type' => 5, 'sub_type' => 11],
+
+        // 🔥 CHARGES
+        ['code' => '61711', 'name' => 'Salaires', 'type' => 6, 'sub_type' => 12],
+        ['code' => '61678', 'name' => 'Impôts et taxes', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61365', 'name' => 'Honoraires', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61441', 'name' => 'Publicité', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61341', 'name' => 'Assurances', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61473', 'name' => 'Frais bancaires', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61254', 'name' => 'Fournitures de bureau', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61378', 'name' => 'Logiciels et abonnements', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61251', 'name' => 'Eau et électricité', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61312', 'name' => 'Loyer', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61335', 'name' => 'Maintenance', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61223', 'name' => 'Carburant', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61455', 'name' => 'Internet et téléphone', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61431', 'name' => 'Transport', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61436', 'name' => 'Restauration', 'type' => 6, 'sub_type' => 13],
+        ['code' => '6148', 'name' => 'Charges diverses', 'type' => 6, 'sub_type' => 13],
+        ['code' => '61315', 'name' => 'Frais informatiques', 'type' => 6, 'sub_type' => 13],
+
+        ['code' => '9990', 'name' => 'Résultat / pertes et profits', 'type' => 6, 'sub_type' => 13],
     ];
 
-    public static $chartOfAccount1 = array(
 
-        [
-            'code' => '5141',
-            'name' => 'Banque',
-            'type' => 'Assets',
-            'sub_type' => 'Current Asset',
-        ],
-        [
-            'code' => '5161',
-            'name' => 'Caisse',
-            'type' => 'Assets',
-            'sub_type' => 'Current Asset',
-        ],
-        [
-            'code' => '3411',
-            'name' => 'Clients',
-            'type' => 'Assets',
-            'sub_type' => 'Current Asset',
-        ],
-        [
-            'code' => '3111',
-            'name' => 'Marchandises',
-            'type' => 'Assets',
-            'sub_type' => 'Inventory Asset',
-        ],
-        [
-            'code' => '2350',
-            'name' => 'Matériel et outillage',
-            'type' => 'Assets',
-            'sub_type' => 'Non-current Asset',
-        ],
+    public static $chartOfAccount1 = [
+        ['code' => '5141', 'name' => 'Banque', 'type' => 'Assets', 'sub_type' => 'Current Asset'],
+        ['code' => '5161', 'name' => 'Caisse', 'type' => 'Assets', 'sub_type' => 'Current Asset'],
+        ['code' => '3421', 'name' => 'Clients', 'type' => 'Assets', 'sub_type' => 'Current Asset'],
+        ['code' => '3111', 'name' => 'Marchandises', 'type' => 'Assets', 'sub_type' => 'Inventory Asset'],
+        ['code' => '2350', 'name' => 'Matériel', 'type' => 'Assets', 'sub_type' => 'Non-current Asset'],
 
-        [
-            'code' => '4411',
-            'name' => 'Fournisseurs',
-            'type' => 'Liabilities',
-            'sub_type' => 'Current Liabilities',
-        ],
+        ['code' => '4411', 'name' => 'Fournisseurs', 'type' => 'Liabilities', 'sub_type' => 'Current Liabilities'],
+        ['code' => '4455', 'name' => 'TVA facturée', 'type' => 'Liabilities', 'sub_type' => 'Current Liabilities'],
+        ['code' => '3455', 'name' => 'TVA récupérable', 'type' => 'Assets', 'sub_type' => 'Current Asset'],
 
-        [
-            'code' => '4455',
-            'name' => 'État - TVA facturée',
-            'type' => 'Liabilities',
-            'sub_type' => 'Current Liabilities',
-        ],
-        [
-            'code' => '3455',
-            'name' => 'État - TVA récupérable',
-            'type' => 'Assets',
-            'sub_type' => 'Current Asset',
-        ],
+        ['code' => '1111', 'name' => 'Capital', 'type' => 'Equity', 'sub_type' => 'Owners Equity'],
+        ['code' => '1191', 'name' => 'Résultat', 'type' => 'Equity', 'sub_type' => 'Owners Equity'],
 
-        [
-            'code' => '1111',
-            'name' => 'Capital social',
-            'type' => 'Equity',
-            'sub_type' => 'Owners Equity',
-        ],
-        [
-            'code' => '1191',
-            'name' => 'Résultat net de l’exercice',
-            'type' => 'Equity',
-            'sub_type' => 'Owners Equity',
-        ],
+        ['code' => '7111', 'name' => 'Ventes marchandises', 'type' => 'Income', 'sub_type' => 'Sales Revenue'],
+        ['code' => '71243', 'name' => 'Prestations services', 'type' => 'Income', 'sub_type' => 'Sales Revenue'],
+        ['code' => '7188', 'name' => 'Autres revenus', 'type' => 'Income', 'sub_type' => 'Other Revenue'],
 
-        [
-            'code' => '4010',
-            'name' => 'Ventes de marchandises',
-            'type' => 'Income',
-            'sub_type' => 'Sales Revenue',
-        ],
-        [
-            'code' => '4020',
-            'name' => 'Prestations de services',
-            'type' => 'Income',
-            'sub_type' => 'Sales Revenue',
-        ],
-        [
-            'code' => '7110',
-            'name' => 'Autres produits',
-            'type' => 'Income',
-            'sub_type' => 'Other Revenue',
-        ],
+        ['code' => '6111', 'name' => 'Coût marchandises', 'type' => 'Costs of Goods Sold', 'sub_type' => 'Costs of Goods Sold'],
+        ['code' => '61263', 'name' => 'Coût services', 'type' => 'Costs of Goods Sold', 'sub_type' => 'Costs of Goods Sold'],
 
-        [
-            'code' => '5010',
-            'name' => 'Coût d’achat des marchandises vendues',
-            'type' => 'Costs of Goods Sold',
-            'sub_type' => 'Costs of Goods Sold',
-        ],
-        [
-            'code' => '5005',
-            'name' => 'Coût des services vendus',
-            'type' => 'Costs of Goods Sold',
-            'sub_type' => 'Costs of Goods Sold',
-        ],
+        ['code' => '61711', 'name' => 'Salaires', 'type' => 'Expenses', 'sub_type' => 'Payroll Expenses'],
+        ['code' => '61365', 'name' => 'Honoraires', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61473', 'name' => 'Frais bancaires', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '61312', 'name' => 'Loyer', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+        ['code' => '6148', 'name' => 'Charges diverses', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
 
-        [
-            'code' => '5410',
-            'name' => 'Salaires',
-            'type' => 'Expenses',
-            'sub_type' => 'Payroll Expenses',
-        ],
-        [
-            'code' => '5550',
-            'name' => 'Impôts et taxes',
-            'type' => 'Expenses',
-            'sub_type' => 'General and Administrative expenses',
-        ],
-        [
-            'code' => '5610',
-            'name' => 'Honoraires comptables et juridiques',
-            'type' => 'Expenses',
-            'sub_type' => 'General and Administrative expenses',
-        ],
-        [
-            'code' => '5690',
-            'name' => 'Frais bancaires',
-            'type' => 'Expenses',
-            'sub_type' => 'General and Administrative expenses',
-        ],
-        [
-            'code' => '5760',
-            'name' => 'Loyer',
-            'type' => 'Expenses',
-            'sub_type' => 'General and Administrative expenses',
-        ],
-
-        [
-            'code' => '9990',
-            'name' => 'Résultat / pertes et profits',
-            'type' => 'Expenses',
-            'sub_type' => 'General and Administrative expenses',
-        ],
-    );
+        ['code' => '9990', 'name' => 'Résultat', 'type' => 'Expenses', 'sub_type' => 'General and Administrative expenses'],
+    ];
 
 
     // chart of account for new company
