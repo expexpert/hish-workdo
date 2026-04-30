@@ -122,6 +122,7 @@ class AuthController extends Controller
 
 
         $randomStr = Str::random(10);
+        $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
 
         $accounts = [
             ['code' => '5141', 'bank_name' => 'Banque principale'],
@@ -130,7 +131,7 @@ class AuthController extends Controller
 
         foreach ($accounts as $acc) {
 
-            $chartOfAccount = ChartOfAccount::where('created_by', $createdBy)
+            $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
                 ->where('code', $acc['code'])
                 ->latest()
                 ->first();
@@ -147,7 +148,7 @@ class AuthController extends Controller
                 'account_number'   => $randomStr,
                 'opening_balance'  => 0,
                 'contact_number'   => $customer->contact,
-                'created_by'       => $createdBy,
+                'created_by'       => $companyID,
             ]);
         }
 
