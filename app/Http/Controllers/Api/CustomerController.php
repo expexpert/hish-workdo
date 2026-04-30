@@ -3701,7 +3701,7 @@ class CustomerController extends Controller
             'to'         => 'required|email',
             'subject'    => 'required|string',
             'message'    => 'required|string',
-            'attachment' => 'nullable|file|max:2050,
+            'attachment' => 'nullable|file|max:10240',
         ]);
 
         // 1. Authenticate SMTP
