@@ -821,7 +821,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:1024',
+            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:2050',
             'month_year' => 'required|string',
         ]);
 
@@ -1326,7 +1326,7 @@ class CustomerController extends Controller
             $validated = $request->validate([
                 'customer_id'    => 'required|exists:customers,id',
                 'supplier_id'    => 'required|exists:customer_suppliers,id',
-                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
                 'date'           => 'required|date',
                 'ttc'            => 'required|numeric|min:0',
                 'tva'            => 'nullable|numeric|min:0',
@@ -1714,7 +1714,7 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
 
             'articles'                    => 'sometimes|array',
             'articles.*.designation'     => 'required_with:articles|string|max:255',
@@ -2154,7 +2154,7 @@ class CustomerController extends Controller
             'payment_method' => 'sometimes|required|string|max:255',
             'status'         => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
             'remove_document' => 'nullable|boolean',
 
             // Articles validation (optional during update)
@@ -2729,7 +2729,7 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
             'notes'       => 'nullable|string',
-            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
 
             'articles'                    => 'sometimes|array',
             'articles.*.designation'     => 'required_with:articles|string|max:255',
@@ -2903,7 +2903,7 @@ class CustomerController extends Controller
             'status'         => 'sometimes|required|string|max:50',
             'review_status'  => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
             'remove_document' => 'nullable|boolean',
 
             // Articles validation
@@ -3361,7 +3361,7 @@ class CustomerController extends Controller
             'reference'      => 'nullable|string|max:255',
             'description'    => 'nullable|string',
             'payment_method' => 'nullable|string',
-            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
         ]);
 
         try {
@@ -3563,7 +3563,7 @@ class CustomerController extends Controller
             'reference'      => 'nullable|string|max:255',
             'description'    => 'nullable|string',
             'payment_method' => 'nullable|string',
-            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:1024',
+            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
             'remove_document' => 'nullable|boolean',
         ]);
 
@@ -3701,7 +3701,7 @@ class CustomerController extends Controller
             'to'         => 'required|email',
             'subject'    => 'required|string',
             'message'    => 'required|string',
-            'attachment' => 'nullable|file|max:10240',
+            'attachment' => 'nullable|file|max:2050,
         ]);
 
         // 1. Authenticate SMTP
