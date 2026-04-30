@@ -49,7 +49,7 @@ class AuthController extends Controller
                     return $query->where('created_by', $createdBy);
                 }),
             ],
-            'contact' => 'required|regex:/^\+\d{1,3}\d{9,13}$/',
+            'contact' => 'required|string|max:20',
             'password' => 'required|string|min:8',
 
             // Company & billing
