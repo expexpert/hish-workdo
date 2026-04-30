@@ -13,7 +13,11 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\Utility;
 use App\Models\ClientNotification;
+use App\Models\User;
+use App\Models\ChartOfAccount;
+use App\Models\BankAccount;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 
 
 
@@ -21,6 +25,160 @@ use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
+
+    public function register(Request $request)
+    {
+        $firstAccountant = User::where('type', 'accountant')
+            ->orderBy('id', 'asc')
+            ->first();
+
+        $createdBy = $firstAccountant?->id ?? 1;
+
+
+        $latest = Customer::where('created_by', '=', $createdBy)->latest()->first();
+        $latestCustomerId = $latest->id + 1 ?? 1;
+
+        // Validation
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('customers')->where(function ($query) use ($createdBy) {
+                    return $query->where('created_by', $createdBy);
+                }),
+            ],
+            'contact' => 'required|regex:/^\+\d{1,3}\d{9,13}$/',
+            'password' => 'required|string|min:8',
+
+            // Company & billing
+            'company_type' => 'required|string|max:255',
+            'billing_name' => 'required|string|max:255',
+            'billing_city' => 'required|string|max:255',
+            'billing_address' => 'nullable|string|max:255',
+            'billing_zip' => 'nullable|string|max:20',
+            'website' => 'nullable|string|max:255',
+
+            // Legal fields
+            'ice_number' => 'nullable|string|max:255',
+            'patent_number' => 'nullable|string|max:255',
+            'rc_number' => 'nullable|string|max:255',
+            'cnss' => 'nullable|string|max:255',
+            'if_number' => 'nullable|string|max:255',
+            'rib' => 'nullable|string|max:255',
+            'vat_number' => 'nullable|string|max:255',
+
+            // Files
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            'signature' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        // Handle file uploads
+        if ($request->hasFile('avatar')) {
+            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        if ($request->hasFile('signature')) {
+            $validated['signature'] = $request->file('signature')->store('signatures', 'public');
+        }
+
+        // Create customer
+        $customer = Customer::create([
+            'name' => $validated['first_name'] . ' ' . ($validated['last_name'] ?? ''),
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'contact' => $validated['contact'],
+
+            'created_by' => $createdBy,
+            'customer_id' => $latestCustomerId,
+
+            // Company & billing
+            'company_type' => $validated['company_type'],
+            'billing_name' => $validated['billing_name'],
+            'billing_city' => $validated['billing_city'],
+            'billing_address' => $validated['billing_address'] ?? null,
+            'billing_zip' => $validated['billing_zip'] ?? null,
+            'website' => $validated['website'] ?? null,
+
+            // Legal
+            'ice_number' => $validated['ice_number'] ?? null,
+            'patent_number' => $validated['patent_number'] ?? null,
+            'rc_number' => $validated['rc_number'] ?? null,
+            'cnss' => $validated['cnss'] ?? null,
+            'if_number' => $validated['if_number'] ?? null,
+            'rib' => $validated['rib'] ?? null,
+            'vat_number' => $validated['vat_number'] ?? null,
+
+            // Files
+            'avatar' => $validated['avatar'] ?? null,
+            'signature' => $validated['signature'] ?? null,
+        ]);
+
+        // Generate token
+        $token = $customer->createToken('mobile-login')->plainTextToken;
+
+
+
+
+        $randomStr = Str::random(10);
+
+        $accounts = [
+            ['code' => '5141', 'bank_name' => 'Banque principale'],
+            ['code' => '5161', 'bank_name' => 'Caisse'],
+        ];
+
+        foreach ($accounts as $acc) {
+
+            $chartOfAccount = ChartOfAccount::where('created_by', $createdBy)
+                ->where('code', $acc['code'])
+                ->latest()
+                ->first();
+
+            if (!$chartOfAccount) {
+                continue;
+            }
+
+            BankAccount::create([
+                'chart_account_id' => $chartOfAccount->id,
+                'customer_id'      => $customer->id,
+                'holder_name'      => $customer->name,
+                'bank_name'        => $acc['bank_name'],
+                'account_number'   => $randomStr,
+                'opening_balance'  => 0,
+                'contact_number'   => $customer->contact,
+                'created_by'       => $createdBy,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'customer' => $customer
+        ], 201);
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $firstAccountant = User::where('type', 'accountant')
+            ->oldest('id')
+            ->first();
+        $request->validate([
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('customers')->where(function ($query) use ($request, $firstAccountant) {
+                    return $query->where('created_by', $firstAccountant ? $firstAccountant->id : '1');
+                }),
+            ],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email is available'
+        ]);
+    }
+
 
     public function login(Request $request)
     {
