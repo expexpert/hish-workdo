@@ -4,17 +4,21 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('referral_codes', function (Blueprint $table) {
             $table->id();
 
-            $table->string('code', 50)->unique();
+            $table->string('code')->unique();
             $table->enum('type', ['influencer', 'partner', 'user'])->default('influencer');
 
-            $table->string('owner_name', 150)->nullable();
-            $table->foreignId('owner_customer_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('owner_name')->nullable();
+            $table->unsignedBigInteger('owner_customer_id')->nullable();
             $table->string('owner_email')->nullable();
 
             $table->integer('discount_percentage')->default(0);
@@ -33,13 +37,15 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            $table->index('code');
-            $table->index('type');
-            $table->index('owner_customer_id');
-            $table->index('is_active');
+            $table->foreign('owner_customer_id')
+                ->references('id')->on('customers')
+                ->nullOnDelete();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('referral_codes');
