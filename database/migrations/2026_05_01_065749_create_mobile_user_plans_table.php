@@ -11,8 +11,6 @@ return new class extends Migration {
             $table->id();
             $table->string('name', 100);
             $table->string('slug', 100)->unique();
-            $table->decimal('price_monthly', 10, 2)->default(0);
-            $table->string('currency', 10)->default('MAD');
 
             $table->integer('invoice_limit')->nullable();
             $table->integer('quote_limit')->nullable();
@@ -21,10 +19,9 @@ return new class extends Migration {
             $table->integer('ocr_limit')->nullable();
 
             $table->integer('storage_limit_mb')->default(500);
-
-            $table->boolean('export_enabled')->default(false);
-            $table->boolean('whatsapp_bot_enabled')->default(false);
-            $table->boolean('is_active')->default(true);
+            $table->boolean('export_enabled')->default(0);
+            $table->boolean('whatsapp_bot_enabled')->default(0);
+            $table->boolean('is_active')->default(1);
 
             $table->timestamps();
         });

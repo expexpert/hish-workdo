@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             $this->call(PlansTableSeeder::class);
             $this->call(UsersTableSeeder::class);
             $this->call(AiTemplateSeeder::class);
-            $this->call(MobileUserPlansSeeder::class);
+            $this->call(MobileSubscriptionSeeder::class);
 
         }else{
             Utility::languagecreate();

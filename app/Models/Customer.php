@@ -51,6 +51,8 @@ class Customer extends Authenticatable
         'storage_used_mb',
         'app_access_enabled',
         'subscription_status',
+        'referral_code_id',
+        'referral_source',
         'password',
         'password_changed_at',
         'contact',
@@ -119,6 +121,7 @@ class Customer extends Authenticatable
         return $this->accountant?->creatorId() ?? $this->created_by;
     }
 
+
     public function mobilePlan()
     {
         return $this->belongsTo(MobileUserPlan::class, 'mobile_user_plan_id');
@@ -132,30 +135,13 @@ class Customer extends Authenticatable
     public function activeSubscription()
     {
         return $this->hasOne(MobileUserSubscription::class)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'trialing'])
             ->latest();
     }
 
-
-    // Helpers
-
-    public function isB2C()
+    public function referralCode()
     {
-        return $this->is_b2c;
-    }
-
-    public function hasActiveSubscription()
-    {
-        return $this->activeSubscription()->exists();
-    }
-
-    public function hasStorageAvailable($sizeMb)
-    {
-        if (!$this->mobilePlan) {
-            return true;
-        }
-
-        return ($this->storage_used_mb + $sizeMb) <= $this->mobilePlan->storage_limit_mb;
+        return $this->belongsTo(ReferralCode::class);
     }
 
     public function currentLanguage()
