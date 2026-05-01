@@ -3,17 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MobileUserPlan extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
         'slug',
-        'price_monthly',
-        'currency',
         'invoice_limit',
         'quote_limit',
         'expense_limit',
@@ -26,42 +21,25 @@ class MobileUserPlan extends Model
     ];
 
     protected $casts = [
-        'price_monthly' => 'float',
-        'invoice_limit' => 'integer',
-        'quote_limit' => 'integer',
-        'expense_limit' => 'integer',
-        'receipt_limit' => 'integer',
-        'ocr_limit' => 'integer',
-        'storage_limit_mb' => 'integer',
         'export_enabled' => 'boolean',
         'whatsapp_bot_enabled' => 'boolean',
         'is_active' => 'boolean',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
+    // 🔗 Relationships
+    public function prices()
+    {
+        return $this->hasMany(MobileUserPlanPrice::class);
+    }
 
     public function subscriptions()
     {
         return $this->hasMany(MobileUserSubscription::class);
     }
 
-    public function customers()
+    // 🔥 Helper
+    public function isUnlimited($feature)
     {
-        return $this->hasMany(Customer::class, 'mobile_user_plan_id');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helpers
-    |--------------------------------------------------------------------------
-    */
-
-    public function isUnlimited($field)
-    {
-        return is_null($this->{$field});
+        return is_null($this->{$feature . '_limit'});
     }
 }
