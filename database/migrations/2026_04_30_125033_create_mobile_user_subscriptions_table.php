@@ -22,10 +22,11 @@ return new class extends Migration {
             ])->default('active');
 
             $table->dateTime('starts_at')->nullable();
+            $table->dateTime('trial_ends_at')->nullable();
             $table->dateTime('ends_at')->nullable();
             $table->dateTime('renews_at')->nullable();
-            $table->dateTime('canceled_at')->nullable();
-
+            $table->dateTime('canceled_at')->nullable();            
+            $table->boolean('refund_eligible')->default(true);
             $table->string('payment_provider', 50)->nullable();
             $table->string('provider_customer_id')->nullable();
             $table->string('provider_subscription_id')->nullable();
@@ -35,9 +36,15 @@ return new class extends Migration {
             $table->index('customer_id');
             $table->index('mobile_user_plan_id');
 
-            // Optional but recommended
-            $table->foreign('customer_id')->references('id')->on('customers')->cascadeOnDelete();
-            $table->foreign('mobile_user_plan_id')->references('id')->on('mobile_user_plans')->cascadeOnDelete();
+            $table->foreign('customer_id')
+                ->references('id')
+                ->on('customers')
+                ->cascadeOnDelete();
+
+            $table->foreign('mobile_user_plan_id')
+                ->references('id')
+                ->on('mobile_user_plans')
+                ->cascadeOnDelete();
         });
     }
 
