@@ -26,6 +26,7 @@ class MobileSubscriptionSeeder extends Seeder
                 'storage_limit_mb' => 100,
                 'export_enabled' => 0,
                 'whatsapp_bot_enabled' => 0,
+                'is_active' => 1,
             ],
             [
                 'name' => 'Basic',
@@ -38,6 +39,7 @@ class MobileSubscriptionSeeder extends Seeder
                 'storage_limit_mb' => 500,
                 'export_enabled' => 1,
                 'whatsapp_bot_enabled' => 0,
+                'is_active' => 1,
             ],
             [
                 'name' => 'Pro',
@@ -50,6 +52,7 @@ class MobileSubscriptionSeeder extends Seeder
                 'storage_limit_mb' => 2048,
                 'export_enabled' => 1,
                 'whatsapp_bot_enabled' => 0,
+                'is_active' => 1,
             ],
             [
                 'name' => 'Business',
@@ -62,23 +65,22 @@ class MobileSubscriptionSeeder extends Seeder
                 'storage_limit_mb' => 10240,
                 'export_enabled' => 1,
                 'whatsapp_bot_enabled' => 1,
+                'is_active' => 1,
             ],
         ];
 
         foreach ($plans as $planData) {
+
             $plan = MobileUserPlan::updateOrCreate(
                 ['slug' => $planData['slug']],
                 $planData
             );
 
-            // =========================
-            // PRICES
-            // =========================
             $this->seedPrices($plan);
         }
 
         // =========================
-        // REFERRAL CODE (EXAMPLE)
+        // REFERRAL CODE
         // =========================
         ReferralCode::updateOrCreate(
             ['code' => 'YASSINE10'],
@@ -87,7 +89,11 @@ class MobileSubscriptionSeeder extends Seeder
                 'owner_name' => 'Yassine Influencer',
                 'owner_email' => 'yassine@example.com',
                 'discount_percentage' => 10,
+                'discount_amount' => 0,
                 'commission_percentage' => 20,
+                'commission_fixed_amount' => 0,
+                'max_uses' => null,
+                'used_count' => 0,
                 'is_active' => 1,
             ]
         );
@@ -131,6 +137,7 @@ class MobileSubscriptionSeeder extends Seeder
         }
 
         foreach ($prices as $price) {
+
             MobileUserPlanPrice::updateOrCreate(
                 [
                     'mobile_user_plan_id' => $plan->id,
