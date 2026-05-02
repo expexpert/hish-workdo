@@ -175,6 +175,7 @@ Route::group(['prefix' => 'bot'], function () {
 
             // Resource Lookups
             Route::get('/customer-clients', [CustomerController::class, 'getCustomerClients']);
+            Route::get('/customer-suppliers', [CustomerController::class, 'getCustomerSuppliers']);
             Route::get('/transaction-resources', [LookupController::class, 'getTransactionResources']);
             Route::get('/product-resources', [LookupController::class, 'getProductResources']);
             Route::get('/customer-products', [CustomerController::class, 'getCustomerProducts']);
