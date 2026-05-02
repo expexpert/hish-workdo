@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AiUserLimit extends Model
 {
     protected $fillable = [
-        'customer_id',
+        'user_id',
         'daily_request_limit',
         'monthly_token_limit',
         'last_request_at',
@@ -19,8 +19,8 @@ class AiUserLimit extends Model
         'is_blocked' => 'boolean',
     ];
 
-    public function customer()
+    public function user()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'user_id');
     }
 }
