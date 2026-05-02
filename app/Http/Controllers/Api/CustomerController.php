@@ -302,6 +302,7 @@ class CustomerController extends Controller
                 'total_expenses_count' => $currentMonthExpense,
                 'bank_statements_count' => ClientBankStatement::where('customer_id', $user->id)->count(),
                 'total_pending_review_count' => CustomerInvoice::where('customer_id', $user->id)->where('review_status', 'PENDING')->count(),
+                'total_clients_count' => Customer::where('created_by', $user->creatorId())->count() + \App\Models\Vender::where('created_by', $user->creatorId())->count(),
                 'total_issued_sum' => (float) ($invoiceStats->total_issued_sum ?? 0),
                 'total_quote_sum' => (float) ($quoteStats->total_quote_sum ?? 0),
                 'total_expenses_vat' => (float) ($expenseStats->total_tva ?? 0),
