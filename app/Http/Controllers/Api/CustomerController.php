@@ -294,6 +294,7 @@ class CustomerController extends Controller
                 'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0) + (float) ($totalRevenue ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
                 'bot_total_sum' => (float) ($expenseStats->bot_total_sum ?? 0),
+                'vat_collected' => (float) ($invoiceStats->vat_collected ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
                 'total_issued_count' => $invoiceStats->total_issued_count,
                 'total_paid_count' => $invoiceStats->total_paid_count,
