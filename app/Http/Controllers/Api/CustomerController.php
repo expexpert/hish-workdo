@@ -212,13 +212,14 @@ class CustomerController extends Controller
             ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
             ->select(
                 DB::raw("ROUND(SUM(CASE WHEN UPPER(status) IN ('ISSUED','PAID') THEN $ttc ELSE 0 END), 2) as total_issued_paid_sum"),
+                DB::raw("ROUND(SUM(CASE WHEN UPPER(status) IN ('ISSUED','PAID') THEN $net ELSE 0 END), 2) as total_ht_sum"),
                 DB::raw("ROUND(SUM(CASE WHEN UPPER(status) = 'PAID' THEN $ttc ELSE 0 END), 2) as total_paid_sum"),
                 DB::raw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_issued_sum"),
                 DB::raw("ROUND(SUM(CASE WHEN UPPER(status) = 'PAID' THEN $vat ELSE 0 END), 2) as vat_collected"),
                 DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'PAID' THEN customer_invoices.id END) as total_paid_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count")
-            )
-            ->first();
+                DB::raw("COUNT(DISTINCT CASE WHEN UPPER(status) = 'ISSUED' THEN customer_invoices.id END) as total_issued_count"),
+                DB::raw("COUNT(DISTINCT customer_invoices.client_id) as total_clients_count")
+            )->first();
 
         $totalRevenue = Revenue::where('customer_id', $user->id)->sum('amount');
 
@@ -240,7 +241,10 @@ class CustomerController extends Controller
             ->when($supplierId, fn($q, $id) => $q->where('supplier_id', $id))
             ->select(
                 DB::raw("SUM(total_ttc) as total_sum"),
-                DB::raw("SUM(total_tva) as total_tva")
+                DB::raw("SUM(total_tva) as total_tva"),
+                DB::raw("ROUND(SUM(COALESCE(total_ttc, ttc, 0)), 2) as bot_total_sum"),
+                DB::raw("ROUND(SUM(COALESCE(total_tva, tva, 0)), 2) as bot_total_tva"),
+                DB::raw("COUNT(id) as total_expenses_count")
             )->first();
 
         $totalVatPayable = ($invoiceStats->vat_collected ?? 0) - ($expenseStats->total_tva ?? 0);
@@ -289,6 +293,7 @@ class CustomerController extends Controller
                 'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
                 'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0) + (float) ($totalRevenue ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
+                'bot_total_sum' => (float) ($expenseStats->bot_total_sum ?? 0),
                 'total_vat_payable' => (float) $totalVatPayable,
                 'total_issued_count' => $invoiceStats->total_issued_count,
                 'total_paid_count' => $invoiceStats->total_paid_count,
@@ -1854,6 +1859,7 @@ class CustomerController extends Controller
         $status = $request->query('status');
         $clientId = $request->query('client_id');
         $id = $request->query('id');
+        $invoiceNumber = $request->query("invoice_number");
         $today = now()->startOfDay();
 
         $query = CustomerInvoice::where('customer_id', $user->id)
@@ -1864,6 +1870,9 @@ class CustomerController extends Controller
             $query->where('id', $id);
         }
 
+        if ($invoiceNumber) {
+            $query->whereRaw("REPLACE(REPLACE(REPLACE(invoice_number, '-', ''), ' ', ''), '.', '') = ?", [$invoiceNumber]);
+        }
         if ($status) {
             $query->where('status', $status);
         }
@@ -1895,6 +1904,8 @@ class CustomerController extends Controller
 
         $invoices->each(function ($invoice) use ($today, &$totalAllInvoices, &$totalPaidInvoices, &$totalIssuedInvoices, &$totalCancelledInvoices, &$totalOverdueInvoices) {
             $totalTtc = 0;
+            $totalTax = 0;
+            $maxTaxRate = 0;
 
             foreach ($invoice->articles as $article) {
                 $priceHt = $article->unit_price_ht * ($article->quantity ?? 1);
@@ -1905,9 +1916,13 @@ class CustomerController extends Controller
                 $taxAmount = round($priceAfterDiscount * $taxRate / 100, 2);
 
                 $totalTtc += ($priceAfterDiscount + $taxAmount);
+                $totalTax += $taxAmount;
+                if ($taxRate > $maxTaxRate) $maxTaxRate = $taxRate;
             }
 
             $invoice->total_ttc = $totalTtc;
+            $invoice->total_tax = $totalTax;
+            $invoice->tax_rate = $maxTaxRate;
 
             // --- Logic for Aggregates ---
             $totalAllInvoices += $totalTtc;
