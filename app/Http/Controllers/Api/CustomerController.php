@@ -1203,7 +1203,7 @@ class CustomerController extends Controller
         if ($sort === 'recent') {
             // Sort by the creation date of the most recent expense
             $suppliers->withMax('expenses', 'created_at')
-                ->orderByRaw('expenses_max_created_at IS NULL, invoices_max_created_at DESC');
+                ->orderByRaw('expenses_max_created_at IS NULL, expenses_max_created_at DESC');
         }
 
         $suppliers = $suppliers->with('expenses')->get();
