@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AiUsageLog extends Model
 {
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'channel',
         'model',
         'tokens_in',
@@ -18,6 +18,6 @@ class AiUsageLog extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'user_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }

@@ -48,7 +48,7 @@ class AiLimitService
         // 3. Daily Request Check (Cache-first)
         $dailyKey = "ai_daily_{$userId}_{$date}";
         $dailyCount = Cache::remember($dailyKey, 86400, function () use ($userId, $date) {
-            return AiUsageLog::where('user_id', $userId)
+            return AiUsageLog::where('customer_id', $userId)
                 ->whereDate('created_at', $date)
                 ->count();
         });
@@ -64,7 +64,7 @@ class AiLimitService
         // 4. Monthly Token Check (Cache-first)
         $monthlyKey = "ai_monthly_{$userId}_{$monthYear}";
         $monthlyTokens = Cache::remember($monthlyKey, 2592000, function () use ($userId, $monthYear) {
-            return AiUsageLog::where('user_id', $userId)
+            return AiUsageLog::where('customer_id', $userId)
                 ->whereRaw("DATE_FORMAT(created_at, '%m-%Y') = ?", [$monthYear])
                 ->sum('total_tokens');
         });
@@ -100,7 +100,7 @@ class AiLimitService
         // 2. Save to DB (With Safety Catch)
         try {
             AiUsageLog::create([
-                'user_id' => $userId,
+                'customer_id' => $userId,
                 'model' => $model,
                 'tokens_in' => $tokensIn,
                 'tokens_out' => $tokensOut,
@@ -123,7 +123,7 @@ class AiLimitService
         Cache::put("ai_cooldown_{$userId}", true, $cooldown);
 
         // 5. Update last_request_at (persistently)
-        AiUserLimit::updateOrCreate(['user_id' => $userId], ['last_request_at' => $now]);
+        AiUserLimit::updateOrCreate(['customer_id' => $userId], ['last_request_at' => $now]);
     }
 
     /**
@@ -133,7 +133,7 @@ class AiLimitService
     {
         return Cache::remember("ai_limits_{$userId}", 3600, function () use ($userId) {
             return AiUserLimit::firstOrCreate(
-                ['user_id' => $userId],
+                ['customer_id' => $userId],
                 [
                     'daily_request_limit' => config('ai_limits.defaults.daily_request_limit'),
                     'monthly_token_limit' => config('ai_limits.defaults.monthly_token_limit'),
