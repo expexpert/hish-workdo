@@ -110,8 +110,15 @@ class AppServiceProvider extends ServiceProvider
         Budget::observe(AdminActivityObserver::class);
 
         RateLimiter::for('api', function (Request $request) {
-        return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-    });
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        if (config('app.url')) {
+            \URL::forceRootUrl(config('app.url'));
+            if (str_contains(config('app.url'), 'https')) {
+                \URL::forceScheme('https');
+            }
+        }
     }
 }
 
