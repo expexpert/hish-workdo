@@ -15,6 +15,7 @@ class ReferralConversion extends Model
         'final_price',
         'commission_amount',
         'currency',
+        'admin_note',
         'status',
         'validated_at',
         'paid_at',
@@ -43,5 +44,13 @@ class ReferralConversion extends Model
     public function subscription()
     {
         return $this->belongsTo(MobileUserSubscription::class);
+    }
+
+    public function isEligibleForValidation()
+    {
+        return $this->status === 'pending'
+            && $this->subscription
+            && now()->gt($this->subscription->trial_ends_at)
+            && $this->subscription->refund_status !== 'processed';
     }
 }

@@ -14,6 +14,11 @@ class MobileUserSubscription extends Model
         'referral_code_id',
         'billing_cycle',
         'status',
+        'refund_status',
+        'refund_requested_at',
+        'refunded_at',
+        'refund_rejected_at',
+        'refund_admin_note',
         'price_paid',
         'original_price',
         'referral_discount_amount',
@@ -30,16 +35,14 @@ class MobileUserSubscription extends Model
     ];
 
     protected $casts = [
-        'price_paid' => 'float',
-        'original_price' => 'float',
-        'referral_discount_amount' => 'float',
-        'refund_eligible' => 'boolean',
-
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'renews_at' => 'datetime',
-        'canceled_at' => 'datetime',
         'trial_ends_at' => 'datetime',
+
+        'refund_requested_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_rejected_at' => 'datetime',
     ];
 
     // 🔗 Relationships
@@ -77,5 +80,15 @@ class MobileUserSubscription extends Model
     public function isTrial()
     {
         return $this->status === 'trialing';
+    }
+
+    public function isRefundEligible()
+    {
+        return $this->trial_ends_at && now()->lte($this->trial_ends_at);
+    }
+
+    public function isRefundProcessed()
+    {
+        return $this->refund_status === 'processed';
     }
 }

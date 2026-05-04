@@ -22,13 +22,18 @@ return new class extends Migration
             $table->enum('billing_cycle', ['monthly', 'quarterly', 'yearly'])->default('monthly');
 
             $table->enum('status', [
-                'trialing',
                 'active',
                 'pending_payment',
                 'past_due',
                 'canceled',
                 'expired'
-            ])->default('active');
+            ])->default('pending_payment');
+
+            $table->enum('refund_status', ['none', 'requested', 'processed', 'rejected'])->default('none');
+            $table->dateTime('refund_requested_at')->nullable();
+            $table->dateTime('refunded_at')->nullable();
+            $table->dateTime('refund_rejected_at')->nullable();
+            $table->text('refund_admin_note')->nullable();
 
             $table->decimal('price_paid', 10, 2)->nullable();
             $table->decimal('original_price', 10, 2)->nullable();

@@ -18,6 +18,7 @@ class ReferralCode extends Model
         'commission_percentage',
         'commission_fixed_amount',
         'max_uses',
+        'clicks',
         'used_count',
         'starts_at',
         'ends_at',

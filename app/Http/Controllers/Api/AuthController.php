@@ -93,6 +93,8 @@ class AuthController extends Controller
             'created_by' => $createdBy,
             'customer_id' => $latestCustomerId,
 
+            'is_b2c' => true,
+
             // Company & billing
             'company_type' => $validated['company_type'],
             'billing_name' => $validated['billing_name'],
@@ -194,6 +196,12 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
+        }
+
+        if ($customer->is_b2c == true && $customer->app_access_enabled == false) {
+            return response()->json([
+                'message' => 'Your account is not enabled for app access. Please contact support.'
+            ], 403);
         }
 
         $token = $customer->createToken('mobile-login')->plainTextToken;
