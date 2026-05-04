@@ -21,6 +21,8 @@ return new class extends Migration
             $table->unsignedBigInteger('owner_customer_id')->nullable();
             $table->string('owner_email')->nullable();
 
+            $table->integer('clicks')->default(0);
+
             $table->integer('discount_percentage')->default(0);
             $table->decimal('discount_amount', 10, 2)->default(0);
 

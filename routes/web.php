@@ -89,6 +89,8 @@ use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\WorkflowController;
 use App\Http\Controllers\CustomerCategoryController;
+use App\Http\Controllers\MobilePlanController;
+use App\Http\Controllers\ReferralCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -122,6 +124,12 @@ Route::get('/login/{lang?}', [AuthenticatedSessionController::class, 'showLoginF
 Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, 'showLinkRequestForm'])->name('langPass');
 
 Route::get('/test-landing', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
+
+Route::get('/signup', [DashboardController::class, 'signup'])->name('signup')->middleware(['XSS', 'revalidate']);
+Route::get('/select-plan', [DashboardController::class, 'selectPlan'])->name('plans.select')->middleware(['XSS', 'revalidate']);
+Route::post('/store-mobile-customer', [DashboardController::class, 'storeMobileCustomer'])->name('mobile.customer.store')->middleware(['XSS', 'revalidate']);
+Route::post('/subscription/upgrade', [DashboardController::class, 'upgradeSubscripton'])->name('subscription.upgrade')->middleware(['XSS', 'revalidate']);
+
 Route::get('/', function () {
     return view('coming-soon');
 });
@@ -204,7 +212,7 @@ Route::prefix('customer')->as('customer.')->group(
 
         Route::get('/retainer/pay/{retainer}', [RetainerController::class, 'payretainer'])->name('pay.retainerpay')->middleware(['XSS']);
         Route::get('proposal', [ProposalController::class, 'customerProposal'])->name('proposal')->middleware(['auth:customer', 'XSS']);
-        
+
         Route::get('workflow', [WorkflowController::class, 'index'])->name('workflow.index')->middleware(['auth:customer', 'XSS']);
 
         Route::get('proposal/{id}/show', [ProposalController::class, 'customerProposalShow'])->name('proposal.show')->middleware(['auth:customer', 'XSS']);
@@ -330,7 +338,7 @@ Route::prefix('customer')->as('customer.')->group(
         Route::post('/invoice-pay-with-coingate', [CoingatePaymentController::class, 'invoicePayWithCoingate'])->name('invoice.pay.with.coingate')->middleware(['XSS', 'revalidate']);
         Route::get('/invoice/coingate/{invoice}/{amount}', [CoingatePaymentController::class, 'getInvoicePaymentStatus'])->name('invoice.coingate')->middleware(['XSS', 'revalidate']);
 
-        
+
         Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])->name('bank-statements.view-file');
     }
 );
@@ -499,7 +507,7 @@ Route::group(['middleware' => ['verified']], function () {
     Route::put('email_template_store/{pid}', [EmailTemplateController::class, 'storeEmailLang'])->name('store.email.language')->middleware(['auth']);
     Route::post('email_template_status', [EmailTemplateController::class, 'updateStatus'])->name('status.email.language')->middleware(['auth']);
 
-    Route::resource('email_template', EmailTemplateController::class)->middleware(['auth','XSS']);
+    Route::resource('email_template', EmailTemplateController::class)->middleware(['auth', 'XSS']);
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'XSS', 'revalidate']);
     Route::get('user/{id}/plan', [UserController::class, 'upgradePlan'])->name('plan.upgrade')->middleware(['XSS', 'revalidate']);
@@ -531,7 +539,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -550,7 +559,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -600,7 +610,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -618,31 +629,31 @@ Route::group(['middleware' => ['verified']], function () {
             Route::resource('customer', CustomerController::class)->except('show');
 
 
-            
-        Route::get('/transactions', [CustomerController::class, 'getClientTransactions'])->name('customer.transactions');
 
-        Route::get('/bank-statements', [CustomerController::class, 'getClientBankStatements'])->name('customer.bank.statements');
+            Route::get('/transactions', [CustomerController::class, 'getClientTransactions'])->name('customer.transactions');
 
-        Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])->name('customer.bank-statements.view-file');
-        Route::get('/customer-expenses/{expense}/view', [CustomerController::class, 'showExpenseFile'])->name('customer.expenses.view-file');
-        Route::get('/customer-invoices/{invoice}/view', [CustomerController::class, 'showInvoiceFile'])->name('customer.invoices.view-file');
-        Route::get('/customer-quotes/{quote}/view', [CustomerController::class, 'showQuoteFile'])->name('customer.quotes.view-file');
-        
-        Route::get('/customer-expenses', [CustomerController::class, 'getExpenses'])->name('customer.expenses');
+            Route::get('/bank-statements', [CustomerController::class, 'getClientBankStatements'])->name('customer.bank.statements');
 
-        Route::get('/customer-invoices', [CustomerController::class, 'getInvoices'])->name('customer.invoices');
+            Route::get('/bank-statements/{bankStatement}/view', [CustomerController::class, 'showFile'])->name('customer.bank-statements.view-file');
+            Route::get('/customer-expenses/{expense}/view', [CustomerController::class, 'showExpenseFile'])->name('customer.expenses.view-file');
+            Route::get('/customer-invoices/{invoice}/view', [CustomerController::class, 'showInvoiceFile'])->name('customer.invoices.view-file');
+            Route::get('/customer-quotes/{quote}/view', [CustomerController::class, 'showQuoteFile'])->name('customer.quotes.view-file');
 
-        Route::get('/customer-quotes', [CustomerController::class, 'getQuotes'])->name('customer.quotes');
+            Route::get('/customer-expenses', [CustomerController::class, 'getExpenses'])->name('customer.expenses');
 
-        Route::post('/customer-invoice/review-action', [CustomerController::class, 'invoiceReviewAction'])->name('invoice.review.action');
-        
+            Route::get('/customer-invoices', [CustomerController::class, 'getInvoices'])->name('customer.invoices');
+
+            Route::get('/customer-quotes', [CustomerController::class, 'getQuotes'])->name('customer.quotes');
+
+            Route::post('/customer-invoice/review-action', [CustomerController::class, 'invoiceReviewAction'])->name('invoice.review.action');
         }
     );
     Route::group(
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -661,7 +672,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -673,7 +685,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -702,7 +715,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -724,7 +738,7 @@ Route::group(['middleware' => ['verified']], function () {
             Route::get('invoice/items', [InvoiceController::class, 'items'])->name('invoice.items');
 
 
-            Route::resource('invoice', InvoiceController::class)->except('index','create');
+            Route::resource('invoice', InvoiceController::class)->except('index', 'create');
             Route::get('invoice/create/{cid}', [InvoiceController::class, 'create'])->name('invoice.create');
         }
     );
@@ -735,7 +749,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -758,7 +773,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -789,7 +805,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -809,7 +826,7 @@ Route::group(['middleware' => ['verified']], function () {
             Route::post('bill/{id}/payment/{pid}/destroy', [BillController::class, 'paymentDestroy'])->name('bill.payment.destroy');
             Route::get('bill/items', [BillController::class, 'items'])->name('bill.items');
 
-            Route::resource('bill', BillController::class)->except('index','create');
+            Route::resource('bill', BillController::class)->except('index', 'create');
             Route::get('bill/create/{cid}', [BillController::class, 'create'])->name('bill.create');
         }
     );
@@ -836,6 +853,9 @@ Route::group(['middleware' => ['verified']], function () {
 
     Route::resource('payment', PaymentController::class)->except('index')->middleware(['auth', 'XSS', 'revalidate']);
     Route::resource('plans', PlanController::class)->middleware(['auth', 'XSS', 'revalidate']);
+    Route::resource('mobile/plans', MobilePlanController::class)->middleware(['auth', 'XSS', 'revalidate'])->names('mobile.plans');
+     Route::get('mobile/subscription', [MobilePlanController::class, 'MobileSubscription'])->name('mobile.subscription')->middleware(['XSS']);
+    Route::resource('referral/codes', ReferralCodeController::class)->middleware(['auth', 'XSS', 'revalidate'])->names('referral.codes');
     Route::get('plan/plan-trial/{id}', [PlanController::class, 'PlanTrial'])->name('plan.trial');
     Route::post('plan-disable', [PlanController::class, 'planDisable'])->name('plan.disable')->middleware(['auth', 'XSS', 'revalidate']);
     Route::resource('expenses', ExpenseController::class)->middleware(['auth', 'XSS', 'revalidate']);
@@ -848,7 +868,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -860,7 +881,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -962,7 +984,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -974,7 +997,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -987,7 +1011,8 @@ Route::group(['middleware' => ['verified']], function () {
         [
             'middleware' => [
                 'auth',
-                'XSS', 'revalidate',
+                'XSS',
+                'revalidate',
             ],
         ],
         function () {
@@ -1051,8 +1076,8 @@ Route::group(['middleware' => ['verified']], function () {
     Route::post('/paytr/payment', [PaytrController::class, 'PlanpayWithPaytr'])->name('pay.paytr.payment');
     Route::any('/paytr/success', [PaytrController::class, 'paytrsuccess'])->name('pay.paytr.success');
 
-    Route::post('/plan/yookassa/payment', [YooKassaController::class,'planPayWithYooKassa'])->name('plan.pay.with.yookassa');
-    Route::get('/plan/yookassa/{plan}', [YooKassaController::class,'planGetYooKassaStatus'])->name('plan.get.yookassa.status');
+    Route::post('/plan/yookassa/payment', [YooKassaController::class, 'planPayWithYooKassa'])->name('plan.pay.with.yookassa');
+    Route::get('/plan/yookassa/{plan}', [YooKassaController::class, 'planGetYooKassaStatus'])->name('plan.get.yookassa.status');
 
     Route::any('/xendit/payment', [XenditPaymentController::class, 'planPayWithXendit'])->name('plan.xendit.payment');
     Route::any('/xendit/payment/status', [XenditPaymentController::class, 'planGetXenditStatus'])->name('plan.xendit.status');
@@ -1079,22 +1104,22 @@ Route::group(['middleware' => ['verified']], function () {
     Route::get('{id}/plan-get-payment-status/{amount}', [PaypalController::class, 'planGetPaymentStatus'])->name('plan.get.payment.status')->middleware(['auth', 'XSS', 'revalidate']);
 
 
-    Route::any('plan-paiementpro-payment', [PaiementProController::class, 'planPayWithPaiementpro'])->name('plan.pay.with.paiementpro')->middleware(['auth','XSS']);
-    Route::any('/plan-paiementpro-status/{plan_id}',  [PaiementProController::class, 'planGetPaiementproStatus'])->name('plan.paiementpro.status')->middleware(['auth','XSS']);
+    Route::any('plan-paiementpro-payment', [PaiementProController::class, 'planPayWithPaiementpro'])->name('plan.pay.with.paiementpro')->middleware(['auth', 'XSS']);
+    Route::any('/plan-paiementpro-status/{plan_id}',  [PaiementProController::class, 'planGetPaiementproStatus'])->name('plan.paiementpro.status')->middleware(['auth', 'XSS']);
 
-	Route::post('plan-nepalste-payment/', [NepalstePaymnetController::class, 'planPayWithNepalste'])->name('plan.pay.with.nepalste')->middleware(['auth','XSS']);
-    Route::get('plan-nepalste-status/',[NepalstePaymnetController::class,'planGetNepalsteStatus'])->name('plan.nepalste.status')->middleware(['auth','XSS']);
-    Route::get('plan-nepalste-cancel/',[NepalstePaymnetController::class,'planGetNepalsteCancel'])->name('plan.nepalste.cancel')->middleware(['auth','XSS']);
+    Route::post('plan-nepalste-payment/', [NepalstePaymnetController::class, 'planPayWithNepalste'])->name('plan.pay.with.nepalste')->middleware(['auth', 'XSS']);
+    Route::get('plan-nepalste-status/', [NepalstePaymnetController::class, 'planGetNepalsteStatus'])->name('plan.nepalste.status')->middleware(['auth', 'XSS']);
+    Route::get('plan-nepalste-cancel/', [NepalstePaymnetController::class, 'planGetNepalsteCancel'])->name('plan.nepalste.cancel')->middleware(['auth', 'XSS']);
 
-	Route::any('plan-cinetpay-payment', [CinetPayController::class, 'planPayWithCinetpay'])->name('plan.pay.with.cinetpay')->middleware(['auth','XSS']);
+    Route::any('plan-cinetpay-payment', [CinetPayController::class, 'planPayWithCinetpay'])->name('plan.pay.with.cinetpay')->middleware(['auth', 'XSS']);
     Route::any('plan-cinetpay-return',  [CinetPayController::class, 'planCinetPayReturn'])->name('plan.cinetpay.return')->middleware(['auth']);
-    Route::any('plan-cinetpay-notify',  [CinetPayController::class, 'planCinetPayNotify'])->name('plan.cinetpay.notify')->middleware(['auth','XSS']);
+    Route::any('plan-cinetpay-notify',  [CinetPayController::class, 'planCinetPayNotify'])->name('plan.cinetpay.notify')->middleware(['auth', 'XSS']);
 
-	Route::any('plan-fedapay-payment', [FedapayController::class, 'planPayWithFedapay'])->name('plan.pay.with.fedapay')->middleware(['auth','XSS']);
-    Route::any('plan-fedapay-status',  [FedapayController::class, 'planGetFedapayStatus'])->name('plan.fedapay.status')->middleware(['auth','XSS']);
+    Route::any('plan-fedapay-payment', [FedapayController::class, 'planPayWithFedapay'])->name('plan.pay.with.fedapay')->middleware(['auth', 'XSS']);
+    Route::any('plan-fedapay-status',  [FedapayController::class, 'planGetFedapayStatus'])->name('plan.fedapay.status')->middleware(['auth', 'XSS']);
 
-    Route::any('plan-payhere-payment', [PayHereController::class, 'planPayWithPayHere'])->name('plan.pay.with.payhere')->middleware(['auth','XSS']);
-    Route::any('plan-payhere-status',  [PayHereController::class, 'planGetPayHereStatus'])->name('plan.payhere.status')->middleware(['auth','XSS']);
+    Route::any('plan-payhere-payment', [PayHereController::class, 'planPayWithPayHere'])->name('plan.pay.with.payhere')->middleware(['auth', 'XSS']);
+    Route::any('plan-payhere-status',  [PayHereController::class, 'planGetPayHereStatus'])->name('plan.payhere.status')->middleware(['auth', 'XSS']);
 
     // Tap Payment
     Route::post('plan-pay-with-tap', [TapPaymentController::class, 'planPayWithTap'])->name('plan.pay.with.tap');
@@ -1121,12 +1146,12 @@ Route::group(['middleware' => ['verified']], function () {
     Route::get('request_cancel/{id}', [PlanRequestController::class, 'cancelRequest'])->name('request.cancel')->middleware(['auth', 'XSS',]);
 
     // Referral program
-    Route::get('referral-program/company', [ReferralProgramController::class, 'companyIndex'])->name('referral-program.company')->middleware(['auth','XSS']);
-	Route::resource('referral-program', ReferralProgramController::class)->except('show')->middleware(['auth','XSS']);
-	Route::get('request-amount-sent/{id}', [ReferralProgramController::class, 'requestedAmountSent'])->name('request.amount.sent');
-	Route::get('request-amount-cancel/{id}', [ReferralProgramController::class, 'requestCancel'])->name('request.amount.cancel');
-	Route::post('request-amount-store/{id}', [ReferralProgramController::class, 'requestedAmountStore'])->name('request.amount.store');
-	Route::get('request-amount/{id}/{status}', [ReferralProgramController::class, 'requestedAmount'])->name('amount.request');
+    Route::get('referral-program/company', [ReferralProgramController::class, 'companyIndex'])->name('referral-program.company')->middleware(['auth', 'XSS']);
+    Route::resource('referral-program', ReferralProgramController::class)->except('show')->middleware(['auth', 'XSS']);
+    Route::get('request-amount-sent/{id}', [ReferralProgramController::class, 'requestedAmountSent'])->name('request.amount.sent');
+    Route::get('request-amount-cancel/{id}', [ReferralProgramController::class, 'requestCancel'])->name('request.amount.cancel');
+    Route::post('request-amount-store/{id}', [ReferralProgramController::class, 'requestedAmountStore'])->name('request.amount.store');
+    Route::get('request-amount/{id}/{status}', [ReferralProgramController::class, 'requestedAmount'])->name('amount.request');
 
     // --------------------------- invoice payments  ---------------------//////
 
@@ -1286,8 +1311,8 @@ Route::any('/invoice-paiementpro-status/{invoice_id}',  [PaiementProController::
 
 // Nepalste
 Route::post('invoice-nepalste-payment/{id}', [NepalstePaymnetController::class, 'invoicePayWithNepalste'])->name('invoice.with.nepalste')->middleware(['XSS']);
-Route::get('invoice-nepalste-status/{id}/{amt?}',[NepalstePaymnetController::class,'invoiceGetNepalsteStatus'])->name('invoice.nepalste.status')->middleware(['XSS']);
-Route::get('invoice-nepalste-cancel/',[NepalstePaymnetController::class,'invoiceGetNepalsteCancel'])->name('invoice.nepalste.cancel')->middleware(['XSS']);
+Route::get('invoice-nepalste-status/{id}/{amt?}', [NepalstePaymnetController::class, 'invoiceGetNepalsteStatus'])->name('invoice.nepalste.status')->middleware(['XSS']);
+Route::get('invoice-nepalste-cancel/', [NepalstePaymnetController::class, 'invoiceGetNepalsteCancel'])->name('invoice.nepalste.cancel')->middleware(['XSS']);
 
 // Cinetpay
 Route::any('invoice-cinetpay-payment/{id}', [CinetPayController::class, 'invoicePayWithCinetPay'])->name('invoice.with.cinetpay')->middleware(['XSS']);
@@ -1308,15 +1333,15 @@ Route::any('invoice-tap-status',  [TapPaymentController::class, 'invoiceGetTapSt
 
 //AuhorizeNet
 Route::any('/invoice-authorizenet-payment', [AuthorizeNetController::class, 'invoicePayWithAuthorizeNet'])->name('invoice.with.authorizenet');
-Route::any('/invoice-get-authorizenet-status',[AuthorizeNetController::class,'getInvoicePaymentStatus'])->name('invoice.get.authorizenet.status');
+Route::any('/invoice-get-authorizenet-status', [AuthorizeNetController::class, 'getInvoicePaymentStatus'])->name('invoice.get.authorizenet.status');
 
 //Khalti
 Route::any('/invoice-khalti-payment', [KhaltiPaymentController::class, 'invoicePayWithKhalti'])->name('invoice.with.khalti');
-Route::any('/invoice-get-khalti-status',[KhaltiPaymentController::class,'getInvoicePaymentStatus'])->name('invoice.get.khalti.status');
+Route::any('/invoice-get-khalti-status', [KhaltiPaymentController::class, 'getInvoicePaymentStatus'])->name('invoice.get.khalti.status');
 
 //ozow
 Route::any('/invoice-ozow-payment', [OzowPaymentController::class, 'invoicePayWithozow'])->name('invoice.with.ozow');
-Route::any('/invoice-get-ozow-status/{id}',[OzowPaymentController::class,'getInvoicePaymentStatus'])->name('invoice.get.ozow.status');
+Route::any('/invoice-get-ozow-status/{id}', [OzowPaymentController::class, 'getInvoicePaymentStatus'])->name('invoice.get.ozow.status');
 
 //----------------------------------Retainer--------------------------//
 
@@ -1326,8 +1351,8 @@ Route::any('/retainer-paiementpro-status/{retainer_id}',  [PaiementProController
 
 //Nepalste
 Route::post('retainer-nepalste-payment/{id}', [NepalstePaymnetController::class, 'retainerPayWithNepalste'])->name('retainer.with.nepalste')->middleware(['XSS']);
-Route::get('retainer-nepalste-status/{id}/{amt?}',[NepalstePaymnetController::class,'retainerGetNepalsteStatus'])->name('retainer.nepalste.status')->middleware(['XSS']);
-Route::get('retainer-nepalste-cancel/',[NepalstePaymnetController::class,'retainerGetNepalsteCancel'])->name('retainer.nepalste.cancel')->middleware(['XSS']);
+Route::get('retainer-nepalste-status/{id}/{amt?}', [NepalstePaymnetController::class, 'retainerGetNepalsteStatus'])->name('retainer.nepalste.status')->middleware(['XSS']);
+Route::get('retainer-nepalste-cancel/', [NepalstePaymnetController::class, 'retainerGetNepalsteCancel'])->name('retainer.nepalste.cancel')->middleware(['XSS']);
 
 //Cinetpay
 Route::any('retainer-cinetpay-payment/{id}', [CinetPayController::class, 'retainerPayWithCinetpay'])->name('retainer.with.cinetpay')->middleware(['XSS']);
@@ -1349,16 +1374,16 @@ Route::any('retainer-tap-status/',  [TapPaymentController::class, 'retainerGetTa
 
 //AuthorizeNet
 Route::any('/retainer-authorizenet-payment', [AuthorizeNetController::class, 'retainerPayWithAuthorizeNet'])->name('retainer.with.authorizenet');
-Route::any('/retainer-get-authorizenet-status',[AuthorizeNetController::class,'getRetainerPaymentStatus'])->name('retainer.get.authorizenet.status');
+Route::any('/retainer-get-authorizenet-status', [AuthorizeNetController::class, 'getRetainerPaymentStatus'])->name('retainer.get.authorizenet.status');
 
 //Khalti
 Route::any('/retainer-khalti-payment', [KhaltiPaymentController::class, 'retainerPayWithKhalti'])->name('retainer.with.khalti');
-Route::any('/retainer-get-khalti-status',[KhaltiPaymentController::class,'getRetainerPaymentStatus'])->name('retainer.get.khalti.status');
+Route::any('/retainer-get-khalti-status', [KhaltiPaymentController::class, 'getRetainerPaymentStatus'])->name('retainer.get.khalti.status');
 
 //ozow
 Route::any('/retainer-ozow-payment', [OzowPaymentController::class, 'retainerPayWithozow'])->name('retainer.with.ozow');
-Route::any('/retainer-get-ozow-status/{id}',[OzowPaymentController::class,'getRetainerPaymentStatus'])->name('retainer.get.ozow.status');
+Route::any('/retainer-get-ozow-status/{id}', [OzowPaymentController::class, 'getRetainerPaymentStatus'])->name('retainer.get.ozow.status');
 
 
 
-Route::get('{id}/{amount}/get-retainer-payment-status', [PaypalController::class,'customerGetRetainerPaymentStatus'])->name('get.retainer.payment.status')->middleware(['XSS', 'revalidate']);
+Route::get('{id}/{amount}/get-retainer-payment-status', [PaypalController::class, 'customerGetRetainerPaymentStatus'])->name('get.retainer.payment.status')->middleware(['XSS', 'revalidate']);

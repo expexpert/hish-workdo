@@ -524,6 +524,31 @@ $emailTemplate = App\Models\EmailTemplate::first();
 
 
                 @if (\Auth::user()->type == 'super admin')
+
+                <!-- Mobile Plan -->
+                <li class="dash-item {{ Route::is('mobile.plans.*') ? 'active' : '' }}">
+                    <a href="{{ route('mobile.plans.index') }}" class="dash-link">
+                        <span class="dash-micon"><i class="ti ti-device-mobile"></i></span>
+                        <span class="dash-mtext">{{ __('Mobile Plan') }}</span>
+                    </a>
+                </li>
+
+                <!-- Referral Codes -->
+                <li class="dash-item {{ Route::is('referral.codes.*') ? 'active' : '' }}">
+                    <a href="{{ route('referral.codes.index') }}" class="dash-link">
+                        <span class="dash-micon"><i class="ti ti-ticket"></i></span>
+                        <span class="dash-mtext">{{ __('Referral Codes') }}</span>
+                    </a>
+                </li>
+
+                <!-- Mobile Subscription -->
+                <li class="dash-item {{ Route::is('mobile.subscription') ? 'active' : '' }}">
+                    <a href="{{ route('mobile.subscription') }}" class="dash-link">
+                        <span class="dash-micon"><i class="ti ti-credit-card"></i></span>
+                        <span class="dash-mtext">{{ __('Mobile Subscription') }}</span>
+                    </a>
+                </li>
+
                 <li
                     class="dash-item {{ Request::segment(1) == 'customer-category' ? 'active' : '' }}">
                     <a href="{{ route('customer-category.index') }}" class="dash-link  ">
@@ -750,13 +775,13 @@ $emailTemplate = App\Models\EmailTemplate::first();
                                         href="{{ route('custom-field.index') }}">{{ __('Custom Field') }}</a>
                                 </li>
                             @endcan -->
-                            @can('manage constant contract type')
-                                <li
-                                    class="dash-item {{ Request::route()->getName() == 'contractType.index' ? 'active' : '' }}">
-                                    <a class="dash-link"
-                                        href="{{ route('contractType.index') }}">{{ __('Contract Type') }}</a>
-                                </li>
-                            @endcan
+                        @can('manage constant contract type')
+                        <li
+                            class="dash-item {{ Request::route()->getName() == 'contractType.index' ? 'active' : '' }}">
+                            <a class="dash-link"
+                                href="{{ route('contractType.index') }}">{{ __('Contract Type') }}</a>
+                        </li>
+                        @endcan
                     </ul>
                 </li>
                 @endif

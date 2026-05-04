@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('commission_amount', 10, 2)->default(0);
 
             $table->string('currency')->default('MAD');
+            $table->text('admin_note')->nullable();
 
             $table->enum('status', ['pending', 'validated', 'rejected', 'paid'])->default('pending');
 

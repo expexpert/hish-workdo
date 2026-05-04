@@ -24,8 +24,16 @@ use App\Models\Customer;
 use App\Models\ClientNotification;
 use App\Models\CustomerInvoice;
 use App\Models\CustomerExpense;
+use App\Models\MobileUserPlan;
+use App\Models\MobileUserPlanPrice;
+use App\Models\MobileUserSubscription;
+use App\Models\ChartOfAccount;
+use App\Models\ReferralCode;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
@@ -279,6 +287,226 @@ class DashboardController extends Controller
                     return redirect('login');
                 }
             }
+        }
+    }
+
+    public function signup()
+    {
+        $ref = request()->query('ref');
+        ReferralCode::where('code', $ref)->increment('clicks');
+
+        return view('dashboard.signup');
+    }
+
+    public function selectPlan()
+    {
+        $customerId = session('customer_id');
+
+        if (!$customerId) {
+            return redirect()->route('signup')->with('error', 'Session expired');
+        }
+
+        $mobilePlans = MobileUserPlan::with('prices')->where('is_active', 1)->get();
+
+        return view('dashboard.select_plan', compact('mobilePlans', 'customerId'));
+    }
+
+    public function storeMobileCustomer(Request $request)
+    {
+        // 1. Validation
+        $firstAccountant = User::where('type', 'accountant')->orderBy('id', 'asc')->first();
+        $createdBy = $firstAccountant?->id ?? 1;
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('customers')->where(fn($q) => $q->where('created_by', $createdBy)),
+            ],
+            'phone' => 'required',
+            'password' => 'required|min:6',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // 2. Fetch required plan data (Failure here triggers Rollback)
+            $freePlan = MobileUserPlan::where('slug', 'free')->firstOrFail();
+            $freePrice = MobileUserPlanPrice::where('mobile_user_plan_id', $freePlan->id)
+                ->where('price', 0)
+                ->first();
+
+            // 3. Referral Logic
+            $referral = null;
+            if ($request->filled('referral_code')) {
+                $referral = ReferralCode::where('code', $request->referral_code)
+                    ->where('is_active', 1)
+                    ->first();
+            }
+
+            // 4. ID Generation (Warning: Better to use Auto-Increment if possible)
+            $latest = Customer::where('created_by', $createdBy)->latest('id')->first();
+            $latestCustomerId = ($latest ? $latest->id : 0) + 1;
+
+            // 5. Create Customer
+            $customer = Customer::create([
+                'name'                => $request->name,
+                'email'               => $request->email,
+                'contact'             => $request->phone,
+                'password'            => Hash::make($request->password), // Don't forget to hash!
+                'is_b2c'              => 1,
+                'created_by'          => $createdBy,
+                'customer_id'         => $latestCustomerId,
+                'app_access_enabled'  => 1,
+                'subscription_status' => 'active',
+                'referral_code_id'    => $referral?->id,
+                'referral_source'     => $request->referral_code,
+                'storage_used_mb'     => 0,
+                'mobile_user_plan_id' => $freePlan->id, // Set this immediately
+            ]);
+
+            // 6. Create Subscription
+            // MAKE SURE THESE ARE IN $fillable in MobileUserSubscription model!
+            MobileUserSubscription::create([
+                'customer_id'               => $customer->id,
+                'mobile_user_plan_id'       => $freePlan->id,
+                'mobile_user_plan_price_id' => $freePrice?->id,
+                'referral_code_id'          => $referral?->id,
+                'billing_cycle'             => 'monthly',
+                'status'                    => 'active',
+                'original_price'            => 0,
+                'price_paid'                => 0,
+                'currency'                  => 'MAD',
+                'starts_at'                 => now(),
+            ]);
+
+
+
+            // $randomStr = Str::random(10);
+            // $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
+
+            // $accounts = [
+            //     ['code' => '5141', 'bank_name' => 'Banque principale'],
+            //     ['code' => '5161', 'bank_name' => 'Caisse'],
+            // ];
+
+            // foreach ($accounts as $acc) {
+
+            //     $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
+            //         ->where('code', $acc['code'])
+            //         ->latest()
+            //         ->first();
+
+            //     if (!$chartOfAccount) {
+            //         continue;
+            //     }
+
+            //     BankAccount::create([
+            //         'chart_account_id' => $chartOfAccount->id,
+            //         'customer_id'      => $customer->id,
+            //         'holder_name'      => $customer->name,
+            //         'bank_name'        => $acc['bank_name'],
+            //         'account_number'   => $randomStr,
+            //         'opening_balance'  => 0,
+            //         'contact_number'   => $customer->contact,
+            //         'created_by'       => $companyID,
+            //     ]);
+            // }
+
+            DB::commit();
+
+            return redirect()->route('plans.select')->with('customer_id', $customer->id);
+        } catch (\Exception $e) {
+            DB::rollback();
+            // Log the error so you can see it in storage/logs/laravel.log
+            \Log::error("Subscription Error: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+
+    public function upgradeSubscripton(Request $request)
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'mobile_plan_price_id' => 'required|exists:mobile_user_plan_prices,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+
+            $customer = Customer::findOrFail($request->customer_id);
+
+            // =========================
+            // ✅ Get selected price
+            // =========================
+            $price = MobileUserPlanPrice::with('plan')->findOrFail($request->mobile_plan_price_id);
+
+            $plan = $price->plan;
+
+            // =========================
+            // 🔥 Referral logic
+            // =========================
+            $referral = null;
+            $discountAmount = 0;
+
+            if ($customer->referral_code_id) {
+
+                $referral = ReferralCode::find($customer->referral_code_id);
+
+                if ($referral && $referral->is_active) {
+
+                    $percentageDiscount = ($price->price * $referral->discount_percentage) / 100;
+                    $fixedDiscount = $referral->discount_amount;
+
+                    $discountAmount = max($percentageDiscount, $fixedDiscount);
+                    $discountAmount = min($discountAmount, $price->price);
+                }
+            }
+
+            $finalPrice = $price->price - $discountAmount;
+
+            // =========================
+            // ✅ Deactivate old FREE subscription
+            // =========================
+            MobileUserSubscription::where('customer_id', $customer->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'canceled',
+                    'canceled_at' => now()
+                ]);
+
+            // =========================
+            // ✅ Create NEW subscription
+            // =========================
+            $subscription = MobileUserSubscription::create([
+                'customer_id' => $customer->id,
+                'mobile_user_plan_id' => $plan->id,
+                'mobile_user_plan_price_id' => $price->id,
+                'referral_code_id' => $customer->referral_code_id,
+                'billing_cycle' => $price->billing_cycle,
+                'status' => 'pending_payment',
+                'original_price' => $price->price,
+                'referral_discount_amount' => $discountAmount,
+                'price_paid' => $finalPrice,
+                'currency' => $price->currency,
+                'refund_status' => 'none',
+            ]);
+
+            DB::commit();
+
+            // =========================
+            // 🚀 Redirect to payment (for now simulate)
+            // =========================
+            return redirect()->route('login');
+            // return redirect()->route('payment.page', $subscription->id);
+        } catch (\Exception $e) {
+
+            DB::rollback();
+
+            return back()->with('error', $e->getMessage());
         }
     }
 
