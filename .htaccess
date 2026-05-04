@@ -15,7 +15,7 @@
     RewriteRule ^ %1 [L,R=301]
 
     # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.jpg|\.jpeg|\.gif|robots\.txt|\.ico|\.ttf|\.woff|\.woff2|\.svg)$ [NC]
+    RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.jpg|\.jpeg|\.gif|\.webp|robots\.txt|\.ico|\.ttf|\.woff|\.woff2|\.svg)$ [NC]
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
@@ -25,3 +25,5 @@
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(css|assets|storage|landing|installer|js)/(.*)$ public/$1/$2 [L,NC]
 </IfModule>
+
+AddType image/webp .webp
