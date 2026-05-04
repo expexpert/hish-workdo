@@ -383,36 +383,36 @@ class DashboardController extends Controller
 
 
 
-            // $randomStr = Str::random(10);
-            // $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
+            $randomStr = Str::random(10);
+            $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
 
-            // $accounts = [
-            //     ['code' => '5141', 'bank_name' => 'Banque principale'],
-            //     ['code' => '5161', 'bank_name' => 'Caisse'],
-            // ];
+            $accounts = [
+                ['code' => '5141', 'bank_name' => 'Banque principale'],
+                ['code' => '5161', 'bank_name' => 'Caisse'],
+            ];
 
-            // foreach ($accounts as $acc) {
+            foreach ($accounts as $acc) {
 
-            //     $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
-            //         ->where('code', $acc['code'])
-            //         ->latest()
-            //         ->first();
+                $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
+                    ->where('code', $acc['code'])
+                    ->latest()
+                    ->first();
 
-            //     if (!$chartOfAccount) {
-            //         continue;
-            //     }
+                if (!$chartOfAccount) {
+                    continue;
+                }
 
-            //     BankAccount::create([
-            //         'chart_account_id' => $chartOfAccount->id,
-            //         'customer_id'      => $customer->id,
-            //         'holder_name'      => $customer->name,
-            //         'bank_name'        => $acc['bank_name'],
-            //         'account_number'   => $randomStr,
-            //         'opening_balance'  => 0,
-            //         'contact_number'   => $customer->contact,
-            //         'created_by'       => $companyID,
-            //     ]);
-            // }
+                BankAccount::create([
+                    'chart_account_id' => $chartOfAccount->id,
+                    'customer_id'      => $customer->id,
+                    'holder_name'      => $customer->name,
+                    'bank_name'        => $acc['bank_name'],
+                    'account_number'   => $randomStr,
+                    'opening_balance'  => 0,
+                    'contact_number'   => $customer->contact,
+                    'created_by'       => $companyID,
+                ]);
+            }
 
             DB::commit();
 
