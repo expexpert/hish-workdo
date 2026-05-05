@@ -23,6 +23,7 @@
     <li class="breadcrumb-item">{{ __('Customer') }}</li>
 @endsection
 
+@if(Auth::user()->type != 'super admin')
 @section('action-btn')
         <div class="d-flex">
             <a href="#" data-size="md" data-bs-toggle="tooltip" title="{{ __('Import') }}"
@@ -42,6 +43,7 @@
             </a>
         </div>
 @endsection
+@endif
 
 @section('content')
     <div class="row">
@@ -59,6 +61,9 @@
                                     @endif
                                     <th> {{ __('Contact') }}</th>
                                     <th> {{ __('Email') }}</th>
+                                    @if(Auth::user()->type == 'super admin')
+                                    <th> {{ __('Plan') }}</th>
+                                    @endif
                                     <th> {{ __('Last Login') }}</th>
                                     <th>{{ __('Action') }}</th>
                                 </tr>
@@ -72,11 +77,11 @@
                                             @can('show customer')
                                                 <a href="{{ route('customer.show', \Crypt::encrypt($customer['id'])) }}"
                                                     class="btn btn-outline-primary">
-                                                    {{ AUth::user()->customerNumberFormat($customer['customer_id']) }}
+                                                    {{ Auth::user()->customerNumberFormat($customer['customer_id']) }}
                                                 </a>
                                             @else
                                                 <a href="#" class="btn btn-outline-primary">
-                                                    {{ AUth::user()->customerNumberFormat($customer['customer_id']) }}
+                                                    {{ Auth::user()->customerNumberFormat($customer['customer_id']) }}
                                                 </a>
                                             @endcan
                                         </td>
@@ -86,6 +91,11 @@
                                         @endif
                                         <td>{{ $customer['contact'] }}</td>
                                         <td>{{ $customer['email'] }}</td>
+                                        @if(Auth::user()->type == 'super admin')
+                                        <td>
+                                            {{ $customer->mobilePlan->name }}
+                                        </td>
+                                        @endif
                                         <td>
                                             {{ !empty($customer->last_login_at) ? $customer->last_login_at : '-' }}
                                         </td>

@@ -500,6 +500,7 @@ class CustomerController extends Controller
         $invoiceUsed = CustomerInvoice::where('customer_id', $user->id)->count();
         $quoteUsed = CustomerQuote::where('customer_id', $user->id)->count();
         $expenseUsed = CustomerExpense::where('customer_id', $user->id)->count();
+        $receiptsUsed = Revenue::where('customer_id', $user->id)->count();
 
         $data['usage'] = [
             'invoices' => [
@@ -516,6 +517,11 @@ class CustomerController extends Controller
                 'used' => $expenseUsed,
                 'limit' => $plan ? $plan->expense_limit : 0,
                 'remaining' => $plan ? ($plan->expense_limit === null ? -1 : max(0, $plan->expense_limit - $expenseUsed)) : 0,
+            ],
+            'receipts' => [
+                'used' => $receiptsUsed,
+                'limit' => $plan ? $plan->receipt_limit : 0,
+                'remaining' => $plan ? ($plan->receipt_limit === null ? -1 : max(0, $plan->receipt_limit - $receiptsUsed)) : 0,
             ],
             'storage' => [
                 'used_mb' => (int) ($user->storage_used_mb ?? 0),
