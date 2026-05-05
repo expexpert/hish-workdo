@@ -326,12 +326,11 @@ class DashboardController extends Controller
         }
 
         // Case 6: Already used in 24h (cookie check)
-        // if (request()->cookie($cookieName)) {
-        //     return redirect('/?already_used')->with('error', 'You have already used this code recently. Try again later.');
-        // }
+        if (!request()->cookie($cookieName)) {
+            $referral->increment('clicks');
+        }
 
         // Valid case
-        $referral->increment('clicks');
         Cookie::queue($cookieName, true, 1440);
 
         $mobilePlans = MobileUserPlan::with('prices')->where('is_active', 1)->get();
@@ -438,40 +437,40 @@ class DashboardController extends Controller
 
 
 
-            // $randomStr = Str::random(10);
-            // $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
+            $randomStr = Str::random(10);
+            $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
 
-            // $accounts = [
-            //     ['code' => '5141', 'bank_name' => 'Banque principale'],
-            //     ['code' => '5161', 'bank_name' => 'Caisse'],
-            // ];
+            $accounts = [
+                ['code' => '5141', 'bank_name' => 'Banque principale'],
+                ['code' => '5161', 'bank_name' => 'Caisse'],
+            ];
 
-            // foreach ($accounts as $acc) {
+            foreach ($accounts as $acc) {
 
-            //     $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
-            //         ->where('code', $acc['code'])
-            //         ->latest()
-            //         ->first();
+                $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
+                    ->where('code', $acc['code'])
+                    ->latest()
+                    ->first();
 
-            //     if (!$chartOfAccount) {
-            //         continue;
-            //     }
+                if (!$chartOfAccount) {
+                    continue;
+                }
 
-            //     BankAccount::create([
-            //         'chart_account_id' => $chartOfAccount->id,
-            //         'customer_id'      => $customer->id,
-            //         'holder_name'      => $customer->name,
-            //         'bank_name'        => $acc['bank_name'],
-            //         'account_number'   => $randomStr,
-            //         'opening_balance'  => 0,
-            //         'contact_number'   => $customer->contact,
-            //         'created_by'       => $companyID,
-            //     ]);
-            // }
+                BankAccount::create([
+                    'chart_account_id' => $chartOfAccount->id,
+                    'customer_id'      => $customer->id,
+                    'holder_name'      => $customer->name,
+                    'bank_name'        => $acc['bank_name'],
+                    'account_number'   => $randomStr,
+                    'opening_balance'  => 0,
+                    'contact_number'   => $customer->contact,
+                    'created_by'       => $companyID,
+                ]);
+            }
 
             DB::commit();
 
-            return redirect('/')->with('success', 'Customer created successfully! Please proceed to select a plan and make payment.');
+            return view('dashboard.payment_success')->with('success', 'Customer created successfully! Please proceed to select a plan and make payment.');
         } catch (\Exception $e) {
             DB::rollback();
             // Log the error so you can see it in storage/logs/laravel.log
