@@ -34,6 +34,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cookie;
 
 class DashboardController extends Controller
 {
@@ -293,22 +294,52 @@ class DashboardController extends Controller
     public function signup()
     {
         $ref = request()->query('ref');
-        ReferralCode::where('code', $ref)->increment('clicks');
 
-        return view('dashboard.signup');
-    }
-
-    public function selectPlan()
-    {
-        $customerId = session('customer_id');
-
-        if (!$customerId) {
-            return redirect()->route('signup')->with('error', 'Session expired');
+        // Case 1: Missing code
+        if (!$ref) {
+            return redirect('/?missing_referral_code')->with('error', 'Referral code is missing.');
         }
+
+        $cookieName = 'ref_used_' . $ref;
+
+        // Get referral record
+        $referral = ReferralCode::where('code', $ref)->first();
+
+        // Case 2: Invalid code
+        if (!$referral) {
+            return redirect('/?invalid_referral_code')->with('error', 'Invalid referral code.');
+        }
+
+        // Case 3: Inactive
+        if (!$referral->is_active) {
+            return redirect('/?inactive_referral_code')->with('error', 'This referral code is inactive.');
+        }
+
+        // Case 4: Expired or not started
+        if (now()->lt($referral->starts_at) || now()->gt($referral->ends_at)) {
+            return redirect('/?expired_referral_code')->with('error', 'This referral code is expired or not yet valid.');
+        }
+
+        // Case 5: Usage limit reached
+        if ($referral->used_count >= $referral->max_uses) {
+            return redirect('/?usage_limit_reached')->with('error', 'This referral code has reached its usage limit.');
+        }
+
+        // Case 6: Already used in 24h (cookie check)
+        // if (request()->cookie($cookieName)) {
+        //     return redirect('/?already_used')->with('error', 'You have already used this code recently. Try again later.');
+        // }
+
+        // Valid case
+        $referral->increment('clicks');
+        Cookie::queue($cookieName, true, 1440);
 
         $mobilePlans = MobileUserPlan::with('prices')->where('is_active', 1)->get();
 
-        return view('dashboard.select_plan', compact('mobilePlans', 'customerId'));
+        $referralCode = $referral->code;
+        $referralDiscount = $referral->discount_percentage;
+
+        return view('dashboard.signup', compact('mobilePlans', 'referralCode', 'referralDiscount'));
     }
 
     public function storeMobileCustomer(Request $request)
@@ -318,7 +349,7 @@ class DashboardController extends Controller
         $createdBy = $firstAccountant?->id ?? 1;
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'full_name' => 'required|string|max:255',
             'email' => [
                 'required',
                 'email',
@@ -326,6 +357,9 @@ class DashboardController extends Controller
             ],
             'phone' => 'required',
             'password' => 'required|min:6',
+            'mobile_plan_price_id' => 'required|exists:mobile_user_plan_prices,id',
+            'referral_discount_amount' => 'required|numeric|min:0',
+            'price_after_discount' => 'required|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -351,7 +385,7 @@ class DashboardController extends Controller
 
             // 5. Create Customer
             $customer = Customer::create([
-                'name'                => $request->name,
+                'name'                => $request->full_name,
                 'email'               => $request->email,
                 'contact'             => $request->phone,
                 'password'            => Hash::make($request->password), // Don't forget to hash!
@@ -363,60 +397,81 @@ class DashboardController extends Controller
                 'referral_code_id'    => $referral?->id,
                 'referral_source'     => $request->referral_code,
                 'storage_used_mb'     => 0,
-                'mobile_user_plan_id' => $freePlan->id, // Set this immediately
+                'is_enable_login'     => 1,
             ]);
 
-            // 6. Create Subscription
-            // MAKE SURE THESE ARE IN $fillable in MobileUserSubscription model!
-            MobileUserSubscription::create([
-                'customer_id'               => $customer->id,
-                'mobile_user_plan_id'       => $freePlan->id,
-                'mobile_user_plan_price_id' => $freePrice?->id,
-                'referral_code_id'          => $referral?->id,
-                'billing_cycle'             => 'monthly',
-                'status'                    => 'active',
-                'original_price'            => 0,
-                'price_paid'                => 0,
-                'currency'                  => 'MAD',
-                'starts_at'                 => now(),
-            ]);
+            $price = MobileUserPlanPrice::with('plan')->findOrFail($request->mobile_plan_price_id);
 
+            $plan = $price->plan;
 
-
-            $randomStr = Str::random(10);
-            $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
-
-            $accounts = [
-                ['code' => '5141', 'bank_name' => 'Banque principale'],
-                ['code' => '5161', 'bank_name' => 'Caisse'],
+            $months = [
+                'monthly'   => 1,
+                'quarterly' => 3,
+                'yearly'    => 12
             ];
 
-            foreach ($accounts as $acc) {
+            $addMonths = $months[$price->billing_cycle] ?? 1;
+            $planEndsAt = now()->addMonths($addMonths);
 
-                $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
-                    ->where('code', $acc['code'])
-                    ->latest()
-                    ->first();
+            MobileUserSubscription::create([
+                'customer_id' => $customer->id,
+                'mobile_user_plan_id' => $plan->id,
+                'mobile_user_plan_price_id' => $request->mobile_plan_price_id,
+                'referral_code_id' => $customer->referral_code_id,
+                'billing_cycle' => $price->billing_cycle,
+                'status' => 'pending_payment',
+                'original_price' => $price->price,
+                'referral_discount_amount' => $request->referral_discount_amount,
+                'price_paid' => $request->price_after_discount,
+                'currency' => $price->currency,
+                'refund_status' => 'none',
+                'starts_at' => now(),
+                'ends_at' => $planEndsAt,
+                'renews_at' => $planEndsAt,
+                'payment_provider' => 'test',
+            ]);
 
-                if (!$chartOfAccount) {
-                    continue;
-                }
+            $customer->update([
+                'mobile_user_plan_id' => $plan->id,
+                'subscription_status' => 'active',
+            ]);
 
-                BankAccount::create([
-                    'chart_account_id' => $chartOfAccount->id,
-                    'customer_id'      => $customer->id,
-                    'holder_name'      => $customer->name,
-                    'bank_name'        => $acc['bank_name'],
-                    'account_number'   => $randomStr,
-                    'opening_balance'  => 0,
-                    'contact_number'   => $customer->contact,
-                    'created_by'       => $companyID,
-                ]);
-            }
+
+
+            // $randomStr = Str::random(10);
+            // $companyID = User::where('id', $createdBy)->pluck('created_by')->first();
+
+            // $accounts = [
+            //     ['code' => '5141', 'bank_name' => 'Banque principale'],
+            //     ['code' => '5161', 'bank_name' => 'Caisse'],
+            // ];
+
+            // foreach ($accounts as $acc) {
+
+            //     $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
+            //         ->where('code', $acc['code'])
+            //         ->latest()
+            //         ->first();
+
+            //     if (!$chartOfAccount) {
+            //         continue;
+            //     }
+
+            //     BankAccount::create([
+            //         'chart_account_id' => $chartOfAccount->id,
+            //         'customer_id'      => $customer->id,
+            //         'holder_name'      => $customer->name,
+            //         'bank_name'        => $acc['bank_name'],
+            //         'account_number'   => $randomStr,
+            //         'opening_balance'  => 0,
+            //         'contact_number'   => $customer->contact,
+            //         'created_by'       => $companyID,
+            //     ]);
+            // }
 
             DB::commit();
 
-            return redirect()->route('plans.select')->with('customer_id', $customer->id);
+            return redirect('/')->with('success', 'Customer created successfully! Please proceed to select a plan and make payment.');
         } catch (\Exception $e) {
             DB::rollback();
             // Log the error so you can see it in storage/logs/laravel.log

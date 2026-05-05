@@ -47,6 +47,9 @@ class ReferralCodeController extends Controller
             'owner_email' => 'nullable|email|max:100',
             'discount_percentage' => 'nullable|numeric|min:0',
             'commission_percentage' => 'nullable|numeric|min:0',
+            'max_uses' => 'required|integer|min:0',
+            'starts_at' => 'required|date',
+            'ends_at' => 'required|date|after:starts_at',
             'is_active' => 'required|boolean',
         ]);
 
@@ -61,6 +64,9 @@ class ReferralCodeController extends Controller
         $referral->owner_email = $request->owner_email;
         $referral->discount_percentage = $request->discount_percentage ?? 0;
         $referral->commission_percentage = $request->commission_percentage ?? 0;
+        $referral->max_uses = $request->max_uses ?? 0;
+        $referral->starts_at = $request->starts_at ?? null;
+        $referral->ends_at = $request->ends_at ?? null;
         $referral->clicks = 0;
         $referral->used_count = 0;
         $referral->is_active = $request->is_active;
@@ -98,6 +104,9 @@ class ReferralCodeController extends Controller
             'owner_email' => 'nullable|email|max:100',
             'discount_percentage' => 'nullable|numeric|min:0',
             'commission_percentage' => 'nullable|numeric|min:0',
+            'max_uses' => 'required|integer|min:0',
+            'starts_at' => 'required|date',
+            'ends_at' => 'required|date|after:starts_at',
             'is_active' => 'required|boolean',
         ]);
 
@@ -111,6 +120,9 @@ class ReferralCodeController extends Controller
         $referral->owner_email = $request->owner_email;
         $referral->discount_percentage = $request->discount_percentage ?? 0;
         $referral->commission_percentage = $request->commission_percentage ?? 0;
+        $referral->max_uses = $request->max_uses ?? 0;
+        $referral->starts_at = $request->starts_at ?? null;
+        $referral->ends_at = $request->ends_at ?? null;
         $referral->is_active = $request->is_active;
 
         $referral->save();

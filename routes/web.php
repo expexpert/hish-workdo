@@ -126,7 +126,6 @@ Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, '
 Route::get('/test-landing', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
 
 Route::get('/signup', [DashboardController::class, 'signup'])->name('signup')->middleware(['XSS', 'revalidate']);
-Route::get('/select-plan', [DashboardController::class, 'selectPlan'])->name('plans.select')->middleware(['XSS', 'revalidate']);
 Route::post('/store-mobile-customer', [DashboardController::class, 'storeMobileCustomer'])->name('mobile.customer.store')->middleware(['XSS', 'revalidate']);
 Route::post('/subscription/upgrade', [DashboardController::class, 'upgradeSubscripton'])->name('subscription.upgrade')->middleware(['XSS', 'revalidate']);
 
@@ -411,6 +410,10 @@ Route::group(['middleware' => ['verified']], function () {
 
     Route::get('users/{id}/login-with-company', [UserController::class, 'LoginWithCompany'])->name('login.with.company');
     Route::get('login-with-company/exit', [UserController::class, 'ExitCompany'])->name('exit.company');
+
+
+    Route::get('mobile/customers', [CustomerController::class, 'mobileCustomers'])->name('mobile.customers')->middleware(['XSS', 'revalidate']);
+    Route::delete('mobile/customer/{id}', [CustomerController::class, 'mobileCustomerDestroy'])->name('mobile.customer.destroy')->middleware(['XSS', 'revalidate']);
 
 
     //================================= Contract Type  ====================================//
@@ -854,7 +857,7 @@ Route::group(['middleware' => ['verified']], function () {
     Route::resource('payment', PaymentController::class)->except('index')->middleware(['auth', 'XSS', 'revalidate']);
     Route::resource('plans', PlanController::class)->middleware(['auth', 'XSS', 'revalidate']);
     Route::resource('mobile/plans', MobilePlanController::class)->middleware(['auth', 'XSS', 'revalidate'])->names('mobile.plans');
-     Route::get('mobile/subscription', [MobilePlanController::class, 'MobileSubscription'])->name('mobile.subscription')->middleware(['XSS']);
+    Route::get('mobile/subscription', [MobilePlanController::class, 'MobileSubscription'])->name('mobile.subscription')->middleware(['XSS']);
     Route::resource('referral/codes', ReferralCodeController::class)->middleware(['auth', 'XSS', 'revalidate'])->names('referral.codes');
     Route::get('plan/plan-trial/{id}', [PlanController::class, 'PlanTrial'])->name('plan.trial');
     Route::post('plan-disable', [PlanController::class, 'planDisable'])->name('plan.disable')->middleware(['auth', 'XSS', 'revalidate']);

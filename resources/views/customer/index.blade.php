@@ -132,7 +132,7 @@
                                                     @endcan
 
 
-
+                                                    @if ($customer->is_b2c == 0)
                                                     @can('delete customer')
                                                         <div class="action-btn">
                                                             {!! Form::open([
@@ -147,6 +147,21 @@
                                                             {!! Form::close() !!}
                                                         </div>
                                                     @endcan
+                                                    @else 
+                                                    <div class="action-btn">
+                                                            {!! Form::open([
+                                                                'method' => 'DELETE',
+                                                                'route' => ['mobile.customer.destroy', $customer['id']],
+                                                                'id' => 'delete-form-' . $customer['id'],
+                                                            ]) !!}
+                                                            <a href="#"
+                                                                class="mx-3 btn btn-sm  align-items-center bs-pass-para bg-danger"
+                                                                data-bs-toggle="tooltip" title="{{ __('Delete') }}"><i
+                                                                    class="ti ti-trash text-white text-white"></i></a>
+                                                            {!! Form::close() !!}
+                                                        </div>
+
+                                                    @endif
 
                                                 @endif
                                             </span>

@@ -635,7 +635,7 @@ class UserController extends Controller
                     $admin->creatorId()
                 );
 
-                return redirect('/');
+                return redirect('/dashboard');
             } else {
                 return redirect()->back()->with('error', __('This company does not allow super admin login.'));
             }
@@ -665,7 +665,7 @@ class UserController extends Controller
         // Clear the admin impersonating session
         session()->forget('admin_impersonating_company_id');
 
-        return redirect('/');
+        return redirect('/dashboard');
     }
 
     public function CompnayInfo($id)
