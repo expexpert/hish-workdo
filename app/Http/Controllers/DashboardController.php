@@ -545,7 +545,11 @@ class DashboardController extends Controller
     {
         if ($request->isMethod('get')) {
             $customerId = Crypt::decryptString(urldecode($request->uid));
-            return view('dashboard.upgrade-plan', compact($customerId));
+            echo '<pre>';
+            print_r($customerId);
+            die('test');
+
+            // return view('dashboard.upgrade-plan', compact($customerId));
         }
 
         $request->validate([
