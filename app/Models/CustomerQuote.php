@@ -22,6 +22,7 @@ class CustomerQuote extends Model
         'review_status',
         'notes',
         'document_path',
+        'is_ocr',
     ];
 
     protected $casts = [

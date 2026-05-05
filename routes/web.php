@@ -127,7 +127,7 @@ Route::get('/test-landing', [DashboardController::class, 'index'])->name('dashbo
 
 Route::get('/signup', [DashboardController::class, 'signup'])->name('signup')->middleware(['XSS', 'revalidate']);
 Route::post('/store-mobile-customer', [DashboardController::class, 'storeMobileCustomer'])->name('mobile.customer.store')->middleware(['XSS', 'revalidate']);
-Route::post('/subscription/upgrade', [DashboardController::class, 'upgradeSubscripton'])->name('subscription.upgrade')->middleware(['XSS', 'revalidate']);
+Route::match(['get', 'post'], '/subscription/upgrade', [DashboardController::class, 'upgradeSubscripton'])->name('subscription.upgrade')->middleware(['XSS', 'revalidate']);
 
 Route::get('/', function () {
     return view('coming-soon');

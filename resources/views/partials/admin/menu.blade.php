@@ -551,7 +551,7 @@ $emailTemplate = App\Models\EmailTemplate::first();
 
                 <li class="dash-item {{ Route::is('mobile.customers') ? 'active' : '' }}">
                     <a href="{{ route('mobile.customers') }}" class="dash-link">
-                        <span class="dash-micon"><i class="ti ti-credit-card"></i></span>
+                        <span class="dash-micon"><i class="ti ti-user-plus"></i></span>
                         <span class="dash-mtext">{{ __('Mobile Customers') }}</span>
                     </a>
                 </li>
