@@ -18,6 +18,7 @@ class Revenue extends Model
         'description',
         'created_by',
         'add_receipt',
+        'is_ocr',
     ];
 
     protected $appends = ['pdf_receipt'];

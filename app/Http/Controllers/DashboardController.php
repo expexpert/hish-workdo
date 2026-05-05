@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 
 class DashboardController extends Controller
 {
@@ -291,54 +293,99 @@ class DashboardController extends Controller
         }
     }
 
-    public function signup()
+    public function signup(Request $request)
     {
-        $ref = request()->query('ref');
+        $ref = $request->query('ref');
+        $referralCode = null;
+        $referralDiscount = null;
 
-        // Case 1: Missing code
-        if (!$ref) {
-            return redirect('/?missing_referral_code')->with('error', 'Referral code is missing.');
+        // ✅ Only for guest users
+        if (auth()->check()) {
+            return redirect('/dashboard');
         }
 
-        $cookieName = 'ref_used_' . $ref;
+        if ($ref) {
 
-        // Get referral record
-        $referral = ReferralCode::where('code', $ref)->first();
+            $ip = $request->ip();
 
-        // Case 2: Invalid code
-        if (!$referral) {
-            return redirect('/?invalid_referral_code')->with('error', 'Invalid referral code.');
+            $referral = ReferralCode::where('code', $ref)->first();
+
+            // ❌ Invalid
+            if (!$referral) {
+                return redirect()->route('signup')
+                    ->withInput()
+                    ->with('error', 'Invalid referral code.');
+            }
+
+            // ❌ Inactive
+            if (!$referral->is_active) {
+                return redirect()->route('signup')
+                    ->withInput()
+                    ->with('error', 'This referral code is inactive.');
+            }
+
+            // ❌ Expired
+            if (now()->lt($referral->starts_at) || now()->gt($referral->ends_at)) {
+                return redirect()->route('signup')
+                    ->withInput()
+                    ->with('error', 'This referral code is expired or not yet valid.');
+            }
+
+            // ❌ Limit reached
+            if ($referral->used_count >= $referral->max_uses) {
+                return redirect()->route('signup')
+                    ->withInput()
+                    ->with('error', 'This referral code has reached its usage limit.');
+            }
+
+            // 🔍 Check existing log for this IP + referral
+            $log = DB::table('referral_ip_logs')
+                ->where('referral_code', $ref)
+                ->where('ip_address', $ip)
+                ->first();
+
+            // ❌ If already used → block discount completely
+            if ($log && $log->is_used) {
+                return redirect()->route('signup')
+                    ->withInput()
+                    ->with('error', 'You have already used this referral code.');
+            }
+
+            // ✅ First time visit → create log + increment clicks
+            if (!$log) {
+
+                $referral->increment('clicks');
+
+                DB::table('referral_ip_logs')->insert([
+                    'referral_code' => $ref,
+                    'ip_address'   => $ip,
+                    'is_used'      => false,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+            }
+
+            // ✅ Store in session
+            if (!session()->has('referral_code')) {
+                session([
+                    'referral_code'     => $referral->code,
+                    'referral_discount' => $referral->discount_percentage
+                ]);
+            }
+
+            $referralCode     = session('referral_code');
+            $referralDiscount = session('referral_discount');
         }
 
-        // Case 3: Inactive
-        if (!$referral->is_active) {
-            return redirect('/?inactive_referral_code')->with('error', 'This referral code is inactive.');
-        }
+        $mobilePlans = MobileUserPlan::with('prices')
+            ->where('is_active', 1)
+            ->get();
 
-        // Case 4: Expired or not started
-        if (now()->lt($referral->starts_at) || now()->gt($referral->ends_at)) {
-            return redirect('/?expired_referral_code')->with('error', 'This referral code is expired or not yet valid.');
-        }
-
-        // Case 5: Usage limit reached
-        if ($referral->used_count >= $referral->max_uses) {
-            return redirect('/?usage_limit_reached')->with('error', 'This referral code has reached its usage limit.');
-        }
-
-        // Case 6: Already used in 24h (cookie check)
-        if (!request()->cookie($cookieName)) {
-            $referral->increment('clicks');
-        }
-
-        // Valid case
-        Cookie::queue($cookieName, true, 1440);
-
-        $mobilePlans = MobileUserPlan::with('prices')->where('is_active', 1)->get();
-
-        $referralCode = $referral->code;
-        $referralDiscount = $referral->discount_percentage;
-
-        return view('dashboard.signup', compact('mobilePlans', 'referralCode', 'referralDiscount'));
+        return view('dashboard.signup', compact(
+            'mobilePlans',
+            'referralCode',
+            'referralDiscount'
+        ));
     }
 
     public function storeMobileCustomer(Request $request)
@@ -376,6 +423,7 @@ class DashboardController extends Controller
                 $referral = ReferralCode::where('code', $request->referral_code)
                     ->where('is_active', 1)
                     ->first();
+                $referral->increment('used_count');
             }
 
             // 4. ID Generation (Warning: Better to use Auto-Increment if possible)
@@ -435,6 +483,19 @@ class DashboardController extends Controller
                 'subscription_status' => 'active',
             ]);
 
+            $ref = session('referral_code');
+            $ip  = $request->ip();
+
+            DB::table('referral_ip_logs')
+                ->where('referral_code', $ref)
+                ->where('ip_address', $ip)
+                ->update([
+                    'is_used'    => true,
+                    'updated_at' => now()
+                ]);
+
+            session()->forget(['referral_code', 'referral_discount']);
+
 
 
             $randomStr = Str::random(10);
@@ -482,6 +543,11 @@ class DashboardController extends Controller
 
     public function upgradeSubscripton(Request $request)
     {
+        if ($request->isMethod('get')) {
+            $customerId = Crypt::decryptString(urldecode($request->uid));
+            return view('dashboard.upgrade-plan', compact($customerId));
+        }
+
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'mobile_plan_price_id' => 'required|exists:mobile_user_plan_prices,id',

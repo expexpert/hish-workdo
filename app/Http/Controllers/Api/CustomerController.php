@@ -484,6 +484,10 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
+        $encryptedId = Crypt::encryptString($user->id);
+
+        $url = url('/subscription/upgrade/' . urlencode($encryptedId));
+
         $data = [];
 
         $data['is_b2c'] = $user->is_b2c;
@@ -501,6 +505,21 @@ class CustomerController extends Controller
         $quoteUsed = CustomerQuote::where('customer_id', $user->id)->count();
         $expenseUsed = CustomerExpense::where('customer_id', $user->id)->count();
         $receiptsUsed = Revenue::where('customer_id', $user->id)->count();
+
+        $models = [
+            CustomerInvoice::class,
+            CustomerQuote::class,
+            CustomerExpense::class,
+            Revenue::class,
+        ];
+
+        $ocrUsed = 0;
+
+        foreach ($models as $model) {
+            $ocrUsed += $model::where('customer_id', $user->id)
+                ->where('is_ocr', true)
+                ->count();
+        }
 
         $data['usage'] = [
             'invoices' => [
@@ -523,6 +542,11 @@ class CustomerController extends Controller
                 'limit' => $plan ? $plan->receipt_limit : 0,
                 'remaining' => $plan ? ($plan->receipt_limit === null ? -1 : max(0, $plan->receipt_limit - $receiptsUsed)) : 0,
             ],
+            'ocr' => [
+                'used' => $ocrUsed,
+                'limit' => $plan ? $plan->ocr_limit : 0,
+                'remaining' => $plan ? ($plan->ocr_limit === null ? -1 : max(0, $plan->ocr_limit - $ocrUsed)) : 0,
+            ],
             'storage' => [
                 'used_mb' => (int) ($user->storage_used_mb ?? 0),
                 'limit_mb' => $plan ? (int) $plan->storage_limit_mb : 0,
@@ -538,7 +562,8 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Subscription status retrieved successfully.',
-            'data'    => $data
+            'data'    => $data,
+            'upgrade_url' => $url,
         ], 200);
     }
 

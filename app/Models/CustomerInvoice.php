@@ -21,7 +21,8 @@ class CustomerInvoice extends Model
         'status',
         'review_status',
         'notes',
-        'document_path'
+        'document_path',
+        'is_ocr',
     ];
 
     protected $casts = [

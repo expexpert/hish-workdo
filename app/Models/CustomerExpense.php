@@ -26,6 +26,7 @@ class CustomerExpense extends Model
         'total_tva',
         'notes',
         'reference',
+        'is_ocr',
     ];
 
     /**
