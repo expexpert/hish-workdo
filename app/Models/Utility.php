@@ -2117,7 +2117,7 @@ class Utility extends Model
             $error = __('Plan storage limit is over so please upgrade the plan.');
             return $error;
         } else {
-            $customer->storage_limit_mb = $total_storage;
+            $customer->storage_used_mb = $total_storage;
         }
 
         $customer->save();
@@ -2138,7 +2138,7 @@ class Utility extends Model
         $customer = Customer::find($customer_id);
 
         if ($customer) {
-            $customer->storage_limit -= $fileSizeMB;
+            $customer->storage_used_mb -= $fileSizeMB;
             $customer->save();
         }
 
