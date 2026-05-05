@@ -31,6 +31,7 @@ use App\Models\InvoiceProduct;
 use App\Models\CustomerQuote;
 use App\Models\ChartOfAccount;
 use App\Models\BankAccount;
+use App\Models\MobileUserSubscription;
 use Illuminate\Support\Str;
 
 class CustomerController extends Controller
@@ -1399,5 +1400,23 @@ class CustomerController extends Controller
             'counts'  => $counts,
             'message' => 'Review status updated'
         ]);
+    }
+
+
+    public function mobileCustomers()
+    {
+        $customers = Customer::where('is_b2c', 1)->with('accountant')->get();
+        $isAccountant = '0';
+
+        return view('customer.index', compact('customers', 'isAccountant'));
+    }
+
+    public function mobileCustomerDestroy($id)
+    {
+        $customer = Customer::where('is_b2c', 1)->findOrFail($id);
+        MobileUserSubscription::where('customer_id', $customer->id)->delete();
+        $customer->delete();
+
+        return redirect()->route('mobile.customers')->with('success', __('Customer successfully deleted.'));
     }
 }

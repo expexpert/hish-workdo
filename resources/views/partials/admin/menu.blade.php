@@ -549,6 +549,13 @@ $emailTemplate = App\Models\EmailTemplate::first();
                     </a>
                 </li>
 
+                <li class="dash-item {{ Route::is('mobile.customers') ? 'active' : '' }}">
+                    <a href="{{ route('mobile.customers') }}" class="dash-link">
+                        <span class="dash-micon"><i class="ti ti-credit-card"></i></span>
+                        <span class="dash-mtext">{{ __('Mobile Customers') }}</span>
+                    </a>
+                </li>
+
                 <li
                     class="dash-item {{ Request::segment(1) == 'customer-category' ? 'active' : '' }}">
                     <a href="{{ route('customer-category.index') }}" class="dash-link  ">

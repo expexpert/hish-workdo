@@ -2105,6 +2105,46 @@ class Utility extends Model
         return true;
     }
 
+    public static function updateB2CStorageLimit($customer_id, $image_size)
+    {
+        $image_size = number_format($image_size / 1048576, 2);
+        $customer   = Customer::find($customer_id);
+        $plan   = MobileUserPlan::find($customer->mobile_user_plan_id);
+        $total_storage = $customer->storage_used_mb + $image_size;
+
+
+        if ($plan->storage_limit_mb <= $total_storage && $plan->storage_limit_mb != -1) {
+            $error = __('Plan storage limit is over so please upgrade the plan.');
+            return $error;
+        } else {
+            $customer->storage_limit_mb = $total_storage;
+        }
+
+        $customer->save();
+        return 1;
+    }
+
+    public static function changeB2CStorageLimitNew($customer_id, $file_path)
+    {
+        $fullPath = storage_path('app/private/' . $file_path);
+
+        if (!file_exists($fullPath)) {
+            return false; // nothing to update
+        }
+
+        $fileSize = filesize($fullPath); // bytes
+        $fileSizeMB = $fileSize / 1048576; // convert to MB
+
+        $customer = Customer::find($customer_id);
+
+        if ($customer) {
+            $customer->storage_limit -= $fileSizeMB;
+            $customer->save();
+        }
+
+        return true;
+    }
+
     public static function getChatGPTSettings()
     {
         $user = User::find(\Auth::user()->creatorId());

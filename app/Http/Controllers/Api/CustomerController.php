@@ -36,6 +36,8 @@ use App\Models\Revenue;
 use App\Models\BankAccount;
 use App\Models\Transaction;
 use App\Models\InvoicePayment;
+use App\Models\MobileUserPlan;
+use App\Models\MobileUserSubscription;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -474,6 +476,63 @@ class CustomerController extends Controller
             'data'    => [
                 'has_unread_notifications' => $hasUnread
             ]
+        ], 200);
+    }
+
+
+    public function getSusbscriptionStatus(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $data = [];
+
+        $data['is_b2c'] = $user->is_b2c;
+        $data['subscription'] = MobileUserSubscription::where('customer_id', $user->id)->get();
+        $data['plan'] = MobileUserPlan::where('id', $user->mobile_user_plan_id)->select('id', 'name', 'slug')->first() ?? 'free';
+
+        // Fetch the plan limits
+        $plan = MobileUserPlan::find($user->mobile_user_plan_id);
+        if (!$plan) {
+            $plan = MobileUserPlan::where('slug', 'free')->first();
+        }
+
+        // Calculate usage
+        $invoiceUsed = CustomerInvoice::where('customer_id', $user->id)->count();
+        $quoteUsed = CustomerQuote::where('customer_id', $user->id)->count();
+        $expenseUsed = CustomerExpense::where('customer_id', $user->id)->count();
+
+        $data['usage'] = [
+            'invoices' => [
+                'used' => $invoiceUsed,
+                'limit' => $plan ? $plan->invoice_limit : 0,
+                'remaining' => $plan ? ($plan->invoice_limit === null ? -1 : max(0, $plan->invoice_limit - $invoiceUsed)) : 0,
+            ],
+            'quotes' => [
+                'used' => $quoteUsed,
+                'limit' => $plan ? $plan->quote_limit : 0,
+                'remaining' => $plan ? ($plan->quote_limit === null ? -1 : max(0, $plan->quote_limit - $quoteUsed)) : 0,
+            ],
+            'expenses' => [
+                'used' => $expenseUsed,
+                'limit' => $plan ? $plan->expense_limit : 0,
+                'remaining' => $plan ? ($plan->expense_limit === null ? -1 : max(0, $plan->expense_limit - $expenseUsed)) : 0,
+            ],
+            'storage' => [
+                'used_mb' => (int) ($user->storage_used_mb ?? 0),
+                'limit_mb' => $plan ? (int) $plan->storage_limit_mb : 0,
+                'remaining_mb' => $plan ? max(0, $plan->storage_limit_mb - ($user->storage_used_mb ?? 0)) : 0,
+            ],
+        ];
+
+        $data['features'] = [
+            'whatsapp_bot_enabled' => $plan->whatsapp_bot_enabled,
+            'export_enabled' => $plan->export_enabled,
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Subscription status retrieved successfully.',
+            'data'    => $data
         ], 200);
     }
 
@@ -1347,7 +1406,11 @@ class CustomerController extends Controller
 
             if (!empty($request->file)) {
                 $image_size = $request->file('file')->getSize();
-                $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+                $user = $request->user();
+
+                $result = $user->is_b2c
+                    ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                    : Utility::updateStorageLimit($user->companyId(), $image_size);
                 if ($result != 1) {
                     return response()->json([
                         'success' => false,
@@ -1564,7 +1627,11 @@ class CustomerController extends Controller
         // Handle File Upload
         if ($request->hasFile('file')) {
             $image_size = $request->file('file')->getSize();
-            $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+
+            $result = $user->is_b2c
+                ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                : Utility::updateStorageLimit($user->companyId(), $image_size);
+
             if ($result != 1) {
                 return response()->json([
                     'success' => false,
@@ -1606,7 +1673,9 @@ class CustomerController extends Controller
 
         if ($expense->file) {
             $file_path = $expense->file;
-            Utility::changeStorageLimitNew(auth()->user()->companyId(), $file_path);
+            $user->is_b2c
+                ? Utility::changeB2CStorageLimitNew($user->id, $file_path)
+                : Utility::changeStorageLimitNew($user->companyId(), $file_path);
             Storage::disk('private')->delete($expense->file);
         }
 
@@ -1710,8 +1779,6 @@ class CustomerController extends Controller
     public function storeInvoice(Request $request)
     {
 
-        // Optional preprocessing
-
         // ✅ STEP 1: Validation
         $validated = $request->validate([
             'customer_id'    => 'required|exists:customers,id',
@@ -1735,7 +1802,13 @@ class CustomerController extends Controller
 
         if (!empty($request->document)) {
             $image_size = $request->file('document')->getSize();
-            $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+
+            $user = $request->user();
+
+            $result = $user->is_b2c
+                ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                : Utility::updateStorageLimit($user->companyId(), $image_size);
+
             if ($result != 1) {
                 return response()->json([
                     'success' => false,
@@ -2186,11 +2259,13 @@ class CustomerController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $validated, $invoice) {
+            return DB::transaction(function () use ($request, $validated, $invoice, $user) {
 
                 if ($request->remove_document) {
                     if ($invoice->document_path) {
-                        Utility::changeStorageLimitNew(auth()->user()->companyId(), $invoice->document_path);
+                        $user->is_b2c
+                            ? Utility::changeB2CStorageLimitNew($user->id, $invoice->document_path)
+                            : Utility::changeStorageLimitNew($user->companyId(), $invoice->document_path);
                         Storage::disk('private')->delete($invoice->document_path);
                     }
                     $validated['document_path'] = null;
@@ -2200,7 +2275,11 @@ class CustomerController extends Controller
                 if ($request->hasFile('document')) {
 
                     $image_size = $request->file('document')->getSize();
-                    $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+
+                    $result = $user->is_b2c
+                        ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                        : Utility::updateStorageLimit($user->companyId(), $image_size);
+
                     if ($result != 1) {
                         return response()->json([
                             'success' => false,
@@ -2258,11 +2337,13 @@ class CustomerController extends Controller
         }
 
         try {
-            return DB::transaction(function () use ($invoice) {
+            return DB::transaction(function () use ($invoice, $user) {
                 // 1. Delete the physical file from storage if it exists
                 if ($invoice->document_path) {
                     $file_path = $invoice->document_path;
-                    Utility::changeStorageLimitNew(auth()->user()->companyId(), $file_path);
+                    $user->is_b2c
+                        ? Utility::changeB2CStorageLimitNew($user->id, $file_path)
+                        : Utility::changeStorageLimitNew($user->companyId(), $file_path);
                     Storage::disk('private')->delete($invoice->document_path);
                 }
 
@@ -2760,7 +2841,12 @@ class CustomerController extends Controller
 
         if (!empty($request->document)) {
             $image_size = $request->file('document')->getSize();
-            $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+            $user = $request->user();
+
+            $result = $user->is_b2c
+                ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                : Utility::updateStorageLimit($user->companyId(), $image_size);
+
             if ($result != 1) {
                 return response()->json([
                     'success' => false,
@@ -2935,11 +3021,13 @@ class CustomerController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $validated, $quote) {
+            return DB::transaction(function () use ($request, $validated, $quote, $user) {
 
                 if ($request->remove_document) {
                     if ($quote->document_path) {
-                        Utility::changeStorageLimitNew(auth()->user()->companyId(), $quote->document_path);
+                        $user->is_b2c
+                            ? Utility::changeB2CStorageLimitNew($user->id, $quote->document_path)
+                            : Utility::changeStorageLimitNew($user->companyId(), $quote->document_path);
                         Storage::disk('private')->delete($quote->document_path);
                     }
                     $validated['document_path'] = null;
@@ -2949,7 +3037,11 @@ class CustomerController extends Controller
                 if ($request->hasFile('document')) {
 
                     $image_size = $request->file('document')->getSize();
-                    $result = Utility::updateStorageLimit(auth()->user()->companyId(), $image_size);
+
+                    $result = $user->is_b2c
+                        ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                        : Utility::updateStorageLimit($user->companyId(), $image_size);
+
                     if ($result != 1) {
                         return response()->json([
                             'success' => false,
@@ -3011,11 +3103,13 @@ class CustomerController extends Controller
         }
 
         try {
-            return DB::transaction(function () use ($quote) {
+            return DB::transaction(function () use ($quote, $user) {
                 // 1. Delete the physical file from storage if it exists
                 if ($quote->document_path) {
                     $file_path = $quote->document_path;
-                    Utility::changeStorageLimitNew(auth()->user()->companyId(), $file_path);
+                    $user->is_b2c
+                        ? Utility::changeB2CStorageLimitNew($user->id, $file_path)
+                        : Utility::changeStorageLimitNew($user->companyId(), $file_path);
                     Storage::disk('private')->delete($quote->document_path);
                 }
 
@@ -3389,7 +3483,11 @@ class CustomerController extends Controller
 
                 $image_size = $request->file('add_receipt')->getSize();
 
-                $result = Utility::updateStorageLimit(\Auth::user()->companyId(), $image_size);
+                $user = $request->user();
+
+                $result = $user->is_b2c
+                    ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                    : Utility::updateStorageLimit($user->companyId(), $image_size);
 
                 if ($result == 1) {
                     $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
@@ -3602,7 +3700,9 @@ class CustomerController extends Controller
             if ($request->hasFile('add_receipt')) {
                 $image_size = $request->file('add_receipt')->getSize();
 
-                $result = Utility::updateStorageLimit(\Auth::user()->companyId(), $image_size);
+                $result = $user->is_b2c
+                    ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                    : Utility::updateStorageLimit($user->companyId(), $image_size);
 
                 if ($result == 1) {
                     // Delete old file if exists

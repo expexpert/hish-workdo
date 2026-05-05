@@ -34,6 +34,9 @@
                                 <th>{{ __('Commission (%)') }}</th>
                                 <th>{{ __('Clicks') }}</th>
                                 <th>{{ __('Used') }}</th>
+                                <th>{{ __('Max Uses') }}</th>
+                                <th>{{ __('Start At') }}</th>
+                                <th>{{ __('End At') }}</th>
                                 <th>{{ __('Status') }}</th>
                                 <th width="10%">{{ __('Action') }}</th>
                             </tr>
@@ -50,6 +53,9 @@
                                 <td>{{ $code->commission_percentage ?? 0 }}</td>
                                 <td>{{ $code->clicks ?? 0 }}</td>
                                 <td>{{ $code->used_count ?? 0 }}</td>
+                                <td>{{ $code->max_uses ?? 0 }}</td>
+                                <td>{{ $code->starts_at ?? '-' }}</td>
+                                <td>{{ $code->ends_at ?? '-'}}</td>
                                 <td>
                                     @if($code->is_active)
                                     <span class="badge bg-success">{{ __('Active') }}</span>

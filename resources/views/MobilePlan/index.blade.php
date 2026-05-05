@@ -6,16 +6,6 @@
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
     <li class="breadcrumb-item">{{ __('Mobile Plan') }}</li>
     @endsection
-    @section('action-btn')
-    <div class="float-end">
-        @can('create plan')
-        <a href="#" data-url="{{ route('mobile.plans.create') }}" data-ajax-popup="true" data-bs-toggle="tooltip"
-            title="{{ __('Create') }}" data-title="{{ __('Create New Plan') }}" class="btn btn-sm btn-primary" data-size="lg">
-            <i class="ti ti-plus"></i>
-        </a>
-        @endcan
-    </div>
-    @endsection
     @section('content')
     <div class="row">
 
@@ -40,7 +30,7 @@
                         </a>
 
                         {{-- DELETE --}}
-                        {!! Form::open([
+                        <!-- {!! Form::open([
                         'method' => 'DELETE',
                         'route' => ['mobile.plans.destroy', $plan->id],
                         'id' => 'delete-form-' . $plan->id
@@ -53,7 +43,7 @@
                             <i class="ti ti-trash"></i>
                         </a>
 
-                        {!! Form::close() !!}
+                        {!! Form::close() !!} -->
                     </div>
 
                     {{-- PLAN NAME --}}

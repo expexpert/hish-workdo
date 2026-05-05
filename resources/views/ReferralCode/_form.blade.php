@@ -67,6 +67,26 @@
 
         <hr>
 
+        <h6 class="mb-3">Start & End Dates</h6>
+
+        <div class="col-md-6">
+            <input type="date"
+                name="starts_at"
+                value="{{ isset($referralCode->starts_at) ? \Carbon\Carbon::parse($referralCode->starts_at)->format('Y-m-d') : '' }}"
+                class="form-control"
+                required>
+        </div>
+
+        <div class="col-md-6">
+            <input type="date"
+                name="ends_at"
+                value="{{ isset($referralCode->ends_at) ? \Carbon\Carbon::parse($referralCode->ends_at)->format('Y-m-d') : '' }}"
+                class="form-control"
+                required>
+        </div>
+
+        <hr>
+
         {{-- ANALYTICS --}}
         @if(isset($referralCode))
         <h6 class="mb-3">Analytics</h6>
@@ -82,18 +102,25 @@
         <hr>
         @endif
 
+        <div class="form-group col-md-6">
+            <label class="form-label">Max Uses</label>
+            <input type="number" name="max_uses" value="{{ $referralCode->max_uses ?? '' }}" class="form-control" required>
+        </div>
+
         {{-- STATUS --}}
-        <h6 class="mb-3">Status</h6>
+        <div class="col-md-6">
+            <h6 class="mb-3">Status</h6>
 
-        <input type="hidden" name="is_active" value="0">
+            <input type="hidden" name="is_active" value="0">
 
-        <div class="form-check form-switch">
-            <input type="checkbox"
-                name="is_active"
-                value="1"
-                class="form-check-input"
-                {{ isset($referralCode) ? ($referralCode->is_active ? 'checked' : '') : 'checked' }}>
-            <label class="form-check-label">Active</label>
+            <div class="form-check form-switch">
+                <input type="checkbox"
+                    name="is_active"
+                    value="1"
+                    class="form-check-input"
+                    {{ isset($referralCode) ? ($referralCode->is_active ? 'checked' : '') : 'checked' }}>
+                <label class="form-check-label">Active</label>
+            </div>
         </div>
 
     </div>
