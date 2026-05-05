@@ -487,7 +487,7 @@ class CustomerController extends Controller
 
         $encryptedId = Crypt::encryptString($user->id);
 
-        $url = url('/subscription/upgrade/' . urlencode($encryptedId));
+        $url = url('/subscription/upgrade?uid=' . urlencode($encryptedId));
 
         $data = [];
 
