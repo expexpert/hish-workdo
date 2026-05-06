@@ -482,7 +482,7 @@ class DashboardController extends Controller
             $customer->update([
                 'mobile_user_plan_id' => $plan->id,
                 'subscription_status' => 'active',
-                'is_enable_login'  => true,
+                'is_enable_login'  => 1,
             ]);
 
             $ref = session('referral_code');

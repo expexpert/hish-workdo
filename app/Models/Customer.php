@@ -23,7 +23,6 @@ class Customer extends Authenticatable
         'password_changed_at' => 'datetime',
         'is_b2c' => 'boolean',
         'app_access_enabled' => 'boolean',
-        'is_enable_login' => 'boolean',
         'storage_used_mb' => 'integer',
     ];
 
