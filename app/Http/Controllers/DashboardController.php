@@ -439,13 +439,12 @@ class DashboardController extends Controller
                 'is_b2c'              => 1,
                 'created_by'          => $createdBy,
                 'customer_id'         => $latestCustomerId,
-                'app_access_enabled'  => 1,
+                'is_enable_login'  => 1,
                 'subscription_status' => 'active',
                 'referral_code_id'    => $referral?->id,
                 'referral_source'     => $request->referral_code,
                 'storage_used_mb'     => 0,
                 'is_enable_login'     => 1,
-                'app_access_enabled'  => false,
             ]);
 
             $price = MobileUserPlanPrice::with('plan')->findOrFail($request->mobile_plan_price_id);
@@ -483,7 +482,7 @@ class DashboardController extends Controller
             $customer->update([
                 'mobile_user_plan_id' => $plan->id,
                 'subscription_status' => 'active',
-                'app_access_enabled'  => true,
+                'is_enable_login'  => true,
             ]);
 
             $ref = session('referral_code');

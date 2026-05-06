@@ -1423,7 +1423,7 @@ class CustomerController extends Controller
     public function mobileCustomerUpdate(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
-        $customer->app_access_enabled = $request->app_access_enabled;
+        $customer->is_enable_login = $request->is_enable_login;
         $customer->save();
 
         return redirect()->back()->with('success', 'Customer access updated successfully.');
