@@ -166,15 +166,15 @@
                                                                 'style' => 'display:inline;' 
                                                             ]) !!}
                                                                 {{-- Hidden field to tell the controller what to do --}}
-                                                                <input type="hidden" name="app_access_enabled" value="{{ $customer['app_access_enabled'] ? 0 : 1 }}">
+                                                                <input type="hidden" name="is_enable_login" value="{{ $customer['is_enable_login'] ? 0 : 1 }}">
 
                                                                 <a href="#" 
-                                                                   class="mx-3 btn btn-sm align-items-center {{ $customer['app_access_enabled'] ? 'bg-success' : 'bg-danger' }}" 
+                                                                   class="mx-3 btn btn-sm align-items-center {{ $customer['is_enable_login'] ? 'bg-success' : 'bg-danger' }}" 
                                                                    data-bs-toggle="tooltip" 
-                                                                   title="{{ $customer['app_access_enabled'] ? __('Disable Access') : __('Enable Access') }}"
+                                                                   title="{{ $customer['is_enable_login'] ? __('Disable Access') : __('Enable Access') }}"
                                                                    onclick="event.preventDefault(); document.getElementById('update-form-{{ $customer['id'] }}').submit();">
 
-                                                                    <i class="ti {{ $customer['app_access_enabled'] ? 'ti-lock' : 'ti-lock-open' }} text-white"></i>
+                                                                    <i class="ti {{ $customer['is_enable_login'] ? 'ti-lock' : 'ti-lock-open' }} text-white"></i>
                                                                 </a>
                                                             {!! Form::close() !!}
                                                     </div>
