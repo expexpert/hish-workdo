@@ -16,6 +16,9 @@ use App\Models\ClientNotification;
 use App\Models\User;
 use App\Models\ChartOfAccount;
 use App\Models\BankAccount;
+use App\Models\MobileUserPlan;
+use App\Models\MobileUserPlanPrice;
+use App\Models\MobileUserSubscription;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Rule;
 
@@ -119,6 +122,45 @@ class AuthController extends Controller
 
         // Generate token
         $token = $customer->createToken('mobile-login')->plainTextToken;
+
+
+        $freePlan = MobileUserPlan::where('name', 'Free')->first();
+        $price = MobileUserPlanPrice::with('plan')->findOrFail($freePlan->id);
+
+        $plan = $price->plan;
+
+        $months = [
+            'monthly'   => 1,
+            'quarterly' => 3,
+            'yearly'    => 12
+        ];
+
+        $addMonths = $months[$price->billing_cycle] ?? 1;
+        $planEndsAt = now()->addMonths($addMonths);
+
+        MobileUserSubscription::create([
+            'customer_id' => $customer->id,
+            'mobile_user_plan_id' => $plan->id,
+            'mobile_user_plan_price_id' => $price->id,
+            'referral_code_id' => null,
+            'billing_cycle' => $price->billing_cycle,
+            'status' => 'active',
+            'original_price' => $price->price,
+            'referral_discount_amount' => 0,
+            'price_paid' => $price->price,
+            'currency' => $price->currency,
+            'refund_status' => 'none',
+            'starts_at' => now(),
+            'ends_at' => $planEndsAt,
+            'renews_at' => $planEndsAt,
+            'trial_ends_at' => now()->addDays(7),
+            'payment_provider' => 'test',
+        ]);
+
+        $customer->update([
+            'mobile_user_plan_id' => $plan->id,
+            'subscription_status' => 'active',
+        ]);
 
 
 
