@@ -97,7 +97,7 @@ class AuthController extends Controller
             'customer_id' => $latestCustomerId,
 
             'is_b2c' => true,
-            'app_access_enabled' => false,
+            'is_enable_login' => 0,
 
             // Company & billing
             'company_type' => $validated['company_type'],
@@ -161,7 +161,7 @@ class AuthController extends Controller
         $customer->update([
             'mobile_user_plan_id' => $plan->id,
             'subscription_status' => 'active',
-            'app_access_enabled'  =>true,
+            'is_enable_login'  => 1,
         ]);
 
 
@@ -242,11 +242,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($customer->is_b2c == true && $customer->app_access_enabled == false) {
-            return response()->json([
-                'message' => 'Your account is not enabled for app access. Please contact support.'
-            ], 403);
-        }
+        // if ($customer->is_b2c == true && $customer->is_enable_login == 0) {
+        //     return response()->json([
+        //         'message' => 'Your account is not enabled for app access. Please contact support.'
+        //     ], 403);
+        // }
 
         $token = $customer->createToken('mobile-login')->plainTextToken;
         $customer->update([
