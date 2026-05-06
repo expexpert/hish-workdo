@@ -3935,8 +3935,8 @@ class CustomerController extends Controller
 
         // --- NEW: Trigger WhatsApp Bot to send the OTP ---
         try {
-            $botUrl = env('WHATSAPP_BOT_URL', 'http://localhost:3005');
-            $botSecret = env('WHATSAPP_BOT_SECRET', 'super-secret');
+            $botUrl = config('ai_limits.bot_url');
+            $botSecret = config('ai_limits.bot_secret');
 
             Http::withHeaders([
                 'X-Bot-Secret' => $botSecret
