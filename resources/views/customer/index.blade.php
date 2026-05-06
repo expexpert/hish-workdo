@@ -158,6 +158,26 @@
                                                         </div>
                                                     @endcan
                                                     @else 
+                                                    <div class="action-btn me-2">
+                                                            {!! Form::open([
+                                                                'method' => 'POST',
+                                                                'route' => ['mobile.customer.update', $customer['id']],
+                                                                'id' => 'update-form-' . $customer['id'],
+                                                                'style' => 'display:inline;' 
+                                                            ]) !!}
+                                                                {{-- Hidden field to tell the controller what to do --}}
+                                                                <input type="hidden" name="app_access_enabled" value="{{ $customer['app_access_enabled'] ? 0 : 1 }}">
+
+                                                                <a href="#" 
+                                                                   class="mx-3 btn btn-sm align-items-center {{ $customer['app_access_enabled'] ? 'bg-success' : 'bg-danger' }}" 
+                                                                   data-bs-toggle="tooltip" 
+                                                                   title="{{ $customer['app_access_enabled'] ? __('Disable Access') : __('Enable Access') }}"
+                                                                   onclick="event.preventDefault(); document.getElementById('update-form-{{ $customer['id'] }}').submit();">
+
+                                                                    <i class="ti {{ $customer['app_access_enabled'] ? 'ti-lock' : 'ti-lock-open' }} text-white"></i>
+                                                                </a>
+                                                            {!! Form::close() !!}
+                                                    </div>
                                                     <div class="action-btn">
                                                             {!! Form::open([
                                                                 'method' => 'DELETE',
@@ -169,7 +189,7 @@
                                                                 data-bs-toggle="tooltip" title="{{ __('Delete') }}"><i
                                                                     class="ti ti-trash text-white text-white"></i></a>
                                                             {!! Form::close() !!}
-                                                        </div>
+                                                    </div>
 
                                                     @endif
 

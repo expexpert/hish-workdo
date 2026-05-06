@@ -414,6 +414,7 @@ Route::group(['middleware' => ['verified']], function () {
 
     Route::get('mobile/customers', [CustomerController::class, 'mobileCustomers'])->name('mobile.customers')->middleware(['XSS', 'revalidate']);
     Route::delete('mobile/customer/{id}', [CustomerController::class, 'mobileCustomerDestroy'])->name('mobile.customer.destroy')->middleware(['XSS', 'revalidate']);
+    Route::post('mobile/customer/{id}', [CustomerController::class, 'mobileCustomerUpdate'])->name('mobile.customer.update')->middleware(['XSS', 'revalidate']);
 
 
     //================================= Contract Type  ====================================//
