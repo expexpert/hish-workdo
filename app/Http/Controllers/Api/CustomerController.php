@@ -3596,7 +3596,7 @@ class CustomerController extends Controller
                 'reference_sub_id' => 0,
                 'date' => $revenue->date,
             ];
-            Utility::addTransactionLines($data);
+            Utility::addTransactionLines(array_merge($data, ['isApp' => 1]));
 
             $uArr = [
                 'payment_name' => $payment->name,

@@ -2234,7 +2234,14 @@ class Utility extends Model
             $transactionLines->credit = 0;
             $transactionLines->debit = $data['transaction_amount'];
         }
-        $transactionLines->created_by = \Auth::user()->creatorId();
+        $isApp = $data['isApp'] ?? 0;
+
+        if ($isApp) {
+            $transactionLines->created_by = \Auth::user()->companyId();
+        } else {
+            $transactionLines->created_by = \Auth::user()->creatorId();
+        }
+
         $transactionLines->save();
     }
 
