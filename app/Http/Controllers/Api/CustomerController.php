@@ -2546,7 +2546,6 @@ class CustomerController extends Controller
             'unit_price_ht' => 'required|numeric|min:0',
             'tva_percentage' => 'required|exists:taxes,id',
             'unit_id' => 'required|exists:product_service_units,id',
-            'category_id' => 'required|exists:product_service_categories,id',
             'reference' => 'required|string|max:255',
             'quantity' => 'nullable|integer',
             'description' => 'nullable|string|max:255',
@@ -2576,6 +2575,8 @@ class CustomerController extends Controller
 
         $randomNumber = Str::random(6);
 
+        $category_id = ProductServiceCategory::where('created_by', $company_id)->where('type', 'product & service')->value('id') ?? 1;
+        
         $productService = new ProductService();
         $productService->name           = $request->designation;
         $productService->description    = $request->description;
@@ -2589,7 +2590,7 @@ class CustomerController extends Controller
         $productService->expense_chartaccount_id    = $expense_chartaccount_id ?? '1';
         $productService->customer_id     = $request->customer_id;
         $productService->unit_id        = $request->unit_id;
-        $productService->category_id    = $request->category_id;
+        $productService->category_id    = $category_id;
         $productService->created_by     = $company_id;
         $productService->save();
 
@@ -3583,7 +3584,7 @@ class CustomerController extends Controller
                 Utility::userBalance('customer', $customer->id, $revenue->amount, 'debit');
             }
 
-            Utility::bankAccountBalance($request->account_id, $revenue->amount, 'credit');
+            Utility::bankAccountBalance($bankAccountID->id, $revenue->amount, 'credit');
 
             $accountId = BankAccount::find($revenue->account_id);
             $data = [
