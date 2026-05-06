@@ -622,20 +622,6 @@
     <main class="main-content">
         <div class="container">
 
-            {{-- Alerts --}}
-            @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-
             {{-- Page Title --}}
             <div class="page-header">
                 <h2 class="page-title">Choisissez votre plan</h2>
@@ -783,6 +769,19 @@
                 <div class="checkout-column">
                     <div class="checkout-panel">
                         <h3 class="checkout-title">Récapitulatif</h3>
+                        {{-- Alerts --}}
+                        @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                        @endif
+                        @if($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
 
                         <form id="checkout-form" action="{{ route('mobile.customer.store') }}" method="POST">
                             @csrf
@@ -861,8 +860,14 @@
         </div>
     </main>
 
-    <script>     
-        
+    <script>
+        setTimeout(function() {
+            let alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.display = 'none';
+            });
+        }, 5000); // 5 seconds
+
         window.onload = function() {
             const toast = document.getElementById('referralToast');
             if (toast) {
@@ -882,7 +887,9 @@
         // ── State ──────────────────────────────────────────────────────────────────
         let currentCycle = 'monthly';
         let currentPlan = null; // { slug, name, prices: { monthly:{price_id, price, currency, discount}, ... } }
-        const referralDiscount = {{!empty($referralDiscount) ? (int) $referralDiscount : 0}};
+        const referralDiscount = {{ !empty($referralDiscount) ? (int) $referralDiscount : 0 }};
+
+
 
         // Build a lookup: slug → { name, prices }
         const planData = {};

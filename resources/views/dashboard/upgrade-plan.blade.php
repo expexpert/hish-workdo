@@ -191,12 +191,6 @@
             gap: 15px;
         }
 
-        @media (min-width: 1024px) {
-            .plans-grid {
-                grid-template-columns: 3fr 1fr;
-            }
-        }
-
         .plans-column {
             display: grid;
             grid-template-columns: 1fr;
@@ -557,6 +551,14 @@
             margin: 0;
         }
 
+        .form-submit.plan-btn {
+            width: auto;
+            margin-left: auto;
+            display: block;
+            padding: 20px;
+            background: #2563eb;
+        }
+
         /* Free plan only visible on monthly */
         @media (max-width: 767px) {
             .page-title {
@@ -780,13 +782,25 @@
                 </div>
 
                 {{-- Checkout Summary Panel --}}
-                
+
+                <form action="{{ route('subscription.upgrade') }}" method="POST" id="checkout-form">
+                    @csrf
+                    <input type="hidden" name="customer_id" id="customer_id" value="{{ $customerId }}">
+                    <input type="hidden" name="mobile_plan_price_id" id="selected-price-id" value="">
+                    <input type="hidden" name="plan_slug" id="selected-plan-slug" value="pro">
+                    <input type="hidden" name="billing_cycle" id="selected-billing" value="monthly">
+                    <input type="hidden" name="referral_discount_amount" id="referral-discount" value="0">
+                    <input type="hidden" name="price_after_discount" id="price-after-discount" value="0">
+
+                    <button class="form-submit plan-btn" type="submit">soumettre</button>
+                </form>
+
+
             </div>
         </div>
     </main>
 
-    <script>     
-        
+    <script>
         window.onload = function() {
             const toast = document.getElementById('referralToast');
             if (toast) {
@@ -805,8 +819,9 @@
 
         // ── State ──────────────────────────────────────────────────────────────────
         let currentCycle = 'monthly';
-        let currentPlan = null; // { slug, name, prices: { monthly:{price_id, price, currency, discount}, ... } }
-        const referralDiscount = {{!empty($referralDiscount) ? (int) $referralDiscount : 0}};
+        let currentPlan = null;
+        const referralDiscount = {{ !empty($referralDiscount) ? (int) $referralDiscount : 0 }};
+
 
         // Build a lookup: slug → { name, prices }
         const planData = {};
@@ -917,10 +932,6 @@
             const referralAmt = referralDiscount > 0 ? Math.round(rawPrice * referralDiscount / 100) : 0;
             const finalPrice = Math.round(rawPrice - referralAmt);
 
-            document.getElementById('summary-plan').textContent = currentPlan.name;
-            document.getElementById('summary-billing').textContent = cycleText(currentCycle);
-            document.getElementById('summary-original').textContent = `${Math.round(rawPrice)} ${currency}`;
-            document.getElementById('summary-total').textContent = `${finalPrice} ${currency}`;
             document.getElementById('referral-discount').value = referralAmt;
             document.getElementById('price-after-discount').value = finalPrice;
             document.getElementById('selected-price-id').value = priceObj.price_id;
@@ -941,25 +952,11 @@
                 quarterly: 'trimestriel',
                 yearly: 'annuel'
             } [currentCycle] || '';
-            document.getElementById('renewal-text').textContent =
-                `Renouvellement ${renewalCycleWord} à ${Math.round(rawPrice)} ${currency}.`;
 
-            // Enable CTA
-            const btn = document.getElementById('cta-btn');
-            btn.disabled = false;
-            btn.style.opacity = '1';
         }
 
         function resetSummary() {
-            document.getElementById('summary-plan').textContent = '—';
-            document.getElementById('summary-billing').textContent = cycleText(currentCycle);
-            document.getElementById('summary-original').textContent = '—';
-            document.getElementById('summary-total').textContent = '—';
-            document.getElementById('renewal-text').textContent = 'Sélectionnez un plan pour continuer.';
             document.getElementById('selected-price-id').value = '';
-            const btn = document.getElementById('cta-btn');
-            btn.disabled = true;
-            btn.style.opacity = '.6';
         }
 
         // ── Helpers ─────────────────────────────────────────────────────────────────
