@@ -466,7 +466,7 @@ class DashboardController extends Controller
                 'mobile_user_plan_price_id' => $request->mobile_plan_price_id,
                 'referral_code_id' => $customer->referral_code_id,
                 'billing_cycle' => $price->billing_cycle,
-                'status' => 'pending_payment',
+                'status' => 'active',
                 'original_price' => $price->price,
                 'referral_discount_amount' => $request->referral_discount_amount,
                 'price_paid' => $request->price_after_discount,
@@ -475,6 +475,7 @@ class DashboardController extends Controller
                 'starts_at' => now(),
                 'ends_at' => $planEndsAt,
                 'renews_at' => $planEndsAt,
+                'trial_ends_at' => now()->addDays(7),
                 'payment_provider' => 'test',
             ]);
 
@@ -544,93 +545,115 @@ class DashboardController extends Controller
     public function upgradeSubscripton(Request $request)
     {
         if ($request->isMethod('get')) {
-            $customerId = Crypt::decryptString(urldecode($request->uid));
-            echo '<pre>';
-            print_r($customerId);
-            die('test');
-
-            // return view('dashboard.upgrade-plan', compact($customerId));
-        }
-
-        $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'mobile_plan_price_id' => 'required|exists:mobile_user_plan_prices,id',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-
-            $customer = Customer::findOrFail($request->customer_id);
-
-            // =========================
-            // ✅ Get selected price
-            // =========================
-            $price = MobileUserPlanPrice::with('plan')->findOrFail($request->mobile_plan_price_id);
-
-            $plan = $price->plan;
-
-            // =========================
-            // 🔥 Referral logic
-            // =========================
-            $referral = null;
-            $discountAmount = 0;
-
-            if ($customer->referral_code_id) {
-
-                $referral = ReferralCode::find($customer->referral_code_id);
-
-                if ($referral && $referral->is_active) {
-
-                    $percentageDiscount = ($price->price * $referral->discount_percentage) / 100;
-                    $fixedDiscount = $referral->discount_amount;
-
-                    $discountAmount = max($percentageDiscount, $fixedDiscount);
-                    $discountAmount = min($discountAmount, $price->price);
-                }
+            if (! $request->hasValidSignature()) {
+                abort(403);
             }
 
-            $finalPrice = $price->price - $discountAmount;
+            $customerId = Crypt::decryptString($request->uid);
+            $mobilePlans = MobileUserPlan::with('prices')->where('is_active', 1)->get();
 
-            // =========================
-            // ✅ Deactivate old FREE subscription
-            // =========================
-            MobileUserSubscription::where('customer_id', $customer->id)
-                ->where('status', 'active')
-                ->update([
-                    'status' => 'canceled',
-                    'canceled_at' => now()
-                ]);
+            return view('dashboard.upgrade-plan', compact('customerId', 'mobilePlans'));
+        } else {
 
-            // =========================
-            // ✅ Create NEW subscription
-            // =========================
-            $subscription = MobileUserSubscription::create([
-                'customer_id' => $customer->id,
-                'mobile_user_plan_id' => $plan->id,
-                'mobile_user_plan_price_id' => $price->id,
-                'referral_code_id' => $customer->referral_code_id,
-                'billing_cycle' => $price->billing_cycle,
-                'status' => 'pending_payment',
-                'original_price' => $price->price,
-                'referral_discount_amount' => $discountAmount,
-                'price_paid' => $finalPrice,
-                'currency' => $price->currency,
-                'refund_status' => 'none',
+            $request->validate([
+                'customer_id' => 'required|exists:customers,id',
+                'mobile_plan_price_id' => 'required|exists:mobile_user_plan_prices,id',
             ]);
 
-            DB::commit();
+            DB::beginTransaction();
 
-            // =========================
-            // 🚀 Redirect to payment (for now simulate)
-            // =========================
-            return redirect()->route('login');
-            // return redirect()->route('payment.page', $subscription->id);
-        } catch (\Exception $e) {
+            try {
 
-            DB::rollback();
+                $customer = Customer::findOrFail($request->customer_id);
 
-            return back()->with('error', $e->getMessage());
+                // =========================
+                // ✅ Get selected price
+                // =========================
+                $price = MobileUserPlanPrice::with('plan')->findOrFail($request->mobile_plan_price_id);
+
+                $plan = $price->plan;
+
+                // =========================
+                // 🔥 Referral logic
+                // =========================
+                $referral = null;
+                $discountAmount = 0;
+
+                // if ($customer->referral_code_id) {
+
+                //     $referral = ReferralCode::find($customer->referral_code_id);
+
+                //     if ($referral && $referral->is_active) {
+
+                //         $percentageDiscount = ($price->price * $referral->discount_percentage) / 100;
+                //         $fixedDiscount = $referral->discount_amount;
+
+                //         $discountAmount = max($percentageDiscount, $fixedDiscount);
+                //         $discountAmount = min($discountAmount, $price->price);
+                //     }
+                // }
+
+                $finalPrice = $price->price - $discountAmount;
+
+                // =========================
+                // ✅ Deactivate old FREE subscription
+                // =========================
+                MobileUserSubscription::where('customer_id', $customer->id)
+                    ->where('status', 'active')
+                    ->update([
+                        'status' => 'canceled',
+                        'canceled_at' => now()
+                    ]);
+
+                $months = [
+                    'monthly'   => 1,
+                    'quarterly' => 3,
+                    'yearly'    => 12
+                ];
+
+                $addMonths = $months[$price->billing_cycle] ?? 1;
+                $planEndsAt = now()->addMonths($addMonths);
+
+
+                // =========================
+                // ✅ Create NEW subscription
+                // =========================
+                $subscription = MobileUserSubscription::create([
+                    'customer_id' => $customer->id,
+                    'mobile_user_plan_id' => $plan->id,
+                    'mobile_user_plan_price_id' => $price->id,
+                    'referral_code_id' => $customer->referral_code_id,
+                    'billing_cycle' => $price->billing_cycle,
+                    'status' => 'active',
+                    'original_price' => $price->price,
+                    'referral_discount_amount' => $discountAmount,
+                    'price_paid' => $finalPrice,
+                    'currency' => $price->currency,
+                    'refund_status' => 'none',
+                    'starts_at' => now(),
+                    'ends_at' => $planEndsAt,
+                    'renews_at' => $planEndsAt,
+                    'trial_ends_at' => now()->addDays(7),
+                    'payment_provider' => 'test',
+                ]);
+
+                $customer->update([
+                    'mobile_user_plan_id' => $plan->id,
+                    'subscription_status' => 'active',
+                ]);
+                DB::commit();
+
+                // =========================
+                // 🚀 Redirect to payment (for now simulate)
+                // =========================
+                return view('dashboard.payment_success')->with('success', 'Customer created successfully! Please proceed to select a plan and make payment.');
+                // return redirect()->route('payment.page', $subscription->id);
+            } catch (\Exception $e) {
+
+                DB::rollback();
+
+                return back()->with('error', $e->getMessage());
+            }
         }
     }
 

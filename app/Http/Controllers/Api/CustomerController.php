@@ -487,12 +487,16 @@ class CustomerController extends Controller
 
         $encryptedId = Crypt::encryptString($user->id);
 
-        $url = url('/subscription/upgrade?uid=' . urlencode($encryptedId));
+        $url = URL::temporarySignedRoute(
+            'subscription.upgrade',
+            now()->addMinutes(30),
+            ['uid' => $encryptedId]
+        );
 
         $data = [];
 
         $data['is_b2c'] = $user->is_b2c;
-        $data['subscription'] = MobileUserSubscription::where('customer_id', $user->id)->get();
+        $data['subscription'] = MobileUserSubscription::where('customer_id', $user->id)->latest()->first();
         $data['plan'] = MobileUserPlan::where('id', $user->mobile_user_plan_id)->select('id', 'name', 'slug')->first() ?? 'free';
 
         // Fetch the plan limits
@@ -560,11 +564,12 @@ class CustomerController extends Controller
             'export_enabled' => $plan->export_enabled,
         ];
 
+        $data['upgrade_url'] = $url;
+
         return response()->json([
             'success' => true,
             'message' => 'Subscription status retrieved successfully.',
             'data'    => $data,
-            'upgrade_url' => $url,
         ], 200);
     }
 
