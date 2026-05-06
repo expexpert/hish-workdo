@@ -97,6 +97,7 @@ class AuthController extends Controller
             'customer_id' => $latestCustomerId,
 
             'is_b2c' => true,
+            'app_access_enabled' => false,
 
             // Company & billing
             'company_type' => $validated['company_type'],
@@ -160,6 +161,7 @@ class AuthController extends Controller
         $customer->update([
             'mobile_user_plan_id' => $plan->id,
             'subscription_status' => 'active',
+            'app_access_enabled'  =>true,
         ]);
 
 
@@ -247,6 +249,9 @@ class AuthController extends Controller
         }
 
         $token = $customer->createToken('mobile-login')->plainTextToken;
+        $customer->update([
+            'last_login_at' => Carbon::now(),
+        ]);
         $isNotification = ClientNotification::where('customer_id', $customer->id)->where('is_read', false)->exists();
 
         return response()->json([

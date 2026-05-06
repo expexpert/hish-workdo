@@ -1419,4 +1419,13 @@ class CustomerController extends Controller
 
         return redirect()->route('mobile.customers')->with('success', __('Customer successfully deleted.'));
     }
+
+    public function mobileCustomerUpdate(Request $request, $id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->app_access_enabled = $request->app_access_enabled;
+        $customer->save();
+
+        return redirect()->back()->with('success', 'Customer access updated successfully.');
+    }
 }
