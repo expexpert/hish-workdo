@@ -1230,7 +1230,7 @@ class CustomerController extends Controller
             $query->where('customer_id', $request->customer);
         }
 
-        $invoices = $query->get();
+        $invoices = $query->latest()->get();
 
         $data['totalInvoiceCount'] = $invoices->count();
         $data['totalPendingInvoiceCount'] = $invoices->where('review_status', 'PENDING')->count();
