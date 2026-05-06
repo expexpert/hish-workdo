@@ -93,7 +93,7 @@
                                         <td>{{ $customer['email'] }}</td>
                                         @if(Auth::user()->type == 'super admin')
                                         <td>
-                                            {{ $customer->mobilePlan->name }}
+                                            {{ $customer->mobilePlan->name ?? '-' }}
                                         </td>
                                         @endif
                                         <td>
