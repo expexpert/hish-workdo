@@ -622,7 +622,7 @@ class DashboardController extends Controller
                     'customer_id' => $customer->id,
                     'mobile_user_plan_id' => $plan->id,
                     'mobile_user_plan_price_id' => $price->id,
-                    'referral_code_id' => $customer->referral_code_id,
+                    'referral_code_id' => null,
                     'billing_cycle' => $price->billing_cycle,
                     'status' => 'active',
                     'original_price' => $price->price,
