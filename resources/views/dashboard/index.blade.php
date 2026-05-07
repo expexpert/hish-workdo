@@ -910,7 +910,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($weeklyInvoice['invoiceTotal']) }}
+                                                            {{ \Auth::user()->priceFormat($weeklyInvoice['invoiceTotal'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -921,7 +921,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($weeklyInvoice['invoicePaid']) }}
+                                                            {{ \Auth::user()->priceFormat($weeklyInvoice['invoicePaid'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -932,7 +932,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($weeklyInvoice['invoiceDue']) }}
+                                                            {{ \Auth::user()->priceFormat($weeklyInvoice['invoiceDue'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -954,7 +954,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($monthlyInvoice['invoiceTotal']) }}
+                                                            {{ \Auth::user()->priceFormat($monthlyInvoice['invoiceTotal'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -965,7 +965,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($monthlyInvoice['invoicePaid']) }}
+                                                            {{ \Auth::user()->priceFormat($monthlyInvoice['invoicePaid'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -976,7 +976,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($monthlyInvoice['invoiceDue']) }}
+                                                            {{ \Auth::user()->priceFormat($monthlyInvoice['invoiceDue'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -1079,7 +1079,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($weeklyBill['billTotal']) }}
+                                                            {{ \Auth::user()->priceFormat($weeklyBill['billTotal'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -1090,7 +1090,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($weeklyBill['billPaid']) }}</h4>
+                                                            {{ \Auth::user()->priceFormat($weeklyBill['billPaid'] ?? 0) }}</h4>
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -1100,7 +1100,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($weeklyBill['billDue']) }}</h4>
+                                                            {{ \Auth::user()->priceFormat($weeklyBill['billDue'] ?? 0) }}</h4>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -1120,7 +1120,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($monthlyBill['billTotal']) }}
+                                                            {{ \Auth::user()->priceFormat($monthlyBill['billTotal'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -1131,7 +1131,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($monthlyBill['billPaid']) }}
+                                                            {{ \Auth::user()->priceFormat($monthlyBill['billPaid'] ?? 0) }}
                                                         </h4>
                                                     </td>
                                                 </tr>
@@ -1142,7 +1142,7 @@
                                                     </td>
                                                     <td>
                                                         <h4 class="text-muted">
-                                                            {{ \Auth::user()->priceFormat($monthlyBill['billDue']) }}</h4>
+                                                            {{ \Auth::user()->priceFormat($monthlyBill['billDue'] ?? 0) }}</h4>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -1163,10 +1163,9 @@
                         <div class="card-body">
                             @forelse($goals as $goal)
                                 @php
-                                    $total = $goal->target($goal->type, $goal->from, $goal->to, $goal->amount)['total'];
-                                    $percentage = $goal->target($goal->type, $goal->from, $goal->to, $goal->amount)[
-                                        'percentage'
-                                    ];
+                                    $targetData = $goal->target($goal->type, $goal->from, $goal->to, $goal->amount);
+                                    $total = $targetData['total'] ?? 0;
+                                    $percentage = $targetData['percentage'] ?? 0;
                                 @endphp
                                 <div class="card border-primary border-2 border-bottom-0 border-start-0 border-end-0">
                                     <div class="card-body">
@@ -1198,11 +1197,11 @@
                                                         <span class="col">
                                                             <span class="text-muted text-sm">{{ __('Progress') }}</span>
                                                             <h6 class="mb-3 mb-sm-0">
-                                                                {{ number_format($goal->target($goal->type, $goal->from, $goal->to, $goal->amount)['percentage'], App\Models\Utility::getValByName('decimal_number'), '.', '') }}%
+                                                                {{ number_format($percentage, App\Models\Utility::getValByName('decimal_number'), '.', '') }}%
                                                             </h6>
                                                             <div class="progress mb-0">
                                                                 <div class="progress-bar bg-primary"
-                                                                    style="width: {{ number_format($goal->target($goal->type, $goal->from, $goal->to, $goal->amount)['percentage'], App\Models\Utility::getValByName('decimal_number'), '.', '') }}%">
+                                                                    style="width: {{ number_format($percentage, App\Models\Utility::getValByName('decimal_number'), '.', '') }}%">
                                                                 </div>
                                                             </div>
                                                         </span>
