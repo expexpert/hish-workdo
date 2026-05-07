@@ -25,6 +25,8 @@ class CustomerExpense extends Model
         'total_ttc',
         'total_tva',
         'notes',
+        'review_status',
+        'bill_status',
         'reference',
         'is_ocr',
     ];
@@ -36,6 +38,8 @@ class CustomerExpense extends Model
         'date' => 'date',
         'ttc' => 'decimal:2',
         'tva' => 'decimal:2',
+        'bill_status' => 'boolean',
+        'is_ocr' => 'boolean',
         'total_ttc' => 'decimal:2',
         'total_tva' => 'decimal:2',
     ];
@@ -60,7 +64,7 @@ class CustomerExpense extends Model
 
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(Vender::class, 'supplier_id');   
+        return $this->belongsTo(Vender::class, 'supplier_id');
     }
 
     public function getFileUrlAttribute()
@@ -70,5 +74,15 @@ class CustomerExpense extends Model
         }
 
         return url("/api/customer/customer-expenses/file/{$this->id}");
+    }
+
+    public static function getExpenseActionStyles($status): string
+    {
+        return match ($status) {
+            'VALIDATED' => 'bg-light text-success border-success',
+            'EDIT_REQUESTED' => 'bg-light text-warning border-warning',
+            'REJECTED' => 'bg-light text-danger border-danger',
+            default => 'bg-white text-muted border-secondary',
+        };
     }
 }

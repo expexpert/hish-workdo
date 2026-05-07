@@ -23,6 +23,10 @@ class Revenue extends Model
 
     protected $appends = ['pdf_receipt'];
 
+    protected $casts = [
+        'is_ocr' => 'boolean',
+    ];
+
     public function category()
     {
         return $this->hasOne('App\Models\ProductServiceCategory', 'id', 'category_id');
