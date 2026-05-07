@@ -38,6 +38,8 @@ use App\Models\InvoicePayment;
 use App\Models\MobileUserPlan;
 use App\Models\MobileUserSubscription;
 use App\Models\Vender;
+use App\Models\User;
+use App\Models\Plan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -1264,24 +1266,46 @@ class CustomerController extends Controller
 
         $validated['customer_id'] = $request->user()->id;
 
-        $vender = new Vender();
-        $vender->customer_id = $validated['customer_id'];
-        $vender->company_name = $validated['company_name'];
-        $vender->name = $validated['supplier_name'];
-        $vender->email = $validated['email'];
-        $vender->contact = $validated['telephone'];
-        $vender->billing_zip = $validated['postal_code'];
-        $vender->billing_city = $validated['city'];
-        $vender->commercial_register = $validated['commercial_register'];
-        $vender->ice_number = $validated['ice'];
+        $objVendor    = auth()->user()->companyId();
+        $creator      = User::find(auth()->user()->companyId());
+        $total_vendor = $objVendor->countVenders();
+        $plan         = Plan::find($creator->plan);
 
-        $vender->save();
+        if ($total_vendor < $plan->max_venders || $plan->max_venders == -1) {
+            $vender = new Vender();
+            $vender->customer_id = $validated['customer_id'];
+            $vender->company_name = $validated['company_name'];
+            $vender->name = $validated['supplier_name'];
+            $vender->email = $validated['email'];
+            $vender->contact = $validated['telephone'];
+            $vender->billing_zip = $validated['postal_code'];
+            $vender->billing_city = $validated['city'];
+            $vender->commercial_register = $validated['commercial_register'];
+            $vender->ice_number = $validated['ice'];
+
+            $vender->created_by  = auth()->user()->companyId();
+            $vender->vender_id   = $this->venderNumber();
+
+            $vender->save();
+        } else {
+            return redirect()->back()->with('error', __('Your user limit is over, Please upgrade plan.'));
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Customer supplier created successfully.',
             'data'    => $vender
         ], 201);
+    }
+
+    function venderNumber()
+    {
+        $latest = Vender::where('created_by', '=', auth()->user()->companyId())->latest()->first();
+        if (!$latest) {
+            return 1;
+        }
+
+        return $latest->vender_id + 1;
     }
 
 
