@@ -616,6 +616,13 @@
                             </div>
                             <div id="vender_detail" class="d-none">
                             </div>
+                            <div class="form-group" id="customer-box">
+                                {{ Form::label('customer_id', __('Customer'), ['class' => 'form-label']) }}<x-required></x-required>
+                                {{ Form::select('customer_id', $customers, null, ['class' => 'form-control select', 'id' => 'customer', 'required' => 'required']) }}
+                                <div class="text-xs mt-1">
+                                    {{ __('Create customer here.') }} <a href="{{ route('customer.index') }}"><b>{{ __('Create customer') }}</b></a>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="row">
