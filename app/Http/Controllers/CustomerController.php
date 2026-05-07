@@ -32,7 +32,14 @@ use App\Models\CustomerQuote;
 use App\Models\ChartOfAccount;
 use App\Models\BankAccount;
 use App\Models\MobileUserSubscription;
+use App\Models\Bill;
+use App\Models\BillProduct;
+use App\Models\ProductService;
+use App\Models\Tax;
+use App\Models\ProductServiceUnit;
+use App\Models\Vender;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Crypt;
 
 class CustomerController extends Controller
 {
@@ -1400,6 +1407,138 @@ class CustomerController extends Controller
             'counts'  => $counts,
             'message' => 'Review status updated'
         ]);
+    }
+
+
+    public function expenseReviewAction(Request $request)
+    {
+
+        $expense = CustomerExpense::findOrFail($request->expense_id);
+
+        $categoryID = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())
+            ->where('type', 'expense')
+            ->first()
+            ?->id ?? 1;
+
+        $product = ProductService::where('created_by', \Auth::user()->creatorId())->where('name', $expense->category->name)->first();
+
+        if (!$product) {
+
+            $user = \Auth::user()->creatorId();
+            $tax = Tax::where('created_by', $user)->where('rate', 0)->first();
+            $unit = ProductServiceUnit::where('created_by', $user)->where('name', 'service')->first();
+            $accounts = ChartOfAccount::where('created_by', $user)->pluck('id', 'code');
+
+            $sale_chartaccount_id = $accounts['71243'] ?? 1;
+            $expense_chartaccount_id = $accounts['61711'] ?? 1;
+
+            $product = new ProductService();
+            $product->name = $expense->category->name;
+            $product->created_by = \Auth::user()->creatorId();
+            $product->sku =  rand(100000, 999999);
+            $product->type =  'Product';
+            $product->sale_price =  0;
+            $product->purchase_price =  0;
+            $product->quantity =  1;
+            $product->tax_id =  $tax->id;
+            $product->unit_id =  $unit->id;
+            $product->category_id =  $categoryID;
+            $product->sale_chartaccount_id =  $sale_chartaccount_id;
+            $product->expense_chartaccount_id =  $expense_chartaccount_id;
+            $product->save();
+        }
+
+        $alreadyValidated = (bool) $expense->bill_status;
+
+        if ($request->action == 'VALIDATED' && !$alreadyValidated) {
+            $bill                 = new Bill();
+            $bill->bill_id        = $this->billNumber();
+            $bill->vender_id      = $expense->supplier_id;
+            $bill->bill_date      = $expense->date;
+            $bill->status         = 0;
+            $bill->due_date       = $expense->date;
+            $bill->category_id    = $categoryID;
+            $bill->order_number   = 0;
+            $bill->discount_apply = 0;
+            $bill->created_by     = \Auth::user()->creatorId();
+
+            $bill->save();
+            Utility::starting_number($bill->bill_id + 1, 'bill');
+
+
+            $billProduct              = new BillProduct();
+            $billProduct->bill_id     = $bill->id;
+            $billProduct->product_id  = $product->id;
+            $billProduct->quantity    = 1;
+            $billProduct->tax         = $product->tax_id;
+            $billProduct->discount    = 0;
+            $billProduct->price       = $expense->total_ttc;
+            $billProduct->save();
+
+            $billTotal = 0;
+            $total_amount = 0;
+
+
+            Utility::total_quantity('plus', $billProduct->quantity, $billProduct->product_id);
+
+            if (!empty($product->id)) {
+                $type = 'bill';
+                $type_id = $bill->id;
+                $description = $product->quantity . '  ' . __('quantity purchase in bill') . ' ' . \Auth::user()->billNumberFormat($bill->bill_id);
+                Utility::addProductStock($product->id, $product->quantity, $type, $description, $type_id);
+                $total_amount += ($billProduct->quantity * $billProduct->price) + $billTotal;
+            }
+
+
+            $setting  = Utility::settings(\Auth::user()->creatorId());
+            $billId    = Crypt::encrypt($bill->id);
+            $bill->url = route('bill.pdf', $billId);
+            $vendor = Vender::find($request->vender_id);
+            if (isset($setting['bill_notification']) && $setting['bill_notification'] == 1) {
+                $uArr = [
+                    'bill_name' => $vendor->name,
+                    'bill_number'  => \Auth::user()->billNumberFormat($bill->bill_id),
+                    'bill_url'  =>  $bill->url,
+                ];
+                Utility::send_twilio_msg($vendor->contact, 'new_bill', $uArr);
+            }
+
+            // webhook
+            $module = 'New Bill';
+            $webhook =  Utility::webhookSetting($module);
+            if ($webhook) {
+                $parameter = json_encode($bill);
+                // 1 parameter is  URL , 2 parameter is data , 3 parameter is method
+                $status = Utility::WebhookCall($webhook['url'], $parameter, $webhook['method']);
+                if ($status == true) {
+                    return redirect()->route('bill.index', $bill->id)->with('success', __('Bill successfully created.'));
+                } else {
+                    return redirect()->back()->with('error', __('Webhook call failed.'));
+                }
+            }
+
+            $expense->review_status = $request->action;
+            $expense->bill_status = true;
+            $expense->save();
+        } else {
+            $expense->review_status = $request->action;
+            $expense->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Review status updated'
+        ]);
+    }
+
+    function billNumber()
+    {
+        $latest = Bill::where('created_by', '=', \Auth::user()->creatorId())->latest()->first();
+        if (!$latest) {
+            return 1;
+        }
+
+        return $latest->bill_id + 1;
     }
 
 

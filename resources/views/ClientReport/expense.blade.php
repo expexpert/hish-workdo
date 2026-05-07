@@ -123,6 +123,7 @@
                                 <th>{{__('Total TTC')}}</th>
                                 <th>{{__('Total TVA')}}</th>
                                 <th>{{__('File')}}</th>
+                                <th>{{__('Actions')}}</th>
                             </tr>
                         </thead>
 
@@ -163,6 +164,26 @@
                                     {{ __('-') }}
                                     @endif
                                 </td>
+                                <td>
+                                    <select class="form-select form-select-sm fw-bold border-2 transition w-100 expense-action {{ \App\Models\CustomerExpense::getExpenseActionStyles($expense->review_status) }}"
+                                        data-id="{{ $expense->id }}" style="min-width:80px">
+
+                                        <option value="" disabled {{ $expense->review_status == 'PENDING' ? 'selected' : '' }}>
+                                            {{ __('Pending') }}
+                                        </option>
+
+                                        <option value="VALIDATED"
+                                            {{ $expense->review_status == 'VALIDATED' ? 'selected' : '' }}>
+                                            {{ __('Validate') }}
+                                        </option>
+
+                                        <option value="REJECTED"
+                                            {{ $expense->review_status == 'REJECTED' ? 'selected' : '' }}>
+                                            {{ __('Reject') }}
+                                        </option>
+
+                                    </select>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -188,4 +209,53 @@
         </div>
     </div>
 </div>
+
+
+
+<script>
+    document.addEventListener('change', function(e) {
+
+        if (e.target.classList.contains('expense-action')) {
+
+            let action = e.target.value;
+            let expenseId = e.target.dataset.id;
+
+            if (!confirm('Are you sure you want to perform this action?')) {
+                return;
+            }
+
+            fetch("{{ route('expense.review.action') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        expense_id: expenseId,
+                        action: action
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+                        console.log("Status updated");
+                        show_toastr('success', '{{ __('Action performed successfully') }}');
+                        const styleMap = {
+                            'VALIDATED': 'bg-light text-success border-success',
+                            'EDIT_REQUESTED': 'bg-light text-warning border-warning',
+                            'REJECTED': 'bg-light text-danger border-danger',
+                            '': 'bg-white text-muted border-secondary'
+                        };
+                        e.target.className = `form-select form-select-sm fw-bold border-2 transition w-100 expense-action ${styleMap[action]}`;
+
+                    } else {
+                        alert("Something went wrong");
+                        show_toastr('error', '{{ __('Failed to perform action') }}');
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+    });
+</script>
 @endsection

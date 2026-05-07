@@ -27,6 +27,7 @@ class CustomerInvoice extends Model
 
     protected $casts = [
         'date' => 'date',
+        'is_ocr' => 'boolean',
     ];
 
     protected $appends = ['invoice_url', 'pdf_url'];

@@ -197,14 +197,20 @@ class UserController extends Controller
                     );
                 }
 
-                $incomeID = $accounts->get('7111') ?? null;
+                $categories = [
+                    'income'  => $accounts->get('7111'),
+                    'expense' => $accounts->get('61711'),
+                ];
 
-                ProductServiceCategory::create([
-                    'name' => 'Default Category',
-                    'type' => 'income',
-                    'chart_account_id' => $incomeID,
-                    'created_by' => $user->id,
-                ]);
+                foreach ($categories as $type => $accountId) {
+                    ProductServiceCategory::create([
+                        'name'             => 'Default Category',
+                        'type'             => $type,
+                        'chart_account_id' => $accountId,
+                        'created_by'       => $user->id,
+                    ]);
+                }
+                
             } else {
                 $validator = \Validator::make(
                     $request->all(),

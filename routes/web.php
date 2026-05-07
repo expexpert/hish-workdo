@@ -650,6 +650,8 @@ Route::group(['middleware' => ['verified']], function () {
             Route::get('/customer-quotes', [CustomerController::class, 'getQuotes'])->name('customer.quotes');
 
             Route::post('/customer-invoice/review-action', [CustomerController::class, 'invoiceReviewAction'])->name('invoice.review.action');
+
+            Route::post('/customer-expense/review-action', [CustomerController::class, 'expenseReviewAction'])->name('expense.review.action');
         }
     );
     Route::group(

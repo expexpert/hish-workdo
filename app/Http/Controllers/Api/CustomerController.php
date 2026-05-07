@@ -1488,6 +1488,7 @@ class CustomerController extends Controller
                 'total_tva'      => 'nullable|numeric|min:0',
                 'notes'          => 'nullable|string',
                 'reference'      => 'nullable|string',
+                'is_ocr'         => 'nullable|boolean',
             ]);
 
             if (!empty($request->file)) {
@@ -1707,7 +1708,8 @@ class CustomerController extends Controller
             'category_id'    => 'sometimes|required|exists:customer_categories,id',
             'total_ttc'      => 'nullable|numeric|min:0',
             'total_tva'      => 'nullable|numeric|min:0',
-            'notes'           => 'nullable|string',
+            'notes'          => 'nullable|string',
+            'reference'      => 'nullable|string',            
         ]);
 
         // Handle File Upload
@@ -1875,6 +1877,7 @@ class CustomerController extends Controller
             'status'         => 'required|string|max:50',
             'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'is_ocr'         => 'nullable|boolean',
 
             'articles'                    => 'sometimes|array',
             'articles.*.designation'     => 'required_with:articles|string|max:255',
@@ -3560,6 +3563,7 @@ class CustomerController extends Controller
             'description'    => 'nullable|string',
             'payment_method' => 'nullable|string',
             'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'is_ocr'         => 'nullable|boolean',
         ]);
 
         try {
