@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Lab404\Impersonate\Models\Impersonate;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Vender extends Authenticatable
 {
@@ -72,12 +73,9 @@ class Vender extends Authenticatable
 
     public function creatorId1()
     {
-        if(\Auth::guard('vender')->check())
-        {
+        if (\Auth::guard('vender')->check()) {
             return $this->id;
-        }
-        else
-        {
+        } else {
             return $this->created_by;
         }
     }
@@ -246,10 +244,11 @@ class Vender extends Authenticatable
     public function vendorPaid($vendorId)
     {
         $vendorPaid = Bill::where('vender_id', $vendorId)->whereNotIn(
-            'status', [
-                        '0',
-                        '1',
-                    ]
+            'status',
+            [
+                '0',
+                '1',
+            ]
         )->get();
 
         $paid         = 0;
@@ -276,5 +275,18 @@ class Vender extends Authenticatable
         $bills = Bill::where('vender_id', $vendorId)->count();
 
         return $bills;
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    /**
+     * Get the Expense for this client.
+     */
+    public function expenses()
+    {
+        return $this->hasMany(CustomerExpense::class, 'supplier_id');
     }
 }
