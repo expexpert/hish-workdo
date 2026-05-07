@@ -122,7 +122,28 @@ class DashboardController extends Controller
                     $data['monthlyBill']       = \Auth::user()->monthlyBill();
                     $data['goals']             = Goal::where('created_by', '=', \Auth::user()->creatorId())->where('is_display', 1)->get();
                 } else {
-                    $data = [];
+                    $data = [
+                        'incomeCategoryColor' => [],
+                        'incomeCategory' => [],
+                        'incomeCatAmount' => [],
+                        'expenseCategoryColor' => [],
+                        'expenseCategory' => [],
+                        'expenseCatAmount' => [],
+                        'incExpBarChartData' => [],
+                        'incExpLineChartData' => [],
+                        'accountantChartData' => ['income' => [], 'expense' => [], 'month' => []],
+                        'currentYear' => date('Y'),
+                        'currentMonth' => date('M'),
+                        'constant' => ['taxes' => 0, 'category' => 0, 'units' => 0, 'bankAccount' => 0],
+                        'bankAccountDetail' => [],
+                        'recentInvoice' => [],
+                        'weeklyInvoice' => 0,
+                        'monthlyInvoice' => 0,
+                        'recentBill' => [],
+                        'weeklyBill' => 0,
+                        'monthlyBill' => 0,
+                        'goals' => [],
+                    ];
                 }
 
                 if (\Auth::user()->type == 'accountant') {
@@ -259,6 +280,20 @@ class DashboardController extends Controller
                         ->orderByDesc('count')
                         ->limit(10)
                         ->get();
+                } else {
+                    $data['totalCustomers'] = 0;
+                    $data['totalInvoices'] = 0;
+                    $data['totalExpenses'] = 0;
+                    $data['latestIncome'] = [];
+                    $data['latestExpense'] = [];
+                    $data['currentMonthRevenue'] = 0;
+                    $data['TodayRevenue'] = 0;
+                    $data['currentMonthExpense'] = 0;
+                    $data['TodayExpense'] = 0;
+                    $data['netResult'] = 0;
+                    $data['totalVatCollected'] = 0;
+                    $data['totalVatDeductible'] = 0;
+                    $data['totalVatPayable'] = 0;
                 }
 
                 $filterIds = \Auth::user()->getCustomerFilterIds();
@@ -273,7 +308,7 @@ class DashboardController extends Controller
                         $storage_limit = 0;
                     }
                 } else {
-                    return view('dashboard.index', $data, compact('users', 'plan'));
+                    $storage_limit = 0;
                 }
 
                 return view('dashboard.index', $data, compact('users', 'plan', 'storage_limit', 'customers'));
