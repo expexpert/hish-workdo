@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\CustomerCategory;
-use App\Models\CustomerSupplier;
+use App\Models\Vender;
 use App\Models\CustomerClient;
 use App\Models\Tax;
 use Illuminate\Support\Facades\Auth;
@@ -64,18 +64,18 @@ class ProcessBotInputs
         // 2. Map Supplier (Expense)
         if ($request->has('supplier_name')) {
             $supplierName = $request->input('supplier_name');
-            $supplier = CustomerSupplier::where('customer_id', $user->id)
+            $supplier = Vender::where('customer_id', $user->id)
                 ->where(function($q) use ($supplierName) {
                     $q->where('company_name', 'LIKE', $supplierName)
-                      ->orWhere('supplier_name', 'LIKE', $supplierName);
+                      ->orWhere('name', 'LIKE', $supplierName);
                 })->first();
 
             // 🛡️ PROTECTION: Do NOT auto-create if we are on the formal "Create Supplier" route
             if (!$supplier && !$request->is('*/customer-supplier')) {
-                $supplier = CustomerSupplier::create([
+                $supplier = Vender::create([
                     'customer_id'   => $user->id,
                     'company_name'  => $supplierName,
-                    'supplier_name' => $supplierName,
+                    'name' => $supplierName,
                     'email'         => 'bot_supplier_' . preg_replace('/[^A-Za-z0-9]/', '', $supplierName) . '_' . time() . '@example.com',
                     'postal_code'   => '00000',
                     'city'          => 'Bot City',

@@ -134,7 +134,7 @@
                                 <td>{{ $expense->customer?->accountant->name ?? '-' }}</td>
                                 @endif
                                 <td><a href="{{ route('customer.show', \Crypt::encrypt($expense->customer_id)) }}" target="_blank">{{ $expense->customer?->name ?? '-' }}</a></td>
-                                <td>{{ $expense->supplier?->supplier_name ?? '-' }}</td>
+                                <td>{{ $expense->supplier?->name ?? '-' }}</td>
                                 <td>{{ $expense->category->name ?? '-' }}</td>
                                 <td>{{ $expense->payment_method ?? '-' }}</td>
                                 <td style="max-width: 250px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">

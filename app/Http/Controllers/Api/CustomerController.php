@@ -1324,7 +1324,7 @@ class CustomerController extends Controller
         if ($like) {
             $query->where(function ($q) use ($like) {
                 $q->where('company_name', 'like', "%$like%")
-                    ->orWhere('supplier_name', 'like', "%$like%");
+                    ->orWhere('name', 'like', "%$like%");
             });
         }
 
@@ -1405,7 +1405,17 @@ class CustomerController extends Controller
             'ice' => 'nullable|string|max:255',
         ]);
 
-        $supplier->update($validated);
+        $vender = Vender::find($supplier->id);
+        $vender->company_name = $validated['company_name'] ?? $vender->company_name;
+        $vender->name = $validated['supplier_name'] ?? $vender->name;
+        $vender->email = $validated['email'] ?? $vender->email;
+        $vender->telephone = $validated['telephone'] ?? $vender->telephone;
+        $vender->billing_zip = $validated['postal_code'] ?? $vender->billing_zip;
+        $vender->billing_city = $validated['city'] ?? $vender->billing_city;
+        $vender->commercial_register = $validated['commercial_register'] ?? $vender->commercial_register;
+        $vender->ice_number = $validated['ice'] ?? $vender->ice_number;
+        $vender->save();
+
 
         return response()->json([
             'success' => true,
@@ -1550,7 +1560,7 @@ class CustomerController extends Controller
         $id = $request->query('id');
 
         $query = CustomerExpense::where('customer_id', $user->id)
-            ->with(['category:id,name', 'supplier:id,supplier_name'])
+            ->with(['category:id,name', 'supplier:id,name'])
             ->orderBy('date', 'desc');
 
         if ($id) {
