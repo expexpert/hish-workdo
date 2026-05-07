@@ -1461,6 +1461,7 @@ class CustomerController extends Controller
             $bill->order_number   = 0;
             $bill->discount_apply = 0;
             $bill->created_by     = \Auth::user()->creatorId();
+            $bill->customer_id     = $expense->customer_id;
 
             $bill->save();
             Utility::starting_number($bill->bill_id + 1, 'bill');

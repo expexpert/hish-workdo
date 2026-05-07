@@ -86,6 +86,10 @@ class BillController extends Controller
             $venders     = Vender::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $venders->prepend('Select Vendor', '');
 
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
+            $customers->prepend('Select Customer', '');
+
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $product_services->prepend('Select Item', '');
 
@@ -100,7 +104,7 @@ class BillController extends Controller
             $subAccounts->where('chart_of_accounts.created_by', \Auth::user()->creatorId());
             $subAccounts = $subAccounts->get()->toArray();
 
-            return view('bill.create', compact('venders', 'bill_number', 'product_services', 'category', 'customFields', 'vendorId', 'chartAccounts', 'subAccounts'));
+            return view('bill.create', compact('venders', 'customers', 'bill_number', 'product_services', 'category', 'customFields', 'vendorId', 'chartAccounts', 'subAccounts'));
         } else {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
@@ -114,6 +118,7 @@ class BillController extends Controller
                 $request->all(),
                 [
                     'vender_id' => 'required',
+                    'customer_id' => 'required',
                     'bill_date' => 'required',
                     'due_date' => 'required',
                     'category_id' => 'required',
@@ -129,6 +134,7 @@ class BillController extends Controller
             $bill            = new Bill();
             $bill->bill_id   = $this->billNumber();
             $bill->vender_id = $request->vender_id;
+            $bill->customer_id = $request->customer_id;
             $bill->bill_date      = $request->bill_date;
             $bill->status         = 0;
             $bill->due_date       = $request->due_date;
@@ -303,6 +309,10 @@ class BillController extends Controller
             $venders          = Vender::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
 
+            $filterIds = \Auth::user()->getCustomerFilterIds();
+            $customers = Customer::whereIn('created_by', $filterIds)->get()->pluck('name', 'id');
+            $customers->prepend('Select Customer', '');
+
             $bill->customField = CustomField::getData($bill, 'bill');
             $customFields      = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'bill')->get();
 
@@ -340,7 +350,7 @@ class BillController extends Controller
             }
 
 
-            return view('bill.edit', compact('venders', 'product_services', 'bill', 'bill_number', 'category', 'customFields', 'chartAccounts', 'items', 'subAccounts'));
+            return view('bill.edit', compact('venders', 'customers', 'product_services', 'bill', 'bill_number', 'category', 'customFields', 'chartAccounts', 'items', 'subAccounts'));
         } else {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
@@ -355,6 +365,7 @@ class BillController extends Controller
                     $request->all(),
                     [
                         'vender_id' => 'required',
+                        'customer_id' => 'required',
                         'bill_date' => 'required',
                         'due_date' => 'required',
                         'items' => 'required',
@@ -366,6 +377,7 @@ class BillController extends Controller
                     return redirect()->route('bill.index')->with('error', $messages->first());
                 }
                 $bill->vender_id      = $request->vender_id;
+                $bill->customer_id      = $request->customer_id;
                 $bill->bill_date      = $request->bill_date;
                 $bill->due_date       = $request->due_date;
                 $bill->order_number   = $request->order_number;
@@ -1031,6 +1043,7 @@ class BillController extends Controller
             $duplicateBill                   = new Bill();
             $duplicateBill->bill_id          = $this->billNumber();
             $duplicateBill->vender_id        = $bill['vender_id'];
+            $duplicateBill->customer_id        = $bill['customer_id'];
             $duplicateBill->bill_date        = date('Y-m-d');
             $duplicateBill->due_date         = $bill['due_date'];
             $duplicateBill->send_date        = null;

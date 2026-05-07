@@ -30,6 +30,11 @@ class Bill extends Model
         return $this->hasOne('App\Models\Vender', 'id', 'vender_id');
     }
 
+    public function customer()
+    {
+        return $this->hasOne('App\Models\Customer', 'id', 'customer_id');
+    }
+
     public function tax()
     {
         return $this->hasOne('App\Models\Tax', 'id', 'tax_id');

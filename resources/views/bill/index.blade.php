@@ -108,6 +108,7 @@
                                     @if (!\Auth::guard('vender')->check())
                                         <th> {{ __('Vendor') }}</th>
                                     @endif
+                                    <th> {{ __('Customer') }}</th>
                                     <th> {{ __('Category') }}</th>
                                     <th> {{ __('Bill Date') }}</th>
                                     <th> {{ __('Due Date') }}</th>
@@ -132,6 +133,7 @@
                                         @if (!\Auth::guard('vender')->check())
                                             <td> {{ !empty($bill->vender) ? $bill->vender->name : '' }} </td>
                                         @endif
+                                        <td> {{ $bill->customer?->name ?? '' }} </td>
                                         <td>{{ !empty($bill->category) ? $bill->category->name : '' }}</td>
                                         <td>{{ Auth::user()->dateFormat($bill->bill_date) }}</td>
                                         <td>{{ Auth::user()->dateFormat($bill->due_date) }}</td>
