@@ -19,11 +19,11 @@
             var chartBarOptions = {
                 series: [{
                         name: "{{ __('Income') }}",
-                        data: {!! json_encode($incExpLineChartData['income']) !!}
+                        data: {!! json_encode($incExpLineChartData['income'] ?? []) !!}
                     },
                     {
                         name: "{{ __('Expense') }}",
-                        data: {!! json_encode($incExpLineChartData['expense']) !!}
+                        data: {!! json_encode($incExpLineChartData['expense'] ?? []) !!}
                     }
                 ],
 
@@ -55,7 +55,7 @@
                     align: 'left'
                 },
                 xaxis: {
-                    categories: {!! json_encode($incExpLineChartData['day']) !!},
+                    categories: {!! json_encode($incExpLineChartData['day'] ?? []) !!},
                     title: {
                         text: '{{ __('Date') }}'
                     }
