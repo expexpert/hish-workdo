@@ -60,7 +60,7 @@ class CustomerExpense extends Model
 
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(CustomerSupplier::class, 'supplier_id')->withTrashed();
+        return $this->belongsTo(Vender::class, 'supplier_id')->withTrashed();
     }
 
     public function getFileUrlAttribute()
