@@ -1140,7 +1140,7 @@ class CustomerController extends Controller
     public function getExpenses(Request $request)
     {
         $user = Auth::user();
-        $query = CustomerExpense::with(['category:id,name', 'supplier:id,supplier_name'])
+        $query = CustomerExpense::with(['category:id,name', 'supplier:id,name'])
             ->orderBy('date', 'desc');
 
         if ($user->type == 'accountant') {

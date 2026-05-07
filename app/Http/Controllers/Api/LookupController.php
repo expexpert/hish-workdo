@@ -20,13 +20,13 @@ class LookupController extends Controller
     {
         $company_id = auth()->user()->companyId();
 
-        $suppliersQuery = Vender::where('customer_id', auth()->id())->select('id', 'supplier_name as name', 'company_name');
+        $suppliersQuery = Vender::where('customer_id', auth()->id())->select('id', 'name', 'company_name');
 
         if (request()->query('sort') === 'recent') {
             $suppliersQuery->withMax('expenses', 'created_at')
                 ->orderByRaw('expenses_max_created_at IS NULL, expenses_max_created_at DESC');
         } else {
-            $suppliersQuery->orderBy('supplier_name', 'asc');
+            $suppliersQuery->orderBy('name', 'asc');
         }
 
         return response()->json([
