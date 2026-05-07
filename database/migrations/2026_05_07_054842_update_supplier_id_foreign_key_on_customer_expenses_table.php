@@ -16,10 +16,10 @@ return new class extends Migration
             // 1. Drop the old foreign key constraint
             $table->dropForeign(['supplier_id']);
 
-            // 2. Change the constraint to point to the 'vendors' table
+            // 2. Change the constraint to point to the 'venders' table
             $table->foreign('supplier_id')
                 ->references('id')
-                ->on('vendors')
+                ->on('venders')
                 ->onDelete('set null')
                 ->change(); 
         });
