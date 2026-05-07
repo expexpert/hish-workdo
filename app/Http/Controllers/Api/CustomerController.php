@@ -1266,9 +1266,9 @@ class CustomerController extends Controller
 
         $validated['customer_id'] = $request->user()->id;
 
-        $objVendor    = auth()->user()->companyId();
+        $objVendor    = User::find(auth()->user()->companyId());
         $creator      = User::find(auth()->user()->companyId());
-        $total_vendor = $objVendor->countVenders();
+        $total_vendor = $creator->countVenders();
         $plan         = Plan::find($creator->plan);
 
         if ($total_vendor < $plan->max_venders || $plan->max_venders == -1) {
@@ -1278,17 +1278,21 @@ class CustomerController extends Controller
             $vender->name = $validated['supplier_name'];
             $vender->email = $validated['email'];
             $vender->contact = $validated['telephone'];
-            $vender->billing_zip = $validated['postal_code'];
-            $vender->billing_city = $validated['city'];
-            $vender->commercial_register = $validated['commercial_register'];
-            $vender->ice_number = $validated['ice'];
+            $vender->billing_zip = $validated['postal_code'] ?? '';
+            $vender->billing_city = $validated['city'] ?? '';
+            $vender->commercial_register = $validated['commercial_register'] ?? '';
+            $vender->ice_number = $validated['ice'] ?? '';
 
             $vender->created_by  = auth()->user()->companyId();
             $vender->vender_id   = $this->venderNumber();
+            $vender->is_enable_login =  0;
 
             $vender->save();
         } else {
-            return redirect()->back()->with('error', __('Your user limit is over, Please upgrade plan.'));
+            return response()->json([
+                'success' => false,
+                'message' => 'Vendor limit reached for your current plan. Please upgrade to add more vendors.'
+            ], 403);
         }
 
         return response()->json([
