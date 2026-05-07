@@ -9,13 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('customer_expenses', function (Blueprint $table) {
-            try {
-                $table->dropForeign(['supplier_id']);
-            } catch (\Exception $e) {
-                // If it fails to drop, we just move on.
-            }
+        try {
+            DB::statement('ALTER TABLE customer_expenses DROP FOREIGN KEY customer_expenses_supplier_id_foreign');
+        } catch (\Exception $e) {
+            // Ignore error: the key simply doesn't exist.
+        }
 
+        // 2. Now that the "phantom" key is handled, use standard Schema to link to venders.
+        Schema::table('customer_expenses', function (Blueprint $table) {
             $table->foreign('supplier_id')
                 ->references('id')
                 ->on('venders')
@@ -26,10 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('customer_expenses', function (Blueprint $table) {
-            try {
-                $table->dropForeign(['supplier_id']);
-            } catch (\Exception $e) { }
-
+            $table->dropForeign(['supplier_id']);
             $table->foreign('supplier_id')
                 ->references('id')
                 ->on('customer_suppliers')
