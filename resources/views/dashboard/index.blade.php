@@ -98,13 +98,13 @@
                 },
                 series: [{
                     name: "{{ __('Income') }}",
-                    data: {!! json_encode($accountantChartData['income']) !!}
+                    data: {!! json_encode($accountantChartData['income'] ?? []) !!}
                 }, {
                     name: "{{ __('Expense') }}",
-                    data: {!! json_encode($accountantChartData['expense']) !!}
+                    data: {!! json_encode($accountantChartData['expense'] ?? []) !!}
                 }],
                 xaxis: {
-                    categories: {!! json_encode($accountantChartData['month']) !!},
+                    categories: {!! json_encode($accountantChartData['month'] ?? []) !!},
                 },
                 colors: ['#3ec9d6', '#FF3A6E'],
                 fill: {
@@ -193,9 +193,9 @@
                         }
                     }
                 },
-                series: {!! json_encode($expenseCatAmount) !!},
-                colors: {!! json_encode($expenseCategoryColor) !!},
-                labels: {!! json_encode($expenseCategory) !!},
+                series: {!! json_encode($expenseCatAmount ?? []) !!},
+                colors: {!! json_encode($expenseCategoryColor ?? []) !!},
+                labels: {!! json_encode($expenseCategory ?? []) !!},
                 legend: {
                     show: true
                 }
@@ -220,9 +220,9 @@
                         }
                     }
                 },
-                series: {!! json_encode($incomeCatAmount) !!},
-                colors: {!! json_encode($incomeCategoryColor) !!},
-                labels: {!! json_encode($incomeCategory) !!},
+                series: {!! json_encode($incomeCatAmount ?? []) !!},
+                colors: {!! json_encode($incomeCategoryColor ?? []) !!},
+                labels: {!! json_encode($incomeCategory ?? []) !!},
                 legend: {
                     show: true
                 }
