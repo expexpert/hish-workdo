@@ -23,7 +23,6 @@ use App\Models\InvoiceArticle;
 use Illuminate\Validation\ValidationException;
 use App\Models\CustomerProduct;
 use App\Models\ProductService;
-use App\Models\CustomerSupplier;
 use Illuminate\Support\Facades\URL;
 use App\Models\CustomerMonthStatus;
 use App\Models\Invoice;
@@ -38,6 +37,7 @@ use App\Models\Transaction;
 use App\Models\InvoicePayment;
 use App\Models\MobileUserPlan;
 use App\Models\MobileUserSubscription;
+use App\Models\Vender;
 use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
@@ -1253,9 +1253,9 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
-            'supplier_name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:customer_suppliers,email',
-            'telephone' => 'nullable|string|max:20',
+            'supplier_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:venders,email',
+            'telephone' => 'required|string|max:20',
             'postal_code' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
@@ -1264,12 +1264,23 @@ class CustomerController extends Controller
 
         $validated['customer_id'] = $request->user()->id;
 
-        $supplier = CustomerSupplier::create($validated);
+        $vender = new Vender();
+        $vender->customer_id = $validated['customer_id'];
+        $vender->company_name = $validated['company_name'];
+        $vender->name = $validated['supplier_name'];
+        $vender->email = $validated['email'];
+        $vender->contact = $validated['telephone'];
+        $vender->billing_zip = $validated['postal_code'];
+        $vender->billing_city = $validated['city'];
+        $vender->commercial_register = $validated['commercial_register'];
+        $vender->ice_number = $validated['ice'];
+
+        $vender->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Customer supplier created successfully.',
-            'data'    => $supplier
+            'data'    => $vender
         ], 201);
     }
 
@@ -1280,7 +1291,7 @@ class CustomerController extends Controller
         $like = $request->query('like');
         $today = now()->format('Y-m-d');
 
-        $query = CustomerSupplier::where('customer_id', $user->id);
+        $query = Vender::where('customer_id', $user->id);
 
         if ($like) {
             $query->where(function ($q) use ($like) {
@@ -1316,7 +1327,7 @@ class CustomerController extends Controller
         $user = $request->user();
 
         // Get supplier + invoice count in same query
-        $supplier = CustomerSupplier::where('id', $id)
+        $supplier = Vender::where('id', $id)
             ->where('customer_id', $user->id)
             ->withCount('expenses')
             ->first();
@@ -1346,7 +1357,7 @@ class CustomerController extends Controller
     public function updateCustomerSupplier(Request $request, $id)
     {
         $user = $request->user();
-        $supplier = CustomerSupplier::where('id', $id)->where('customer_id', $user->id)->first();
+        $supplier = Vender::where('id', $id)->where('customer_id', $user->id)->first();
 
         if (! $supplier) {
             return response()->json([
@@ -1357,9 +1368,9 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'company_name' => 'sometimes|required|string|max:255',
-            'supplier_name' => 'sometimes|nullable|string|max:255',
-            'email' => 'sometimes|nullable|email|unique:customer_suppliers,email,' . $supplier->id,
-            'telephone' => 'nullable|string|max:20',
+            'supplier_name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:venders,email,' . $supplier->id,
+            'telephone' => 'sometimes|required|string|max:20',
             'postal_code' => 'sometimes|nullable|string|max:20',
             'city' => 'sometimes|nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
@@ -1379,7 +1390,7 @@ class CustomerController extends Controller
     public function deleteCustomerSupplier(Request $request, $id)
     {
         $user = $request->user();
-        $supplier = CustomerSupplier::where('id', $id)->where('customer_id', $user->id)->first();
+        $supplier = Vender::where('id', $id)->where('customer_id', $user->id)->first();
 
         if (! $supplier) {
             return response()->json([
@@ -1401,7 +1412,7 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        $supplier = CustomerSupplier::where('id', $id)
+        $supplier = Vender::where('id', $id)
             ->where('customer_id', $user->id)
             ->first();
 
@@ -1428,7 +1439,7 @@ class CustomerController extends Controller
         try {
             $validated = $request->validate([
                 'customer_id'    => 'required|exists:customers,id',
-                'supplier_id'    => 'required|exists:customer_suppliers,id',
+                'supplier_id'    => 'required|exists:venders,id',
                 'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
                 'date'           => 'required|date',
                 'ttc'            => 'required|numeric|min:0',
@@ -1535,7 +1546,7 @@ class CustomerController extends Controller
             $query->whereMonth('date', $month);
         }
 
-        $expenses = $query->get();
+        $expenses = $query->latest()->get();
 
         // Append signed download URLs for the bot
         $expenses->each(function ($expense) {
@@ -1649,7 +1660,7 @@ class CustomerController extends Controller
         }
 
         $validated = $request->validate([
-            'supplier_id'    => 'sometimes|required|exists:customer_suppliers,id',
+            'supplier_id'    => 'sometimes|required|exists:venders,id',
             'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'date'           => 'sometimes|required|date',
             'ttc'            => 'sometimes|required|numeric|min:0',
@@ -2576,7 +2587,7 @@ class CustomerController extends Controller
         $randomNumber = Str::random(6);
 
         $category_id = ProductServiceCategory::where('created_by', $company_id)->where('type', 'product & service')->value('id') ?? 1;
-        
+
         $productService = new ProductService();
         $productService->name           = $request->designation;
         $productService->description    = $request->description;
@@ -2790,7 +2801,7 @@ class CustomerController extends Controller
             $query->whereMonth('date', $month);
         }
 
-        $quotes = $query->get();
+        $quotes = $query->latest()->get();
 
         // --- Initialize Totals ---
         $totalAllQuotes = 0;

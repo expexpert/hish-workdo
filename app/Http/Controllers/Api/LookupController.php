@@ -8,7 +8,7 @@ use App\Models\CustomerCategory;
 use App\Models\ProductServiceCategory;
 use App\Models\CustomerClient;
 use App\Models\CustomerInvoice;
-use App\Models\CustomerSupplier;
+use App\Models\Vender;
 use App\Models\CustomerQuote;
 use App\Models\Tax;
 use App\Models\Invoice;
@@ -20,7 +20,7 @@ class LookupController extends Controller
     {
         $company_id = auth()->user()->companyId();
 
-        $suppliersQuery = CustomerSupplier::where('customer_id', auth()->id())->select('id', 'supplier_name as name', 'company_name');
+        $suppliersQuery = Vender::where('customer_id', auth()->id())->select('id', 'supplier_name as name', 'company_name');
 
         if (request()->query('sort') === 'recent') {
             $suppliersQuery->withMax('expenses', 'created_at')
