@@ -15,6 +15,23 @@
             margin: 40px;
         }
 
+
+        /* WATERMARK IMAGE STYLE */
+        .watermark {
+            position: fixed;
+            top: 15%;
+            left: 10%;
+            width: 80%;
+            opacity: 0.1;
+            z-index: -1000;
+            text-align: center;
+        }
+
+        .watermark img {
+            width: 800px;
+            height: auto;
+        }
+
         /* HEADER */
 
         .header-table {
@@ -114,19 +131,43 @@
 
 <body>
 
+    @if(isset($is_logo) && $is_logo == false)
+    <div class="watermark">
+        @php
+        $logoPath = 'uploads/logo/simply-compta.png';
+        $watermarkSrc = null;
+        $storageLogoPath = storage_path('app/public/' . $logoPath);
+
+        if (is_file($storageLogoPath)) {
+        $mime = mime_content_type($storageLogoPath) ?: 'image/png';
+        $watermarkSrc = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($storageLogoPath));
+        } elseif (\Storage::disk('public')->exists($logoPath)) {
+        $watermarkSrc = asset('storage/' . $logoPath);
+        }
+        @endphp
+
+        @if($watermarkSrc)
+        <img src="{{ $watermarkSrc }}">
+        @endif
+    </div>
+    @endif
+
     <!-- HEADER -->
     <table class="header-table">
         <tr>
 
+
             <td width="60%">
 
                 @php
+                if(isset($is_logo) && $is_logo == true){
                 $logoSrc = $logo_data_uri ?? $logo_url ?? ($company->avatar_url ?? null);
+                } else {
+                $logoSrc = '#';
+                }
                 @endphp
 
-                @if($logoSrc)
                 <img src="{{ $logoSrc }}" class="logo">
-                @endif
 
                 <div class="invoice-title">
                     @if($invoice->invoice_number)
@@ -262,28 +303,28 @@
         <tr>
             <td><strong>TOTAL HT</strong></td>
             <td>
-               MAD {{ number_format($totals['total_ht'],2,',',' ') }}               
+                MAD {{ number_format($totals['total_ht'],2,',',' ') }}
             </td>
         </tr>
 
         <tr>
             <td><strong>After Discount</strong></td>
             <td>
-               MAD {{ number_format($totals['afterDiscount'],2,',',' ') }}               
+                MAD {{ number_format($totals['afterDiscount'],2,',',' ') }}
             </td>
         </tr>
 
         <tr>
             <td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
             <td>
-               MAD {{ number_format($totals['total_tva'],2,',',' ') }}               
+                MAD {{ number_format($totals['total_tva'],2,',',' ') }}
             </td>
         </tr>
 
         <tr class="total-final" style="background:{{ $pdfColor }};">
             <td><strong>TOTAL TTC</strong></td>
             <td>
-               MAD {{ number_format($totals['total_ttc'],2,',',' ') }}               
+                MAD {{ number_format($totals['total_ttc'],2,',',' ') }}
             </td>
         </tr>
 
@@ -295,12 +336,14 @@
     <div class="signature">
 
         @php
+        if(isset($is_logo) && $is_logo == true){
         $sigSrc = $signature_data_uri ?? $signature_url ?? ($company->signature_url ?? null);
+        } else {
+        $sigSrc = '#';
+        }
         @endphp
 
-        @if($sigSrc)
         <img src="{{ $sigSrc }}" alt="Signature">
-        @endif
 
     </div>
 

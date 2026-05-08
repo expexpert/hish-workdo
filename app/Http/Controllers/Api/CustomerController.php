@@ -82,7 +82,7 @@ class CustomerController extends Controller
             'cnss'             => 'sometimes|required|string|max:255',
             'rib'              => 'sometimes|required|string|max:255',
             'company_type'     => 'sometimes|required|string|max:255',
-            'company_color'   => 'sometimes|required|string|max:255',
+            'company_color'    => 'sometimes|required|string|max:255',
             'contact'          => 'sometimes|required|string|max:20',
             'address'          => 'sometimes|required|string|max:255',
             'billing_name'     => 'sometimes|required|string|max:255',
@@ -173,6 +173,17 @@ class CustomerController extends Controller
             ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
             ->count();
 
+        $expiredInvoicesCount = CustomerInvoice::where('customer_id', $user->id)
+            ->where('status', 'issued')
+            ->whereDate('due_date', '<', now())
+            ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
+            ->count();
+
+        $sentQuotesCount = CustomerQuote::where('customer_id', $user->id)
+            ->where('status', 'sent')
+            ->when($clientId, fn($q, $id) => $q->where('client_id', $id))
+            ->count();
+
         $unreadDocumentsCount = ClientNotification::where('customer_id', $user->id)
             ->where('is_read', false)
             ->where('data', 'like', '%"document_notification"%')
@@ -207,6 +218,14 @@ class CustomerController extends Controller
             ->where('customer_invoices.customer_id', $user->id)
             ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
             ->selectRaw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_unpaid_sum")
+            ->first();
+
+        $expiredInvoiceSum = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
+            ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
+            ->where('customer_invoices.customer_id', $user->id)
+            ->when($clientId, fn($q, $id) => $q->where('customer_invoices.client_id', $id))
+            ->whereDate('customer_invoices.due_date', '<', now())
+            ->selectRaw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_expired_sum")
             ->first();
 
         $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
@@ -322,6 +341,9 @@ class CustomerController extends Controller
                 'unreadDocumentsCount' => $unreadDocumentsCount,
                 'total_pending_actions' => $missingBankStatementCount + $unpaidInvoicesCount + $unreadDocumentsCount,
                 'total_progress_score' => $statementScore + $invoiceExpenseScore + $notificationScore,
+                'expiredInvoicesCount' => $expiredInvoicesCount,
+                'expiredInvoiceSum' => $expiredInvoiceSum,
+                'sentQuotesCount' => $sentQuotesCount,
 
                 'is_enable_login' => $is_enable_login,
             ]
@@ -508,10 +530,31 @@ class CustomerController extends Controller
         }
 
         // Calculate usage
-        $invoiceUsed = CustomerInvoice::where('customer_id', $user->id)->count();
-        $quoteUsed = CustomerQuote::where('customer_id', $user->id)->count();
-        $expenseUsed = CustomerExpense::where('customer_id', $user->id)->count();
-        $receiptsUsed = Revenue::where('customer_id', $user->id)->count();
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $invoiceUsed = CustomerInvoice::where('customer_id', $user->id)
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->count();
+
+        $quoteUsed = CustomerQuote::where('customer_id', $user->id)
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->count();
+
+        $expenseUsed = CustomerExpense::where('customer_id', $user->id)
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->count();
+
+        $receiptsUsed = Revenue::where('customer_id', $user->id)
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->count();
+
+        $totalClients = CustomerClient::where('customer_id', $user->id)->count();
+        $totalSuppliers = Vender::where('customer_id', $user->id)->count();
 
         $models = [
             CustomerInvoice::class,
@@ -559,11 +602,22 @@ class CustomerController extends Controller
                 'limit_mb' => $plan ? (int) $plan->storage_limit_mb : 0,
                 'remaining_mb' => $plan ? max(0, $plan->storage_limit_mb - ($user->storage_used_mb ?? 0)) : 0,
             ],
+            'clients' => [
+                'used' => $totalClients,
+                'limit' => $plan ? $plan->client_limit : 0,
+                'remaining' => $plan ? ($plan->client_limit === null ? -1 : max(0, $plan->client_limit - $receiptsUsed)) : 0,
+            ],
+            'suppliers' => [
+                'used' => $totalSuppliers,
+                'limit' => $plan ? $plan->supplier_limit : 0,
+                'remaining' => $plan ? ($plan->supplier_limit === null ? -1 : max(0, $plan->supplier_limit - $ocrUsed)) : 0,
+            ],
         ];
 
         $data['features'] = [
             'whatsapp_bot_enabled' => $plan->whatsapp_bot_enabled,
             'export_enabled' => $plan->export_enabled,
+            'logo' => $plan->logo,
         ];
 
         $data['upgrade_url'] = $url;
@@ -852,7 +906,7 @@ class CustomerController extends Controller
             'category_id'      => 'required|exists:customer_categories,id',
             'description'      => 'nullable|string',
             'reference'        => 'nullable|string|max:255',
-            'payment_receipt'  => 'nullable|image|mimes:jpg,jpeg,png,pdf|max:5120',
+            'payment_receipt'  => 'nullable|image|mimes:jpg,jpeg,png,pdf|max:20500',
         ]);
 
         // Handle File Upload for "Payment Receipt"
@@ -926,7 +980,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:2050',
+            'statement' => 'required|mimes:pdf,csv,xls,xlsx,jpg,jpeg,png|max:20500',
             'month_year' => 'required|string',
         ]);
 
@@ -1478,7 +1532,7 @@ class CustomerController extends Controller
             $validated = $request->validate([
                 'customer_id'    => 'required|exists:customers,id',
                 'supplier_id'    => 'required|exists:venders,id',
-                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+                'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
                 'date'           => 'required|date',
                 'ttc'            => 'required|numeric|min:0',
                 'tva'            => 'nullable|numeric|min:0',
@@ -1700,7 +1754,7 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'supplier_id'    => 'sometimes|required|exists:venders,id',
-            'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'file'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'date'           => 'sometimes|required|date',
             'ttc'            => 'sometimes|required|numeric|min:0',
             'tva'            => 'nullable|numeric|min:0',
@@ -1709,7 +1763,7 @@ class CustomerController extends Controller
             'total_ttc'      => 'nullable|numeric|min:0',
             'total_tva'      => 'nullable|numeric|min:0',
             'notes'          => 'nullable|string',
-            'reference'      => 'nullable|string',            
+            'reference'      => 'nullable|string',
         ]);
 
         // Handle File Upload
@@ -1876,7 +1930,7 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'is_ocr'         => 'nullable|boolean',
 
             'articles'                    => 'sometimes|array',
@@ -2204,6 +2258,10 @@ class CustomerController extends Controller
         $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
         $pdfColor = $company && $company->company_color ? $company->company_color : '#4FA3D1';
 
+        $user = Customer::find($customerId);
+
+        $is_logo = $user?->mobilePlan?->logo ?? 0;
+
         $logoDataUri = null;
         $signatureDataUri = null;
 
@@ -2237,6 +2295,7 @@ class CustomerController extends Controller
             'logo_url'         => $logoUrl,
             'signature_url'    => $signatureUrl,
             'logo_data_uri'    => $logoDataUri,
+            'is_logo'          => $is_logo,
             'signature_data_uri' => $signatureDataUri,
             'pdfColor'         => $pdfColor
         ])->setPaper('a4')->setOptions(['isRemoteEnabled' => true]);
@@ -2333,7 +2392,7 @@ class CustomerController extends Controller
             'payment_method' => 'sometimes|required|string|max:255',
             'status'         => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'remove_document' => 'nullable|boolean',
 
             // Articles validation (optional during update)
@@ -2917,7 +2976,7 @@ class CustomerController extends Controller
             'payment_method' => 'required|string|max:255',
             'status'      => 'required|string|max:50',
             'notes'       => 'nullable|string',
-            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'document'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
 
             'articles'                    => 'sometimes|array',
             'articles.*.designation'     => 'required_with:articles|string|max:255',
@@ -3096,7 +3155,7 @@ class CustomerController extends Controller
             'status'         => 'sometimes|required|string|max:50',
             'review_status'  => 'sometimes|required|string|max:50',
             'notes'          => 'nullable|string',
-            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'remove_document' => 'nullable|boolean',
 
             // Articles validation
@@ -3291,6 +3350,7 @@ class CustomerController extends Controller
 
     public function downloadQuotePdf(Request $request, $id)
     {
+        $user = $request->user();
 
         $quote = CustomerQuote::where('customer_id', $request->user()->id)
             ->with(['client', 'articles.tax', 'customer'])
@@ -3316,6 +3376,8 @@ class CustomerController extends Controller
         $logoUrl = ($company && $company->avatar) ? asset('storage/' . $company->avatar) : null;
         $signatureUrl = ($company && $company->signature) ? asset('storage/' . $company->signature) : null;
         $pdfColor = $company && $company->company_color ? $company->company_color : '#4FA3D1';
+
+        $is_logo = $request->user()?->mobilePlan?->logo ?? 0;
 
         $logoDataUri = null;
         $signatureDataUri = null;
@@ -3350,6 +3412,7 @@ class CustomerController extends Controller
             'logo_url'         => $logoUrl,
             'signature_url'    => $signatureUrl,
             'logo_data_uri'    => $logoDataUri,
+            'is_logo'          => $is_logo,
             'signature_data_uri' => $signatureDataUri,
             'pdfColor'         => $pdfColor
         ])->setPaper('a4')->setOptions(['isRemoteEnabled' => true]);
@@ -3562,7 +3625,7 @@ class CustomerController extends Controller
             'reference'      => 'nullable|string|max:255',
             'description'    => 'nullable|string',
             'payment_method' => 'nullable|string',
-            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'is_ocr'         => 'nullable|boolean',
         ]);
 
@@ -3769,7 +3832,7 @@ class CustomerController extends Controller
             'reference'      => 'nullable|string|max:255',
             'description'    => 'nullable|string',
             'payment_method' => 'nullable|string',
-            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2050',
+            'add_receipt'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'remove_document' => 'nullable|boolean',
         ]);
 

@@ -53,12 +53,20 @@
             <input type="number" name="storage_limit_mb" value="{{ $plan->storage_limit_mb ?? '' }}" class="form-control" placeholder="Storage (MB)" required>
         </div>
 
+        <div class="col-md-4 mt-2">
+            <input type="number" name="client_limit" value="{{ $plan->client_limit ?? '' }}" class="form-control" placeholder="Customer Limit">
+        </div>
+
+        <div class="col-md-4 mt-2">
+            <input type="number" name="supplier_limit" value="{{ $plan->supplier_limit ?? '' }}" class="form-control" placeholder="Supplier Limit">
+        </div>
+
         <hr>
 
         {{-- FEATURES --}}
         <h6 class="mb-3">Features</h6>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="form-check form-switch">
                 <input type="checkbox" name="export_enabled" class="form-check-input"
                     {{ isset($plan) && $plan->export_enabled ? 'checked' : '' }}>
@@ -66,11 +74,19 @@
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="form-check form-switch">
                 <input type="checkbox" name="whatsapp_bot_enabled" class="form-check-input"
                     {{ isset($plan) && $plan->whatsapp_bot_enabled ? 'checked' : '' }}>
                 <label class="form-check-label">WhatsApp Bot</label>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-check form-switch">
+                <input type="checkbox" name="logo" class="form-check-input"
+                    {{ isset($plan) && $plan->logo ? 'checked' : '' }}>
+                <label class="form-check-label">Custom Logo</label>
             </div>
         </div>
 
