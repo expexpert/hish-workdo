@@ -121,6 +121,11 @@ class Customer extends Authenticatable
         return $this->accountant?->creatorId() ?? $this->created_by;
     }
 
+    public function company()
+    {
+        return User::where('id', $this->companyId())->first();
+    }
+
 
     public function mobilePlan()
     {
