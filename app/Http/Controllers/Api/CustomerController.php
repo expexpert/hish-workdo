@@ -162,6 +162,11 @@ class CustomerController extends Controller
         $monthStart = now()->copy()->startOfMonth();
         $monthEnd = now()->copy()->endOfMonth();
 
+        $plan = MobileUserPlan::find($user->mobile_user_plan_id);
+        if (!$plan) {
+            $plan = MobileUserPlan::where('slug', 'free')->first();
+        }
+
         // 🔥 COMMON FORMULAS
         $net = "(invoice_articles.total_price_ht - COALESCE(invoice_articles.discount, 0))";
         $vat = "($net * COALESCE(taxes.rate, 0) / 100)";
@@ -345,8 +350,10 @@ class CustomerController extends Controller
                 'expiredInvoiceSum' => $expiredInvoiceSum,
                 'sentQuotesCount' => $sentQuotesCount,
 
+
                 'is_enable_login' => $is_enable_login,
-            ]
+                'whatsapp_bot_enabled' => $plan->whatsapp_bot_enabled,
+                ]
         ], 200);
     }
 
