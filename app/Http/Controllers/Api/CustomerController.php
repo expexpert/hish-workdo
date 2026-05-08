@@ -1342,29 +1342,29 @@ class CustomerController extends Controller
         $total_vendor = $creator->countVenders();
         $plan         = Plan::find($creator->plan);
 
-        if ($total_vendor < $plan->max_venders || $plan->max_venders == -1) {
-            $vender = new Vender();
-            $vender->customer_id = $validated['customer_id'];
-            $vender->company_name = $validated['company_name'];
-            $vender->name = $validated['supplier_name'];
-            $vender->email = $validated['email'];
-            $vender->contact = $validated['telephone'];
-            $vender->billing_zip = $validated['postal_code'] ?? '';
-            $vender->billing_city = $validated['city'] ?? '';
-            $vender->commercial_register = $validated['commercial_register'] ?? '';
-            $vender->ice_number = $validated['ice'] ?? '';
+        // if ($total_vendor < $plan->max_venders || $plan->max_venders == -1) {
+        $vender = new Vender();
+        $vender->customer_id = $validated['customer_id'];
+        $vender->company_name = $validated['company_name'];
+        $vender->name = $validated['supplier_name'];
+        $vender->email = $validated['email'];
+        $vender->contact = $validated['telephone'];
+        $vender->billing_zip = $validated['postal_code'] ?? '';
+        $vender->billing_city = $validated['city'] ?? '';
+        $vender->commercial_register = $validated['commercial_register'] ?? '';
+        $vender->ice_number = $validated['ice'] ?? '';
 
-            $vender->created_by  = auth()->user()->companyId();
-            $vender->vender_id   = $this->venderNumber();
-            $vender->is_enable_login =  0;
+        $vender->created_by  = auth()->user()->companyId();
+        $vender->vender_id   = $this->venderNumber();
+        $vender->is_enable_login =  0;
 
-            $vender->save();
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vendor limit reached for your current plan. Please upgrade to add more vendors.'
-            ], 403);
-        }
+        $vender->save();
+        // } else {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Vendor limit reached for your current plan. Please upgrade to add more vendors.'
+        //     ], 403);
+        // }
 
         return response()->json([
             'success' => true,
@@ -1566,9 +1566,12 @@ class CustomerController extends Controller
                 $image_size = $request->file('file')->getSize();
                 $user = $request->user();
 
-                $result = $user->is_b2c
-                    ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                    : Utility::updateStorageLimit($user->companyId(), $image_size);
+                // $result = $user->is_b2c
+                //     ? Utility::updateB2CStorageLimit($user->id, $image_size)
+                //     : Utility::updateStorageLimit($user->companyId(), $image_size);
+
+                $result = Utility::updateB2CStorageLimit($user->id, $image_size);
+
                 if ($result != 1) {
                     return response()->json([
                         'success' => false,
@@ -1787,9 +1790,7 @@ class CustomerController extends Controller
         if ($request->hasFile('file')) {
             $image_size = $request->file('file')->getSize();
 
-            $result = $user->is_b2c
-                ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                : Utility::updateStorageLimit($user->companyId(), $image_size);
+            $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
             if ($result != 1) {
                 return response()->json([
@@ -1965,9 +1966,7 @@ class CustomerController extends Controller
 
             $user = $request->user();
 
-            $result = $user->is_b2c
-                ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                : Utility::updateStorageLimit($user->companyId(), $image_size);
+            $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
             if ($result != 1) {
                 return response()->json([
@@ -2441,9 +2440,7 @@ class CustomerController extends Controller
 
                     $image_size = $request->file('document')->getSize();
 
-                    $result = $user->is_b2c
-                        ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                        : Utility::updateStorageLimit($user->companyId(), $image_size);
+                    $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
                     if ($result != 1) {
                         return response()->json([
@@ -3009,9 +3006,7 @@ class CustomerController extends Controller
             $image_size = $request->file('document')->getSize();
             $user = $request->user();
 
-            $result = $user->is_b2c
-                ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                : Utility::updateStorageLimit($user->companyId(), $image_size);
+            $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
             if ($result != 1) {
                 return response()->json([
@@ -3204,9 +3199,7 @@ class CustomerController extends Controller
 
                     $image_size = $request->file('document')->getSize();
 
-                    $result = $user->is_b2c
-                        ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                        : Utility::updateStorageLimit($user->companyId(), $image_size);
+                    $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
                     if ($result != 1) {
                         return response()->json([
@@ -3656,9 +3649,7 @@ class CustomerController extends Controller
 
                 $user = $request->user();
 
-                $result = $user->is_b2c
-                    ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                    : Utility::updateStorageLimit($user->companyId(), $image_size);
+                $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
                 if ($result == 1) {
                     $fileName = time() . "_" . $request->add_receipt->getClientOriginalName();
@@ -3871,9 +3862,7 @@ class CustomerController extends Controller
             if ($request->hasFile('add_receipt')) {
                 $image_size = $request->file('add_receipt')->getSize();
 
-                $result = $user->is_b2c
-                    ? Utility::updateB2CStorageLimit($user->id, $image_size)
-                    : Utility::updateStorageLimit($user->companyId(), $image_size);
+                $result = Utility::updateB2CStorageLimit($user->id, $image_size);
 
                 if ($result == 1) {
                     // Delete old file if exists
