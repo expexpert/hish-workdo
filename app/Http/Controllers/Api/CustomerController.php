@@ -154,7 +154,7 @@ class CustomerController extends Controller
         $userName = $user->name;
         $is_enable_login = $user->is_enable_login;
 
-        $companyName = $user->company()->name ?? '';
+        $companyName = $user->company()->name ?? 'company';
 
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');

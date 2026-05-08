@@ -128,6 +128,7 @@ Route::get('/test-landing', [DashboardController::class, 'index'])->name('dashbo
 Route::get('/signup', [DashboardController::class, 'signup'])->name('signup')->middleware(['XSS', 'revalidate']);
 Route::post('/store-mobile-customer', [DashboardController::class, 'storeMobileCustomer'])->name('mobile.customer.store')->middleware(['XSS', 'revalidate']);
 Route::match(['get', 'post'], '/subscription/upgrade', [DashboardController::class, 'upgradeSubscripton'])->name('subscription.upgrade')->middleware(['XSS', 'revalidate']);
+Route::get('customer/invite/accept', [CustomerController::class, 'acceptInvitation'])->name('customer.invite.accept');
 
 Route::get('/', function () {
     return view('coming-soon');
@@ -652,6 +653,8 @@ Route::group(['middleware' => ['verified']], function () {
             Route::post('/customer-invoice/review-action', [CustomerController::class, 'invoiceReviewAction'])->name('invoice.review.action');
 
             Route::post('/customer-expense/review-action', [CustomerController::class, 'expenseReviewAction'])->name('expense.review.action');
+
+            Route::post('/invite-customer', [CustomerController::class, 'inviteCustomer'])->name('invite.customer');
         }
     );
     Route::group(
