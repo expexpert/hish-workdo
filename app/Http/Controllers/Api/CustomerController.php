@@ -622,12 +622,12 @@ class CustomerController extends Controller
             'clients' => [
                 'used' => $totalClients,
                 'limit' => $plan ? $plan->client_limit : 0,
-                'remaining' => $plan ? ($plan->client_limit === null ? -1 : max(0, $plan->client_limit - $receiptsUsed)) : 0,
+                'remaining' => $plan ? ($plan->client_limit === null ? -1 : max(0, $plan->client_limit - $totalClients)) : 0,
             ],
             'suppliers' => [
                 'used' => $totalSuppliers,
                 'limit' => $plan ? $plan->supplier_limit : 0,
-                'remaining' => $plan ? ($plan->supplier_limit === null ? -1 : max(0, $plan->supplier_limit - $ocrUsed)) : 0,
+                'remaining' => $plan ? ($plan->supplier_limit === null ? -1 : max(0, $plan->supplier_limit - $totalSuppliers)) : 0,
             ],
         ];
 
