@@ -1620,6 +1620,10 @@ class CustomerController extends Controller
             return back()->with('error', 'No customer found with that email address.');
         }
 
+        if($customer->is_b2c == 0){
+            return back()->with('error', 'This customer is already associated with an accountant.');
+        }
+
         $encryptedCustomer = Crypt::encryptString($customer->id);
 
         $encryptedAccountant = Crypt::encryptString($accountant->id);
