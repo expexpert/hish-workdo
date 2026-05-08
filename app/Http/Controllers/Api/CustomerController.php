@@ -154,6 +154,8 @@ class CustomerController extends Controller
         $userName = $user->name;
         $is_enable_login = $user->is_enable_login;
 
+        $companyName = $user->company()->name ?? '';
+
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $clientId = $request->query('client_id');
@@ -328,6 +330,7 @@ class CustomerController extends Controller
             'message' => 'Dashboard data retrieved successfully.',
             'data' => [
                 'userName' => $userName,
+                'companyName' => $companyName,
                 'total_issued_paid_sum' => (float) ($invoiceStats->total_issued_paid_sum ?? 0),
                 'total_paid_sum' => (float) ($invoiceStats->total_paid_sum ?? 0) + (float) ($totalRevenue ?? 0),
                 'total_expenses_sum' => (float) ($expenseStats->total_sum ?? 0),
