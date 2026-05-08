@@ -102,12 +102,24 @@
                             <strong>{{ $plan->storage_limit_mb }} MB</strong>
                         </li>
 
+                        <li>👥 Customer :
+                            <strong>{{ $plan->client_limit ?? 'Unlimited' }}</strong>
+                        </li>
+
+                        <li>🤝 Supplier :
+                            <strong>{{ $plan->supplier_limit ?? 'Unlimited' }}</strong>
+                        </li>
+
                         @if($plan->export_enabled)
                         <li>✅ Export Enabled</li>
                         @endif
 
                         @if($plan->whatsapp_bot_enabled)
                         <li>📲 WhatsApp Bot</li>
+                        @endif
+
+                        @if($plan->logo)
+                        <li>🎨 Custom Logo</li>
                         @endif
                     </ul>
 

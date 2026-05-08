@@ -14,6 +14,9 @@ class MobileUserPlan extends Model
         'expense_limit',
         'receipt_limit',
         'ocr_limit',
+        'client_limit',
+        'supplier_limit',
+        'logo',
         'storage_limit_mb',
         'export_enabled',
         'whatsapp_bot_enabled',
@@ -24,6 +27,7 @@ class MobileUserPlan extends Model
         'export_enabled' => 'boolean',
         'whatsapp_bot_enabled' => 'boolean',
         'is_active' => 'boolean',
+        'logo' => 'boolean',
     ];
 
     // 🔗 Relationships

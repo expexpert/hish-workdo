@@ -7,28 +7,36 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        // Handle customer_quotes
-        Schema::table('customer_quotes', function (Blueprint $table) {
-            $logicalIndexName = 'customer_quotes_quote_number_unique';
+        $quoteIndexesToTry = [
+            'customer_quotes_quote_number_unique',
+            'customer_quotes_invoice_number_unique' // The typo name from your screenshot
+        ];
 
-            // Check if index exists before dropping
-            if ($this->hasIndex('customer_quotes', $logicalIndexName)) {
-                $table->dropUnique($logicalIndexName);
+        foreach ($quoteIndexesToTry as $index) {
+            if ($this->hasIndex('customer_quotes', $index)) {
+                Schema::table('customer_quotes', function (Blueprint $table) use ($index) {
+                    $table->dropUnique($index);
+                });
             }
-        });
+        }
 
         // Handle customer_invoices
-        Schema::table('customer_invoices', function (Blueprint $table) {
-            $logicalIndexName = 'customer_invoices_invoice_number_unique';
-
-            if ($this->hasIndex('customer_invoices', $logicalIndexName)) {
-                $table->dropUnique($logicalIndexName);
-            }
-        });
+        $invoiceIndex = 'customer_invoices_invoice_number_unique';
+        if ($this->hasIndex('customer_invoices', $invoiceIndex)) {
+            Schema::table('customer_invoices', function (Blueprint $table) use ($invoiceIndex) {
+                $table->dropUnique($invoiceIndex);
+            });
+        }
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('customer_quotes', function (Blueprint $table) {
@@ -43,16 +51,11 @@ return new class extends Migration
     /**
      * Helper to check if an index exists on a table
      */
-    private function hasIndex($table, $index): bool
+    private function hasIndex($table, $indexName): bool
     {
-        $conn = Schema::getConnection();
-        $dbName = $conn->getDatabaseName();
-
         $results = DB::select(
-            "
-            SHOW INDEX FROM {$table} 
-            WHERE Key_name = ?",
-            [$index]
+            "SHOW INDEX FROM {$table} WHERE Key_name = ?",
+            [$indexName]
         );
 
         return count($results) > 0;

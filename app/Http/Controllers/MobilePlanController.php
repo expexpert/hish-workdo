@@ -53,6 +53,8 @@ class MobilePlanController extends Controller
             'receipt_limit'    => 'nullable|numeric',
             'ocr_limit'        => 'nullable|numeric',
             'storage_limit_mb' => 'required|numeric',
+            'client_limit' => 'required|numeric',
+            'supplier_limit' => 'required|numeric',
             'prices'                       => 'required|array|min:1',
             'prices.*.billing_cycle'       => 'required|string',
             'prices.*.price'               => 'required|numeric|min:0',
@@ -71,8 +73,11 @@ class MobilePlanController extends Controller
                 'receipt_limit'        => $request->receipt_limit,
                 'ocr_limit'            => $request->ocr_limit,
                 'storage_limit_mb'     => $request->storage_limit_mb,
+                'client_limit'       => $request->client_limit,
+                'supplier_limit'       => $request->supplier_limit,
                 'export_enabled'       => $request->has('export_enabled'),
                 'whatsapp_bot_enabled' => $request->has('whatsapp_bot_enabled'),
+                'logo'                 => $request->has('logo'),
             ]);
 
             foreach (array_values($request->prices) as $index => $priceData) {
@@ -115,6 +120,8 @@ class MobilePlanController extends Controller
             'receipt_limit'    => 'nullable|numeric',
             'ocr_limit'        => 'nullable|numeric',
             'storage_limit_mb' => 'required|numeric',
+            'client_limit' => 'required|numeric',
+            'supplier_limit' => 'required|numeric',
             'prices'                       => 'required|array|min:1',
             'prices.*.billing_cycle'       => 'required|string',
             'prices.*.price'               => 'required|numeric|min:0',
@@ -133,8 +140,11 @@ class MobilePlanController extends Controller
                 'receipt_limit'        => $request->receipt_limit,
                 'ocr_limit'            => $request->ocr_limit,
                 'storage_limit_mb'     => $request->storage_limit_mb,
+                'client_limit'      => $request->client_limit,
+                'supplier_limit'       => $request->supplier_limit,
                 'export_enabled'       => $request->has('export_enabled'),
                 'whatsapp_bot_enabled' => $request->has('whatsapp_bot_enabled'),
+                'logo'                 => $request->has('logo'),
             ]);
 
             $existingIds = $plan->prices->pluck('id')->toArray();
