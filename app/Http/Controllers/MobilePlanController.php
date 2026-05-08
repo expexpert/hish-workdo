@@ -230,7 +230,10 @@ class MobilePlanController extends Controller
 
     public function MobileSubscription(Request $request)
     {
-        $mobileSubscriptions = MobileUserSubscription::with('plan', 'price', 'customer', 'referralCode')->get();
+        $mobileSubscriptions = MobileUserSubscription::with('plan', 'price', 'customer', 'referralCode')
+            ->whereHas('customer', function ($query) {
+                $query->where('is_b2c', true);
+            })->get();
         return view('MobilePlan.subscription', compact('mobileSubscriptions'));
     }
 }
