@@ -233,6 +233,15 @@ class CustomerController extends Controller
             ->selectRaw("ROUND(SUM(CASE WHEN UPPER(status) = 'ISSUED' THEN $ttc ELSE 0 END), 2) as total_expired_sum")
             ->first();
 
+        $sentQuoteSum = CustomerQuote::leftJoin('quotes_articles', 'customer_quotes.id', '=', 'quotes_articles.quotes_id')
+            ->leftJoin('taxes', 'quotes_articles.tva_percentage', '=', 'taxes.id')
+            ->where('customer_quotes.customer_id', $user->id)
+            ->where('customer_quotes.status', 'sent')
+            ->when($clientId, fn($q, $id) => $q->where('customer_quotes.client_id', $id))
+            ->select(
+                DB::raw("ROUND(SUM((quotes_articles.total_price_ht - COALESCE(quotes_articles.discount, 0)) * (1 + COALESCE(taxes.rate, 0) / 100)), 2) as sent_quote_sum"),
+            )->first();
+
         $invoiceStats = CustomerInvoice::leftJoin('invoice_articles', 'customer_invoices.id', '=', 'invoice_articles.invoice_id')
             ->leftJoin('taxes', 'invoice_articles.tva_percentage', '=', 'taxes.id')
             ->where('customer_invoices.customer_id', $user->id)
@@ -347,13 +356,14 @@ class CustomerController extends Controller
                 'total_pending_actions' => $missingBankStatementCount + $unpaidInvoicesCount + $unreadDocumentsCount,
                 'total_progress_score' => $statementScore + $invoiceExpenseScore + $notificationScore,
                 'expiredInvoicesCount' => $expiredInvoicesCount,
-                'expiredInvoiceSum' => $expiredInvoiceSum,
+                'expiredInvoiceSum' => (float) ($expiredInvoiceSum->total_expired_sum ?? 0),
                 'sentQuotesCount' => $sentQuotesCount,
+                'sentQuoteSum' => (float) ($sentQuoteSum->sent_quote_sum ?? 0),
 
 
                 'is_enable_login' => $is_enable_login,
                 'whatsapp_bot_enabled' => $plan->whatsapp_bot_enabled,
-                ]
+            ]
         ], 200);
     }
 
