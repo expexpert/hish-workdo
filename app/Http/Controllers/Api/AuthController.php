@@ -130,15 +130,6 @@ class AuthController extends Controller
 
         $plan = $price->plan;
 
-        $months = [
-            'monthly'   => 1,
-            'quarterly' => 3,
-            'yearly'    => 12
-        ];
-
-        $addMonths = $months[$price->billing_cycle] ?? 1;
-        $planEndsAt = now()->addMonths($addMonths);
-
         MobileUserSubscription::create([
             'customer_id' => $customer->id,
             'mobile_user_plan_id' => $plan->id,
@@ -152,8 +143,8 @@ class AuthController extends Controller
             'currency' => $price->currency,
             'refund_status' => 'none',
             'starts_at' => now(),
-            'ends_at' => $planEndsAt,
-            'renews_at' => $planEndsAt,
+            'ends_at' => now()->addMonths(1),
+            'renews_at' => now()->addMonths(1),
             'trial_ends_at' => now()->addDays(7),
             'payment_provider' => 'test',
         ]);

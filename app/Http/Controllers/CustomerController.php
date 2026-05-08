@@ -38,6 +38,8 @@ use App\Models\ProductService;
 use App\Models\Tax;
 use App\Models\ProductServiceUnit;
 use App\Models\Vender;
+use App\Models\MobileUserPlan;
+use App\Models\MobileUserPlanPrice;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
 
@@ -160,6 +162,38 @@ class CustomerController extends Controller
 
                 $customer->save();
                 CustomField::saveData($customer, $request->customField);
+
+
+
+                $freePlan = MobileUserPlan::where('name', 'Free')->first();
+                $price    = MobileUserPlanPrice::with('plan')->findOrFail($freePlan->id);
+
+                $plan = $price->plan;
+
+                MobileUserSubscription::create([
+                    'customer_id' => $customer->id,
+                    'mobile_user_plan_id' => $plan->id,
+                    'mobile_user_plan_price_id' => $price->id,
+                    'referral_code_id' => null,
+                    'billing_cycle' => $price->billing_cycle,
+                    'status' => 'active',
+                    'original_price' => $price->price,
+                    'referral_discount_amount' => 0,
+                    'price_paid' => $price->price,
+                    'currency' => $price->currency,
+                    'refund_status' => 'none',
+                    'starts_at' => now(),
+                    'ends_at' => now()->addMonths(1),
+                    'renews_at' => now()->addMonths(1),
+                    'trial_ends_at' => now()->addDays(7),
+                    'payment_provider' => 'test',
+                ]);
+
+                $customer->update([
+                    'mobile_user_plan_id' => $plan->id,
+                    'subscription_status' => 'active',
+                    'is_enable_login'  => 1,
+                ]);
 
 
                 $randomStr = Str::random(10);
