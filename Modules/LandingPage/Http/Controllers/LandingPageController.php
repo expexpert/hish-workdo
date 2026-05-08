@@ -108,17 +108,7 @@ class LandingPageController extends Controller
         ]);
 
         try {
-            $settings = Utility::settings();
-            config([
-                'mail.default' => $settings['mail_driver'],
-                'mail.mailers.smtp.host' => $settings['mail_host'],
-                'mail.mailers.smtp.port' => $settings['mail_port'],
-                'mail.mailers.smtp.encryption' => $settings['mail_encryption'],
-                'mail.mailers.smtp.username' => $settings['mail_username'],
-                'mail.mailers.smtp.password' => $settings['mail_password'],
-                'mail.from.address' => $settings['mail_from_address'],
-                'mail.from.name' => $settings['mail_from_name'],
-            ]);
+            Utility::getSMTPDetailsNew(1);
 
             Mail::to('contact@simply-compta.com')->send(new \App\Mail\ContactFormMail($request->all()));
             return redirect()->back()->with('success', 'Votre demande a été envoyée avec succès !');

@@ -42,6 +42,9 @@ use App\Models\MobileUserPlan;
 use App\Models\MobileUserPlanPrice;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CustomerInvitationMail;
 
 class CustomerController extends Controller
 {
@@ -62,7 +65,9 @@ class CustomerController extends Controller
             $customers = Customer::whereIn('created_by', $filterIds)->with('accountant')->get();
             $isAccountant = \Auth::user()->type == 'accountant';
 
-            return view('customer.index', compact('customers', 'isAccountant'));
+            $B2CCustomers = Customer::where('is_b2c', 1)->get();
+
+            return view('customer.index', compact('customers', 'isAccountant', 'B2CCustomers'));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
@@ -1601,5 +1606,61 @@ class CustomerController extends Controller
         $customer->save();
 
         return redirect()->back()->with('success', 'Customer access updated successfully.');
+    }
+
+
+
+    public function inviteCustomer(Request $request)
+    {
+        $accountant = auth()->user();
+
+        $customer = Customer::where('email', $request->email)->first();
+
+        if (!$customer){
+            return back()->with('error', 'No customer found with that email address.');
+        }
+
+        $encryptedCustomer = Crypt::encryptString($customer->id);
+
+        $encryptedAccountant = Crypt::encryptString($accountant->id);
+
+        $url = URL::temporarySignedRoute(
+            'customer.invite.accept',
+            now()->addHours(48),
+            [
+                'customer' => $encryptedCustomer,
+                'accountant' => $encryptedAccountant,
+            ]
+        );
+
+        Utility::getSMTPDetailsNew($accountant->creatorId());
+
+        try {
+            Mail::to($customer->email)->send(new CustomerInvitationMail($url, $accountant, $customer));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to send invitation email: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Invitation sent successfully.');
+    }
+
+    public function acceptInvitation(Request $request)
+    {
+        try {
+            $customerId = Crypt::decryptString($request->customer);
+            $accountantId = Crypt::decryptString($request->accountant);
+
+            $customer = Customer::findOrFail($customerId);
+            $accountant = User::findOrFail($accountantId);
+
+            // Assign the accountant to the customer
+            $customer->created_by = $accountant->id;
+            $customer->is_b2c = 0;
+            $customer->save();
+
+            return view('dashboard.customer_merge')->with('success', 'Invitation accepted successfully. You are now connected with ' . $accountant->name);
+        } catch (\Exception $e) {
+            return redirect()->route('login')->with('error', 'Invalid or expired invitation link.');
+        }
     }
 }

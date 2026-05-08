@@ -1452,6 +1452,33 @@ class Utility extends Model
         return $smtpDetail;
     }
 
+    public static function getSMTPDetailsNew($user_id)
+    {
+        $settings = self::settingsById($user_id);
+        if (empty($settings['mail_driver'])) {
+            $settings = self::settingsById(1);
+        }
+
+        config([
+            'mail.default'                   => isset($settings['mail_driver'])       ? $settings['mail_driver']       : '',
+            'mail.mailers.smtp.host'         => isset($settings['mail_host'])         ? $settings['mail_host']         : '',
+            'mail.mailers.smtp.port'         => isset($settings['mail_port'])         ? $settings['mail_port']         : '',
+            'mail.mailers.smtp.encryption'   => isset($settings['mail_encryption'])   ? $settings['mail_encryption']   : '',
+            'mail.mailers.smtp.username'     => isset($settings['mail_username'])     ? $settings['mail_username']     : '',
+            'mail.mailers.smtp.password'     => isset($settings['mail_password'])     ? $settings['mail_password']     : '',
+            'mail.from.address'              => isset($settings['mail_from_address']) ? $settings['mail_from_address'] : '',
+            'mail.from.name'                 => isset($settings['mail_from_name'])    ? $settings['mail_from_name']    : '',
+            'mail.driver'                    => isset($settings['mail_driver'])       ? $settings['mail_driver']       : '',
+            'mail.host'                      => isset($settings['mail_host'])         ? $settings['mail_host']         : '',
+            'mail.port'                      => isset($settings['mail_port'])         ? $settings['mail_port']         : '',
+            'mail.encryption'                => isset($settings['mail_encryption'])   ? $settings['mail_encryption']   : '',
+            'mail.username'                  => isset($settings['mail_username'])     ? $settings['mail_username']     : '',
+            'mail.password'                  => isset($settings['mail_password'])     ? $settings['mail_password']     : '',
+        ]);
+
+        return $settings;
+    }
+
     public static function sendEmailTemplate($emailTemplate, $mailTo, $obj)
     {
         $usr = \Auth::user();

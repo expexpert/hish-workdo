@@ -6,7 +6,7 @@
     <meta charset='utf-8'>
 
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Payment successful</title>
+    <title>Joined successfully</title>
 
     <link rel='stylesheet' href='main.css'>
     <style>
@@ -72,16 +72,15 @@
 
 <body>
 
-
-<section class="Payment-successful">
-    <div class="payment-boxx">
-        <div class="payment-text-box">
-            <h2>Paiement réussi.</h2>
-            <p>Vous pouvez maintenant vous connecter à l'application.</p>
-            <h6>Merci.</h6>
+    <section class="Payment-successful">
+        <div class="payment-boxx">
+            <div class="payment-text-box">
+                <h2>Intégration réussie.</h2>
+                <p>Invitation acceptée avec succès.</p>
+                <h6>Merci.</h6>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
 </body>
 

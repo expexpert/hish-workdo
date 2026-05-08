@@ -21,6 +21,7 @@ use App\Models\MobileUserPlanPrice;
 use App\Models\MobileUserSubscription;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 
 
@@ -35,7 +36,7 @@ class AuthController extends Controller
             ->orderBy('id', 'asc')
             ->first();
 
-        $createdBy = $firstAccountant?->id ?? 1;
+        $createdBy = $firstAccountant?->id ?? 3;
 
 
         $latest = Customer::where('created_by', '=', $createdBy)->latest()->first();
@@ -187,6 +188,34 @@ class AuthController extends Controller
                 'contact_number'   => $customer->contact,
                 'created_by'       => $companyID,
             ]);
+        }
+
+
+        $userpassword  = $validated['password'];
+        $role_r = Role::where('name', '=', 'customer')->firstOrFail();
+        $customer->assignRole($role_r);
+
+        $uArr = [
+            'email' => $customer->email,
+            'password' => $userpassword,
+        ];
+
+        try {
+            $resp = Utility::sendEmailTemplate('user_created', [$customer->id => $customer->email], $uArr);
+        } catch (\Exception $e) {
+            $smtp_error = __('E-Mail has been not sent due to SMTP configuration');
+        }
+
+
+        //Twilio Notification
+        $setting  = Utility::settings($companyID);
+        if (isset($setting['customer_notification']) && $setting['customer_notification'] == 1) {
+            $uArr = [
+                'customer_name' => $request->name,
+                'email'  => $request->email,
+                'password'  =>  $userpassword,
+            ];
+            Utility::send_twilio_msg($request->contact, 'new_customer', $uArr);
         }
 
         return response()->json([

@@ -137,11 +137,11 @@ class DashboardController extends Controller
                         'constant' => ['taxes' => 0, 'category' => 0, 'units' => 0, 'bankAccount' => 0],
                         'bankAccountDetail' => [],
                         'recentInvoice' => [],
-                        'weeklyInvoice' => ['invoiceTotal' => 0, 'invoicePaid' => 0, 'invoiceDue' => 0],
-                        'monthlyInvoice' => ['invoiceTotal' => 0, 'invoicePaid' => 0, 'invoiceDue' => 0],
+                        'weeklyInvoice' => 0,
+                        'monthlyInvoice' => 0,
                         'recentBill' => [],
-                        'weeklyBill' => ['billTotal' => 0, 'billPaid' => 0, 'billDue' => 0],
-                        'monthlyBill' => ['billTotal' => 0, 'billPaid' => 0, 'billDue' => 0],
+                        'weeklyBill' => 0,
+                        'monthlyBill' => 0,
                         'goals' => [],
                     ];
                 }
