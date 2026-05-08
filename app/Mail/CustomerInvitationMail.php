@@ -34,6 +34,6 @@ class CustomerInvitationMail extends Mailable
     public function build()
     {
         return $this->view('email.customer_invitation')
-            ->subject('Invitation to join ' . $this->accountant->name);
+            ->subject('Invitation à rejoindre ' . $this->accountant->name);
     }
 }
