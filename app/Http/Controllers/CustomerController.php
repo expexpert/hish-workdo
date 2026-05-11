@@ -1616,11 +1616,11 @@ class CustomerController extends Controller
 
         $customer = Customer::where('email', $request->email)->first();
 
-        if (!$customer){
+        if (!$customer) {
             return back()->with('error', 'No customer found with that email address.');
         }
 
-        if($customer->is_b2c == 0){
+        if ($customer->is_b2c == 0) {
             return back()->with('error', 'This customer is already associated with an accountant.');
         }
 
@@ -1661,6 +1661,39 @@ class CustomerController extends Controller
             $customer->created_by = $accountant->id;
             $customer->is_b2c = 0;
             $customer->save();
+
+
+            $randomStr = Str::random(10);
+            $companyID = $accountant->created_by;
+
+            $accounts = [
+                ['code' => '5141', 'bank_name' => 'Banque principale'],
+                ['code' => '5161', 'bank_name' => 'Caisse'],
+            ];
+
+            foreach ($accounts as $acc) {
+
+                $chartOfAccount = ChartOfAccount::where('created_by', $companyID)
+                    ->where('code', $acc['code'])
+                    ->latest()
+                    ->first();
+
+                if (!$chartOfAccount) {
+                    continue;
+                }
+
+                BankAccount::create([
+                    'chart_account_id' => $chartOfAccount->id,
+                    'customer_id'      => $customer->id,
+                    'holder_name'      => $customer->name,
+                    'bank_name'        => $acc['bank_name'],
+                    'account_number'   => $randomStr,
+                    'opening_balance'  => 0,
+                    'contact_number'   => $customer->contact,
+                    'created_by'       => $companyID,
+                ]);
+            }
+
 
             return view('dashboard.customer_merge')->with('success', 'Invitation accepted successfully. You are now connected with ' . $accountant->name);
         } catch (\Exception $e) {
