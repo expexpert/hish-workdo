@@ -199,7 +199,7 @@
 
         @media (min-width: 768px) {
             .plans-column {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -664,7 +664,7 @@
             <div class="plans-grid">
                 <div class="plans-column" id="plans-column">
 
-                    @foreach($mobilePlans as $plan)
+                    @foreach($mobilePlans->where('slug', '!=', 'free') as $plan)
                     @php
                     $isRecommended = $plan->slug === 'pro';
                     $isFree = $plan->slug === 'free';
