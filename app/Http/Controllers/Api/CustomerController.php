@@ -228,6 +228,10 @@ class CustomerController extends Controller
             ->where('month_year', now()->format('m-Y'))
             ->exists();
 
+        $hasLastMonthStatement = ClientBankStatement::where('customer_id', $user->id)
+            ->where('month_year', now()->subMonth()->format('m-Y'))
+            ->exists();    
+
         $missingBankStatementCount = $hasStatement ? 0 : 1;
 
         $currentMonthInvoice = CustomerInvoice::where('customer_id', $user->id)
@@ -381,6 +385,7 @@ class CustomerController extends Controller
                 'total_vat_payable_percentage_change' => $calcTrend($current->vat, $previous->vat),
 
                 'hasStatement' => $hasStatement,
+                'hasLastMonthStatement' => $hasLastMonthStatement,
                 'unpaidInvoicesCount' => $unpaidInvoicesCount,
                 'unpaidInvoiceSum' => (float) ($unpaidInvoiceSum->total_unpaid_sum ?? 0),
                 'unreadDocumentsCount' => $unreadDocumentsCount,
