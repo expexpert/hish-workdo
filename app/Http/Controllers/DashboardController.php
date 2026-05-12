@@ -330,25 +330,18 @@ class DashboardController extends Controller
 
     public function signup(Request $request)
     {
-        $ref = $request->query('ref');
-        $referralCode = null;
+        $ref              = $request->query('ref');
+        $referralCode     = null;
         $referralDiscount = null;
+        $response         = null;
 
         // ✅ Only for guest users
         if (auth()->check()) {
             return redirect('/dashboard');
         }
-        \Log::info('Headers', [
-            'ip'            => $request->ip(),
-            'x-forwarded'   => $request->header('X-Forwarded-For'),
-            'real-ip'       => $request->header('X-Real-IP'),
-            'user-agent'    => $request->header('User-Agent'),
-        ]);
 
         if ($ref) {
-
-            $ip = $request->ip();
-
+            $ip       = $request->ip();
             $referral = ReferralCode::where('code', $ref)->first();
 
             // ❌ Invalid
@@ -392,25 +385,38 @@ class DashboardController extends Controller
                     ->with('error', 'You have already used this referral code.');
             }
 
-            // ✅ First time visit → create log + increment clicks
-            if (!$log) {
+            // 🔍 Check all three layers for click tracking
+            $cookieKey        = 'ref_clicked_' . $ref;
+            $alreadyClicked   = $request->cookie($cookieKey);           // Layer 1: Cookie
+            $alreadyInSession = session()->has('ref_clicked_' . $ref);  // Layer 2: Session
+            $alreadyByIp      = !is_null($log);                         // Layer 3: IP log
 
-                $referral->increment('clicks');
+            $alreadyTracked = $alreadyClicked || $alreadyInSession || $alreadyByIp;
 
-                DB::table('referral_ip_logs')->insert([
+            if (!$alreadyTracked) {
+                // ✅ Atomic insert — prevents race conditions
+                $inserted = DB::table('referral_ip_logs')->insertOrIgnore([
                     'referral_code' => $ref,
-                    'ip_address'   => $ip,
-                    'is_used'      => false,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
+                    'ip_address'    => $ip,
+                    'is_used'       => false,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
                 ]);
+
+                // ✅ Only increment if row was actually newly inserted
+                if ($inserted) {
+                    $referral->increment('clicks');
+                }
             }
 
-            // ✅ Store in session
+            // ✅ Always mark in session (covers VPN + same browser case)
+            session(['ref_clicked_' . $ref => true]);
+
+            // ✅ Store referral in session for checkout discount
             if (!session()->has('referral_code')) {
                 session([
                     'referral_code'     => $referral->code,
-                    'referral_discount' => $referral->discount_percentage
+                    'referral_discount' => $referral->discount_percentage,
                 ]);
             }
 
@@ -422,11 +428,26 @@ class DashboardController extends Controller
             ->where('is_active', 1)
             ->get();
 
-        return view('dashboard.signup', compact(
+        // ✅ Build response with cookie if ref is present
+        $response = response()->view('dashboard.signup', compact(
             'mobilePlans',
             'referralCode',
             'referralDiscount'
         ));
+
+        if ($ref) {
+            $response->cookie(
+                'ref_clicked_' . $ref,  // Cookie name
+                '1',                     // Value
+                60 * 24 * 30,            // Expiry: 30 days
+                '/',                     // Path
+                null,                    // Domain
+                true,                    // Secure (HTTPS only)
+                true                     // HttpOnly (not accessible via JS)
+            );
+        }
+
+        return $response;
     }
 
     public function storeMobileCustomer(Request $request)
