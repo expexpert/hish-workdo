@@ -59,11 +59,10 @@ class CustomerController extends Controller
             $user = $request->user();
 
             if ($user) {
-                $cacheKey = 'last_login_check_' . $user->id;
+                $cacheKey = 'customer_logged_in_' . $user->id;
 
                 if (!cache()->has($cacheKey)) {
-
-                    $customer = Customer::where('user_id', $user->id)->first();
+                    $customer = Customer::find($user->id);
 
                     if ($customer) {
                         if (!$customer->last_login_at?->isToday()) {
@@ -71,6 +70,7 @@ class CustomerController extends Controller
                                 'last_login_at' => now(),
                             ]);
                         }
+
                         cache()->put($cacheKey, true, now()->endOfDay());
                     }
                 }
