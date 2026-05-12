@@ -73,32 +73,24 @@
 <body>
 
 
-    <section class="Payment-successful">
-        <div class="payment-boxx">
-            <div class="payment-text-box">
-                <h2>Paiement réussi.</h2>
-                <p>Vous pouvez maintenant vous connecter à l'application.</p>
-                <h6>Merci.</h6>
-            </div>
-            <button id="continueBtn">Continue</button>
+<section class="Payment-successful">
+    <div class="payment-boxx">
+        <div class="payment-text-box">
+            <h2>Paiement réussi.</h2>
+            <p>Vous pouvez maintenant vous connecter à l'application.</p>
+            <h6>Merci.</h6>
         </div>
-    </section>
+    </div>
+</section>
 
 </body>
 
 </html>
 
-<!-- <script>
+<script>
     document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
             window.location.href = "/";
         }, 5000);
-    });
-</script> -->
-
-<script>
-    document.getElementById('continueBtn').addEventListener('click', function() {
-        console.log('Continue button clicked');
-        window.location.href = 'myapp://subscription-success';
     });
 </script>
