@@ -338,6 +338,12 @@ class DashboardController extends Controller
         if (auth()->check()) {
             return redirect('/dashboard');
         }
+        \Log::info('Headers', [
+            'ip'            => $request->ip(),
+            'x-forwarded'   => $request->header('X-Forwarded-For'),
+            'real-ip'       => $request->header('X-Real-IP'),
+            'user-agent'    => $request->header('User-Agent'),
+        ]);
 
         if ($ref) {
 
