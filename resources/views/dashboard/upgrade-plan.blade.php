@@ -795,17 +795,15 @@
                     <button class="form-submit plan-btn" type="submit">soumettre</button>
                 </form>
 
-                <button id="continueBtn">temp button</button>
+
+                <a href="myapp://subscription-success">temp button</a>
+
+                <button onclick="window.location.href='myapp://subscription-success'">Test Deep Link</button>
             </div>
         </div>
     </main>
 
     <script>
-        document.getElementById('continueBtn').addEventListener('click', function() {
-            console.log('Continue button clicked');
-    // This allows you to add logic later, like analytics or checks
-    window.location.href = 'myapp://subscription-success';
-});
         window.onload = function() {
             const toast = document.getElementById('referralToast');
             if (toast) {
