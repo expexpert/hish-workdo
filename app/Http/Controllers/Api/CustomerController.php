@@ -3678,9 +3678,9 @@ class CustomerController extends Controller
             $categoryID = ProductServiceCategory::where('created_by', auth()->user()->companyId())->where('type', 'income')->first();
 
             if ($request->payment_method == 'cash') {
-                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Caisse%')->first();
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Caisse%')->latest()->first();
             } else {
-                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Banque principale%')->first();
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Banque principale%')->latest()->first();
             }
 
 
@@ -3897,9 +3897,9 @@ class CustomerController extends Controller
             }
 
             if ($request->payment_method == 'cash') {
-                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Caisse%')->first();
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Caisse%')->latest()->first();
             } else {
-                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Banque principale%')->first();
+                $bankAccountID = BankAccount::where('customer_id', auth()->user()->id)->where('bank_name', 'like', '%Banque principale%')->latest()->first();
             }
             $validated['account_id'] = $bankAccountID ? $bankAccountID->id : null;
 
