@@ -24,6 +24,7 @@ class Customer extends Authenticatable
         'is_b2c' => 'boolean',
         'app_access_enabled' => 'boolean',
         'storage_used_mb' => 'integer',
+        'last_login_at' => 'datetime',
     ];
 
     protected $fillable = [
