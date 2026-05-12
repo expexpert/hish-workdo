@@ -65,7 +65,9 @@ class CustomerController extends Controller
                     $customer = Customer::find($user->id);
 
                     if ($customer) {
-                        if (!$customer->last_login_at?->isToday()) {
+                        $lastLogin = $customer->last_login_at;
+
+                        if (!$lastLogin || !$lastLogin->isToday()) {
                             $customer->update([
                                 'last_login_at' => now(),
                             ]);
@@ -230,7 +232,7 @@ class CustomerController extends Controller
 
         $hasLastMonthStatement = ClientBankStatement::where('customer_id', $user->id)
             ->where('month_year', now()->subMonth()->format('m-Y'))
-            ->exists();    
+            ->exists();
 
         $missingBankStatementCount = $hasStatement ? 0 : 1;
 
