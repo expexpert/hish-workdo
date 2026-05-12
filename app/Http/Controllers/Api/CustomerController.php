@@ -53,6 +53,33 @@ use Illuminate\Support\Facades\Crypt;
 class CustomerController extends Controller
 {
 
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = $request->user();
+
+            if ($user) {
+                $cacheKey = 'last_login_check_' . $user->id;
+
+                if (!cache()->has($cacheKey)) {
+
+                    $customer = Customer::where('user_id', $user->id)->first();
+
+                    if ($customer) {
+                        if (!$customer->last_login_at?->isToday()) {
+                            $customer->update([
+                                'last_login_at' => now(),
+                            ]);
+                        }
+                        cache()->put($cacheKey, true, now()->endOfDay());
+                    }
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function getProfile(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -73,7 +100,7 @@ class CustomerController extends Controller
             // If these keys are present in the request, they MUST have a value (cannot be empty)
             'name'             => 'sometimes|required|string|max:255',
             'email'            => 'sometimes|required|email|unique:customers,email,' . $user->id,
-            
+
             'bio'              => 'nullable|string|max:1000',
             'short_bio'        => 'nullable|string|max:255',
             'ice_number'       => 'nullable|string|max:255',
