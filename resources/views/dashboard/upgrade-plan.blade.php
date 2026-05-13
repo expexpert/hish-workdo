@@ -795,10 +795,6 @@
                     <button class="form-submit plan-btn" type="submit">soumettre</button>
                 </form>
 
-
-                <a href="myapp://subscription-success">temp button</a>
-
-                <button onclick="window.location.href='myapp://subscription-success'">Test Deep Link</button>
             </div>
         </div>
     </main>

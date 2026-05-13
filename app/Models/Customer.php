@@ -186,15 +186,18 @@ class Customer extends Authenticatable
     public static function invoiceNumberFormat($number)
     {
         $settings = Utility::settings();
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        $year = date('Y');
+
+        return $settings["invoice_prefix"] . '-' . $year . '-' . sprintf("%04d", $number);
     }
 
 
     public function quoteNumberFormat($number)
     {
         $settings = Utility::settings();
+        $year = date('Y');
 
-        return $settings["quote_prefix"] . sprintf("%05d", $number);
+        return $settings["quote_prefix"] . '-' . $year . '-' . sprintf("%04d", $number);
     }
 
     public static function retainerNumberFormat($number)

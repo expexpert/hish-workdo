@@ -20,7 +20,7 @@ class LookupController extends Controller
     {
         $company_id = auth()->user()->companyId();
 
-        $suppliersQuery = Vender::where('customer_id', auth()->id())->select('id', 'name', 'company_name');
+        $suppliersQuery = Vender::where('customer_id', auth()->id())->where('created_by', $company_id)->select('id', 'name', 'company_name');
 
         if (request()->query('sort') === 'recent') {
             $suppliersQuery->withMax('expenses', 'created_at')
@@ -75,7 +75,7 @@ class LookupController extends Controller
             return 1;
         }
 
-        return $latest->id + 1;
+        return $latest->invoice_number + 1;
     }
 
     function quoteNumber()
@@ -85,7 +85,7 @@ class LookupController extends Controller
             return 1;
         }
 
-        return $latest->id + 1;
+        return $latest->quote_number + 1;
     }
 
 
