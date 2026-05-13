@@ -1428,7 +1428,7 @@ class CustomerController extends Controller
                 //Product Stock Report
                 $type = 'invoice';
                 $type_id = $newInvoice->id;
-                $description = $newArticle->quantity . '  ' . __(' quantity sold in invoice') . ' ' . \Auth::user()->invoiceNumberFormatNew($newInvoice->invoice_id);
+                $description = $newArticle->quantity . '  ' . __(' quantity sold in invoice') . ' ' . \Auth::user()->invoiceNumberFormatNew($newInvoice->invoice_id, $newInvoice->created_at);
                 Utility::addProductStock($newArticle->product_id, $newArticle->quantity, $type, $description, $type_id);
             }
         }
