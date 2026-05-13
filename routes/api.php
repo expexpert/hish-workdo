@@ -48,7 +48,9 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
 
     Route::get('/has-unread-notifications', [CustomerController::class, 'hasUnreadNotifications']);
 
-    Route::get('/get-subscription-status', [CustomerController::class, 'getSusbscriptionStatus']);
+    Route::get('/get-subscription-status', [CustomerController::class, 'getSubscriptionStatus']);
+
+    Route::get('/onboarding-checklist', [CustomerController::class, 'getOnboardingChecklist']);
 
     Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);
 

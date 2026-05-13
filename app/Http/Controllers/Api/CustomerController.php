@@ -560,7 +560,7 @@ class CustomerController extends Controller
     }
 
 
-    public function getSusbscriptionStatus(Request $request): JsonResponse
+    public function getSubscriptionStatus(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -684,6 +684,36 @@ class CustomerController extends Controller
         ], 200);
     }
 
+
+    public function getOnboardingChecklist(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $requiredFields = ['billing_name', 'ice_number', 'rc_number', 'patent_number', 'if_number', 'cnss', 'rib'];
+
+        $isCompanySetupComplete = collect($requiredFields)->every(fn($field) => !empty($user->$field));
+
+        $steps = [
+            'company-setup' => $isCompanySetupComplete,
+            'first-client'  => CustomerClient::where('customer_id', $user->id)->exists(),
+            'first-invoice' => CustomerInvoice::where('customer_id', $user->id)->exists(),
+            'add-supplier'  => Vender::where('customer_id', $user->id)->exists(),
+            'first-expense' => CustomerExpense::where('customer_id', $user->id)->exists(),
+        ];
+
+        $checklist = collect($steps)->map(function ($isCompleted, $key) {
+            return [
+                'id'     => $key,
+                'status' => $isCompleted ? 'completed' : 'pending'
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Onboarding checklist retrieved successfully.',
+            'data'    => $checklist
+        ], 200);
+    }
 
     public function getAccountantInfo(Request $request): JsonResponse
     {
