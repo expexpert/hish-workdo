@@ -30,7 +30,7 @@ class CustomerInvoice extends Model
         'is_ocr' => 'boolean',
     ];
 
-    protected $appends = ['invoice_url', 'pdf_url'];
+    protected $appends = ['invoice_url', 'pdf_url', 'invoice_number_formatted'];
 
     /**
      * Get the customer who owns the invoice.
@@ -75,5 +75,10 @@ class CustomerInvoice extends Model
             'REJECTED' => 'bg-light text-danger border-danger',
             default => 'bg-white text-muted border-secondary',
         };
+    }
+
+    public function getInvoiceNumberFormattedAttribute()
+    {
+        return $this->invoice_number ? \Auth::user()->invoiceNumberFormat($this->invoice_number) : null;
     }
 }
