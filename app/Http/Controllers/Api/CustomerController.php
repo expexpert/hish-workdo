@@ -1427,8 +1427,10 @@ class CustomerController extends Controller
         $user = $request->user();
         $like = $request->query('like');
         $today = now()->format('Y-m-d');
+        $company_id = auth()->user()->companyId();
 
-        $query = Vender::where('customer_id', $user->id);
+
+        $query = Vender::where('customer_id', $user->id)->where('created_by', $company_id);
 
         if ($like) {
             $query->where(function ($q) use ($like) {
@@ -2680,7 +2682,7 @@ class CustomerController extends Controller
             return 1;
         }
 
-        return $latest->id + 1;
+        return $latest->invoice_number + 1;
     }
 
     function quoteNumber()
@@ -2690,7 +2692,7 @@ class CustomerController extends Controller
             return 1;
         }
 
-        return $latest->id + 1;
+        return $latest->quote_number + 1;
     }
 
 
@@ -3552,7 +3554,7 @@ class CustomerController extends Controller
         try {
             return DB::transaction(function () use ($quote) {
                 $duplicateQuote = $quote->replicate();
-                $duplicateQuote->quote_number = \Auth::user()->invoiceNumberFormat($this->quoteNumber());
+                $duplicateQuote->quote_number = \Auth::user()->quoteNumberFormat($this->quoteNumber());
 
                 // ✅ Handle document duplication
                 if ($quote->document_path && Storage::disk('private')->exists($quote->document_path)) {

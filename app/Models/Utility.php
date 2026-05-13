@@ -82,7 +82,7 @@ class Utility extends Model
             "company_telephone" => "",
             "company_email" => "",
             "company_email_from_name" => "",
-            "invoice_prefix" => "#INVO",
+            "invoice_prefix" => "#FAC",
             "quote_prefix" => "#DEV",
             "journal_prefix" => "#JUR",
             "invoice_color" => "ffffff",
@@ -617,7 +617,7 @@ class Utility extends Model
     public static function invoiceNumberFormat($settings, $number)
     {
         $settings = Utility::settings();
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return $settings["invoice_prefix"] . '-' . $year . '-' . sprintf("%04d", $number);
     }
 
     public static function proposalNumberFormat($settings, $number)

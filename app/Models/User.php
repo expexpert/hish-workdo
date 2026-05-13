@@ -175,15 +175,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function invoiceNumberFormat($number)
     {
         $settings = Utility::settings();
+        $year = date('Y');
 
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return $settings["invoice_prefix"] . '-' . $year . '-' . sprintf("%04d", $number);
     }
 
     public function quoteNumberFormat($number)
     {
         $settings = Utility::settings();
+        $year = date('Y');
 
-        return $settings["quote_prefix"] . sprintf("%05d", $number);
+        return $settings["quote_prefix"] . '-' . $year . '-' . sprintf("%04d", $number);
     }
 
     public function getProfileAttribute()
@@ -545,13 +547,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $year = date('Y');
 
-        if(\Auth::user()->type == 'accountant') {
+        if (\Auth::user()->type == 'accountant') {
             $customerIds = \Auth::user()->getAccountantCustomersIds();
         } else {
             $filterIds = \Auth::user()->getCustomerFilterIds();
             $customerIds = Customer::whereIn('created_by', $filterIds)->pluck('id');
         }
-        
+
 
         // 1. Prepare Month Labels (Standard 12 months)
         $dataArr['month'] = array_map(fn($m) => __(date('F', mktime(0, 0, 0, $m, 1))), range(1, 12));

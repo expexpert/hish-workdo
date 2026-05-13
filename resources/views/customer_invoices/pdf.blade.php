@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>
-        {{ $invoice->invoice_number ? 'Facture ' . $invoice->invoice_number : ($invoice->quote_number ? 'Devis ' . $invoice->quote_number : '') }}
+        {{ $invoice->invoice_number ? 'Facture ' . \Auth::user()->invoiceNumberFormat($invoice->invoice_number) : ($invoice->quote_number ? 'Devis ' . \Auth::user()->quoteNumberFormat($invoice->quote_number) : '') }}
     </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
@@ -228,9 +228,9 @@
                 <br>
 
                 @if($invoice->invoice_number)
-                <strong>N° de facture :</strong> {{ $invoice->invoice_number }}<br>
+                <strong>N° de facture :</strong> {{ \Auth::user()->invoiceNumberFormat($invoice->invoice_number) }}<br>
                 @elseif($invoice->quote_number)
-                <strong>N° de devis :</strong> {{ $invoice->quote_number }}<br>
+                <strong>N° de devis :</strong> {{ \Auth::user()->quoteNumberFormat($invoice->quote_number) }}<br>
                 @endif
                 <strong>Date de facturation :</strong>
                 {{ $invoice->date ? $invoice->date->format('d/m/Y') : '' }}
