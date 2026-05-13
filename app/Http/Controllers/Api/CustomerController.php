@@ -3059,6 +3059,7 @@ class CustomerController extends Controller
         try {
             // ✅ STEP 2: Prepare Data
             $quoteData = collect($validated)->except(['articles', 'document'])->toArray();
+            $quoteData['quote_number'] = $this->quoteNumber();
 
             $articlesData = [];
 
