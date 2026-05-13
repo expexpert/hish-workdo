@@ -196,7 +196,7 @@
                                 @endif
                                 <td><a href="{{ route('customer.show', \Crypt::encrypt($invoice->customer_id)) }}" target="_blank">{{ $invoice->customer?->name ?? '-' }}</a></td>
                                 <td>{{ $invoice->client?->client_name ?? '-' }}</td>
-                                <td>{{ \Auth::user()->invoiceNumberFormat($invoice->invoice_number) ?? '-' }}</td>
+                                <td>{{ \Auth::user()->invoiceNumberFormatNew($invoice->invoice_number, $invoice->created_at) }}</td>
                                 <td>{{ $invoice->payment_method ?? '-' }}</td>
                                 <td style="max-width: 100px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                                     @if($invoice->notes)
@@ -278,7 +278,7 @@
                         <div class="modal-dialog modal-lg modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="articlesLabel-{{ $invoice->id }}">{{ __('Invoice Articles') }} — {{ \Auth::user()->invoiceNumberFormat($invoice->invoice_number) ?? '#' }}</h5>
+                                    <h5 class="modal-title" id="articlesLabel-{{ $invoice->id }}">{{ __('Invoice Articles') }} — {{ \Auth::user()->invoiceNumberFormatNew($invoice->invoice_number, $invoice->created_at) ?? '#' }}</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
                                 </div>
                                 <div class="modal-body">

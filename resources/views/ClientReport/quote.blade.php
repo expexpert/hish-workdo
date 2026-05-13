@@ -136,7 +136,7 @@
                                 @endif
                                 <td><a href="{{ route('customer.show', \Crypt::encrypt($quote->customer_id)) }}" target="_blank">{{ $quote->customer?->name ?? '-' }}</a></td>
                                 <td>{{ $quote->client?->client_name ?? '-' }}</td>
-                                <td>{{ \Auth::user()->quoteNumberFormat($quote->quote_number) ?? '-' }}</td>
+                                <td>{{ \Auth::user()->quoteNumberFormatNew($quote->quote_number, $quote->created_at) ?? '-' }}</td>
                                 <td>{{ $quote->payment_method ?? '-' }}</td>
                                 <td style="max-width: 100px; overflow-wrap: break-word; word-wrap: break-word; white-space: normal;">
                                     @if($quote->notes)
@@ -192,7 +192,7 @@
                         <div class="modal-dialog modal-lg modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="articlesLabel-{{ $quote->id }}">{{ __('quote Articles') }} — {{ \Auth::user()->quoteNumberFormat($quote->quote_number) ?? '#' }}</h5>
+                                    <h5 class="modal-title" id="articlesLabel-{{ $quote->id }}">{{ __('quote Articles') }} — {{ \Auth::user()->quoteNumberFormatNew($quote->quote_number, $quote->created_at) ?? '#' }}</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
                                 </div>
                                 <div class="modal-body">

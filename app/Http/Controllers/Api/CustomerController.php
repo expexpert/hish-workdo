@@ -2400,7 +2400,7 @@ class CustomerController extends Controller
         ]);
         $pdf->setHttpContext($context);
 
-        $filename = 'Invoice_' . \Auth::user()->invoiceNumberFormat($invoice->invoice_number) . '.pdf';
+        $filename = 'Invoice_' . \Auth::user()->invoiceNumberFormatNew($invoice->invoice_number) . '.pdf';
         return $pdf->download($filename);
     }
 
@@ -2627,7 +2627,7 @@ class CustomerController extends Controller
                 foreach ($invoice->articles as $article) {
                     $taxRate = $article->tax ? $article->tax->rate : 0;
                     fputcsv($file, [
-                        \Auth::user()->invoiceNumberFormat($invoice->invoice_number),
+                        \Auth::user()->invoiceNumberFormatNew($invoice->invoice_number),
                         $invoice->date,
                         $clientName,
                         $invoice->status,
@@ -3403,7 +3403,7 @@ class CustomerController extends Controller
                 foreach ($quote->articles as $article) {
                     $taxRate = $article->tax ? $article->tax->rate : 0;
                     fputcsv($file, [
-                        \Auth::user()->quoteNumberFormat($quote->quote_number),
+                        \Auth::user()->quoteNumberFormatNew($quote->quote_number),
                         $quote->date,
                         $clientName,
                         $quote->status,
@@ -3521,7 +3521,7 @@ class CustomerController extends Controller
         ]);
         $pdf->setHttpContext($context);
 
-        $filename = 'Quote_' . \Auth::user()->quoteNumberFormat($quote->quote_number) . '.pdf';
+        $filename = 'Quote_' . \Auth::user()->quoteNumberFormatNew($quote->quote_number) . '.pdf';
         return $pdf->download($filename);
     }
 
