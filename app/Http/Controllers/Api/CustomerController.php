@@ -3663,7 +3663,7 @@ class CustomerController extends Controller
                 $invoice->client_id = $quote->client_id;
                 $invoice->date = $quote->date;
                 $invoice->due_date = $quote->due_date;
-                $invoice->invoice_number = $quote->quote_number;
+                $invoice->invoice_number = $this->invoiceNumber();
                 $invoice->payment_method = $quote->payment_method;
                 $invoice->status = 'issued';
                 $invoice->review_status = 'PENDING';
