@@ -31,7 +31,7 @@ class CustomerQuote extends Model
         'is_ocr' => 'boolean',
     ];
 
-    protected $appends = ['invoice_url', 'pdf_url'];
+    protected $appends = ['invoice_url', 'pdf_url', 'quote_number_formatted'];
 
     /*
     |--------------------------------------------------------------------------
@@ -67,5 +67,10 @@ class CustomerQuote extends Model
     public function getPdfUrlAttribute()
     {
         return url("/api/customer/customer-quotes/pdf/{$this->id}");
+    }
+
+    public function getQuoteNumberFormattedAttribute()
+    {
+        return $this->quote_number ? \Auth::user()->quoteNumberFormat($this->quote_number) : null;
     }
 }

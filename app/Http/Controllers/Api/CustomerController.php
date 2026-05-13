@@ -1987,6 +1987,7 @@ class CustomerController extends Controller
             'due_date'       => 'required|date|after:date',
             'payment_method' => 'required|string|max:255',
             'status'         => 'required|string|max:50',
+            'invoice_number' => 'required|string|max:255',
             'notes'          => 'nullable|string',
             'document'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:20500',
             'is_ocr'         => 'nullable|boolean',
@@ -2019,7 +2020,7 @@ class CustomerController extends Controller
         try {
             // ✅ STEP 2: Prepare header data
             $invoiceData = collect($validated)->except(['articles', 'document'])->toArray();
-            $invoiceData['invoice_number'] = $this->invoiceNumber();
+            $invoiceData['invoice_number'] = $this->parseNumber($validated['invoice_number']);
 
             $articlesData = [];
             $now = now();
@@ -2369,7 +2370,7 @@ class CustomerController extends Controller
         ]);
         $pdf->setHttpContext($context);
 
-        $filename = 'Invoice_' . $invoice->invoice_number . '.pdf';
+        $filename = 'Invoice_' . \Auth::user()->invoiceNumberFormat($invoice->invoice_number) . '.pdf';
         return $pdf->download($filename);
     }
 
@@ -2596,7 +2597,7 @@ class CustomerController extends Controller
                 foreach ($invoice->articles as $article) {
                     $taxRate = $article->tax ? $article->tax->rate : 0;
                     fputcsv($file, [
-                        $invoice->invoice_number,
+                        \Auth::user()->invoiceNumberFormat($invoice->invoice_number),
                         $invoice->date,
                         $clientName,
                         $invoice->status,
@@ -2693,6 +2694,15 @@ class CustomerController extends Controller
         }
 
         return $latest->quote_number + 1;
+    }
+
+    function parseNumber($formattedNumber)
+    {
+        if (preg_match('/(\d+)$/', $formattedNumber, $matches)) {
+            return (int)$matches[1];
+        }
+
+        return 0;
     }
 
 
@@ -3059,7 +3069,7 @@ class CustomerController extends Controller
         try {
             // ✅ STEP 2: Prepare Data
             $quoteData = collect($validated)->except(['articles', 'document'])->toArray();
-            $quoteData['quote_number'] = $this->quoteNumber();
+            $quoteData['quote_number'] = $this->parseNumber($validated['quote_number']);
 
             $articlesData = [];
 
@@ -3363,7 +3373,7 @@ class CustomerController extends Controller
                 foreach ($quote->articles as $article) {
                     $taxRate = $article->tax ? $article->tax->rate : 0;
                     fputcsv($file, [
-                        $quote->quote_number,
+                        \Auth::user()->quoteNumberFormat($quote->quote_number),
                         $quote->date,
                         $clientName,
                         $quote->status,
@@ -3481,7 +3491,7 @@ class CustomerController extends Controller
         ]);
         $pdf->setHttpContext($context);
 
-        $filename = 'Quote_' . $quote->quote_number . '.pdf';
+        $filename = 'Quote_' . \Auth::user()->quoteNumberFormat($quote->quote_number) . '.pdf';
         return $pdf->download($filename);
     }
 
