@@ -54,8 +54,8 @@ class LookupController extends Controller
             $clientsQuery->orderBy('client_name', 'asc');
         }
 
-        $invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
-        $quote_number = \Auth::user()->quoteNumberFormat($this->quoteNumber());
+        $invoice_number = \Auth::user()->invoiceNumberFormatNew($this->invoiceNumber());
+        $quote_number = \Auth::user()->quoteNumberFormatNew($this->quoteNumber());
 
         return response()->json([
             'status' => 'success',

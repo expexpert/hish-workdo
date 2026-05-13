@@ -617,7 +617,7 @@ class Utility extends Model
     public static function invoiceNumberFormat($settings, $number)
     {
         $settings = Utility::settings();
-        return $settings["invoice_prefix"] . '-' . $year . '-' . sprintf("%04d", $number);
+        return $settings["invoice_prefix"] . sprintf("%05d", $number);
     }
 
     public static function proposalNumberFormat($settings, $number)

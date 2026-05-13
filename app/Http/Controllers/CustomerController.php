@@ -1392,7 +1392,7 @@ class CustomerController extends Controller
             ?->id ?? 1;
 
         $InvoiceArticle = InvoiceArticle::where('invoice_id', $invoice->id)->get();
-        $alreadyValidated = Invoice::where('ref_number', \Auth::user()->invoiceNumberFormat($invoice->invoice_number))->where('customer_id', $invoice->customer_id)->exists();
+        $alreadyValidated = Invoice::where('ref_number', \Auth::user()->invoiceNumberFormatNew($invoice->invoice_number))->where('customer_id', $invoice->customer_id)->exists();
 
 
         if ($request->action == 'VALIDATED' && !$alreadyValidated) {
@@ -1404,7 +1404,7 @@ class CustomerController extends Controller
             $newInvoice->due_date       = $invoice->due_date;
             $newInvoice->send_date      = $invoice->created_at->format('Y-m-d');
             $newInvoice->category_id    = $categoryID;
-            $newInvoice->ref_number     = \Auth::user()->invoiceNumberFormat($invoice->invoice_number);
+            $newInvoice->ref_number     = \Auth::user()->invoiceNumberFormatNew($invoice->invoice_number);
             $newInvoice->discount_apply = isset($invoice->discount_apply) ? 1 : 0;
             $newInvoice->created_by     = \Auth::user()->creatorId();
 
@@ -1428,7 +1428,7 @@ class CustomerController extends Controller
                 //Product Stock Report
                 $type = 'invoice';
                 $type_id = $newInvoice->id;
-                $description = $newArticle->quantity . '  ' . __(' quantity sold in invoice') . ' ' . \Auth::user()->invoiceNumberFormat($newInvoice->invoice_id);
+                $description = $newArticle->quantity . '  ' . __(' quantity sold in invoice') . ' ' . \Auth::user()->invoiceNumberFormatNew($newInvoice->invoice_id);
                 Utility::addProductStock($newArticle->product_id, $newArticle->quantity, $type, $description, $type_id);
             }
         }
