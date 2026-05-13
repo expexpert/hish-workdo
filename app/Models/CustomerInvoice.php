@@ -79,6 +79,6 @@ class CustomerInvoice extends Model
 
     public function getInvoiceNumberFormattedAttribute()
     {
-        return $this->invoice_number ? \Auth::user()->invoiceNumberFormat($this->invoice_number) : null;
+        return $this->invoice_number ? \Auth::user()->invoiceNumberFormatNew($this->invoice_number, $this->created_at) : null;
     }
 }

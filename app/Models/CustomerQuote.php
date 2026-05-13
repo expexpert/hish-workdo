@@ -71,6 +71,6 @@ class CustomerQuote extends Model
 
     public function getQuoteNumberFormattedAttribute()
     {
-        return $this->quote_number ? \Auth::user()->quoteNumberFormat($this->quote_number) : null;
+        return $this->quote_number ? \Auth::user()->quoteNumberFormatNew($this->quote_number, $this->created_at) : null;
     }
 }
