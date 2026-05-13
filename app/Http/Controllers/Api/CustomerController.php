@@ -2019,7 +2019,7 @@ class CustomerController extends Controller
         try {
             // ✅ STEP 2: Prepare header data
             $invoiceData = collect($validated)->except(['articles', 'document'])->toArray();
-            $invoiceData['invoice_number'] = auth()->user()->invoiceNumberFormat($this->invoiceNumber());
+            $invoiceData['invoice_number'] = $this->invoiceNumber();
 
             $articlesData = [];
             $now = now();
@@ -2637,7 +2637,7 @@ class CustomerController extends Controller
         try {
             return DB::transaction(function () use ($invoice) {
                 $duplicateInvoice = $invoice->replicate();
-                $duplicateInvoice->invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
+                $duplicateInvoice->invoice_number = $this->invoiceNumber();
 
                 // ✅ Handle document duplication
                 if ($invoice->document_path && Storage::disk('private')->exists($invoice->document_path)) {
@@ -3554,7 +3554,7 @@ class CustomerController extends Controller
         try {
             return DB::transaction(function () use ($quote) {
                 $duplicateQuote = $quote->replicate();
-                $duplicateQuote->quote_number = \Auth::user()->quoteNumberFormat($this->quoteNumber());
+                $duplicateQuote->quote_number = $this->quoteNumber();
 
                 // ✅ Handle document duplication
                 if ($quote->document_path && Storage::disk('private')->exists($quote->document_path)) {
