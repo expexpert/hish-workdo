@@ -55,7 +55,7 @@ class AuthController extends Controller
                 }),
             ],
             'contact' => 'required|string|max:20',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:6',
 
             // Company & billing
             'company_type' => 'required|string|max:255',

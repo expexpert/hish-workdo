@@ -64,8 +64,8 @@ class CheckSubscriptionStatus extends Command
 
         foreach ($subscriptions7After as $subscription) {
             $customer = $subscription->customer;
-            if ($customer && $customer->is_enable_login) {
-                $customer->is_enable_login = 0;
+            if ($customer && $customer->app_access_enabled) {
+                $customer->app_access_enabled = 0;
                 $customer->save();
                 $this->sendEmail($subscription, 'service_stopped');
                 $this->info("Service stopped for customer: {$customer->email} (Subscription ended on: {$subscription->ends_at})");
