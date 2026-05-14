@@ -183,6 +183,15 @@ class CustomerController extends Controller
         $user = $request->user();
         $userName = $user->name;
         $is_enable_login = $user->is_enable_login;
+        $app_access_enabled = $user->app_access_enabled;
+
+        $encryptedId = Crypt::encryptString($user->id);
+
+        $url = URL::temporarySignedRoute(
+            'subscription.upgrade',
+            now()->addMinutes(30),
+            ['uid' => $encryptedId]
+        );
 
         $companyName = $user->company()->name ?? 'company';
 
@@ -400,6 +409,8 @@ class CustomerController extends Controller
 
 
                 'is_enable_login' => $is_enable_login,
+                'planExpired' => $app_access_enabled ? false : true,
+                'upgrade_url' => $url,
                 'whatsapp_bot_enabled' => $plan->whatsapp_bot_enabled,
             ]
         ], 200);
