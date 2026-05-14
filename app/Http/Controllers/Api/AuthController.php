@@ -22,6 +22,7 @@ use App\Models\MobileUserSubscription;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Cache;
 
 
 
@@ -225,25 +226,89 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function checkEmail(Request $request)
+    public function checkEmail(Request $request): JsonResponse
     {
-        $firstAccountant = User::where('type', 'accountant')
-            ->oldest('id')
-            ->first();
-        $request->validate([
+        // Scoping the uniqueness check to the first accountant/creator
+        $firstAccountant = User::where('type', 'accountant')->oldest('id')->first();
+        $creatorId = $firstAccountant ? $firstAccountant->id : 1;
+
+        // 1. Validation
+        $validator = \Validator::make($request->all(), [
             'email' => [
                 'required',
                 'email',
-                Rule::unique('customers')->where(function ($query) use ($request, $firstAccountant) {
-                    return $query->where('created_by', $firstAccountant ? $firstAccountant->id : '1');
+                Rule::unique('customers')->where(function ($query) use ($creatorId) {
+                    return $query->where('created_by', $creatorId);
                 }),
             ],
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Email is available'
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email already exists or is invalid.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // 2. Configure SMTP using your Utility helper
+        Utility::getSMTPDetails(1);
+
+        try {
+            // 3. Generate a 6-digit OTP
+            $otp = rand(100000, 999999);
+            $email = $request->email;
+
+            // 4. Store in Cache for 10 minutes
+            \Cache::put('otp_' . $email, $otp, now()->addMinutes(10));
+
+            // 5. Send Mail using your custom view and settings
+            $settings = Utility::settings();
+            \Mail::send(
+                'auth.customerVerify',
+                ['token' => $otp, 'email' => $email],
+                function ($message) use ($email, $settings) {
+                    $message->from($settings['mail_username'], $settings['mail_from_name']);
+                    $message->to($email);
+                    $message->subject('Verify Your Email Address');
+                }
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email is available. A 6-digit OTP has been sent to your email.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification OTP. ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp'   => 'required|numeric'
         ]);
+
+        $cachedOtp = Cache::get('otp_' . $request->email);
+
+        if ($cachedOtp && $cachedOtp == $request->otp) {
+            // Success: Clear the OTP so it can't be used again
+            Cache::forget('otp_' . $request->email);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP verified successfully.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid or expired OTP.'
+        ], 422);
     }
 
 
