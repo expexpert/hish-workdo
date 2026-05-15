@@ -762,7 +762,6 @@ class CustomerController extends Controller
             'data' => [
                 'terms_and_conditions' => asset('storage/documents/terms-and-conditions.pdf'),
                 'privacy_policy'       => asset('storage/documents/privacy-policy.pdf'),
-                // If using S3: Storage::disk('s3')->url('documents/terms.pdf')
             ]
         ]);
     }
@@ -1575,6 +1574,9 @@ class CustomerController extends Controller
             'city' => 'sometimes|nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
             'ice' => 'nullable|string|max:255',
+            'if_number' => 'nullable|string|max:255',
+            'cnss_number' => 'nullable|string|max:255',
+            'billing_address' => 'nullable|string|max:255',
         ]);
 
         $vender = Vender::find($supplier->id);
@@ -1586,6 +1588,9 @@ class CustomerController extends Controller
         $vender->billing_city = $validated['city'] ?? $vender->billing_city;
         $vender->commercial_register = $validated['commercial_register'] ?? $vender->commercial_register;
         $vender->ice_number = $validated['ice'] ?? $vender->ice_number;
+        $vender->if_number = $validated['if_number'] ?? $vender->if_number;
+        $vender->cnss_number = $validated['cnss_number'] ?? $vender->cnss_number;
+        $vender->billing_address = $validated['billing_address'] ?? $vender->billing_address;
         $vender->save();
 
 
