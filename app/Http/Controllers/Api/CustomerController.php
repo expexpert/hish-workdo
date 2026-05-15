@@ -755,6 +755,18 @@ class CustomerController extends Controller
         ], 200);
     }
 
+    public function getLegalLinks(Request $request): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'terms_and_conditions' => asset('storage/documents/terms-and-conditions.pdf'),
+                'privacy_policy'       => asset('storage/documents/privacy-policy.pdf'),
+                // If using S3: Storage::disk('s3')->url('documents/terms.pdf')
+            ]
+        ]);
+    }
+
 
     public function getCustomerNotifications(Request $request): JsonResponse
     {

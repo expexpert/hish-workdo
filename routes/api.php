@@ -54,6 +54,8 @@ Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
     Route::get('/onboarding-checklist', [CustomerController::class, 'getOnboardingChecklist']);
 
     Route::get('/accountant-info', [CustomerController::class, 'getAccountantInfo']);
+    
+    Route::get('/legal-links', [CustomerController::class, 'getLegalLinks']);
 
     Route::get('/notification', [CustomerController::class, 'getCustomerNotifications']);
     Route::get('/view-single-notification/{id}', [CustomerController::class, 'viewSingleNotification']);

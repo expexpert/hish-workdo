@@ -94,12 +94,7 @@ class CustomerController extends Controller
             $rules = [
                 'name' => 'required',
                 'contact' => 'required|regex:/^\+\d{1,3}\d{9,13}$/',
-                'email' => [
-                    'required',
-                    Rule::unique('customers')->where(function ($query) {
-                        return $query->where('created_by', \Auth::user()->id);
-                    })
-                ],
+                'email' => 'required|email|unique:customers,email',
 
             ];
 
