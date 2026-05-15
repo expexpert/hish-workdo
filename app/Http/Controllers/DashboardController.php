@@ -29,11 +29,13 @@ use App\Models\MobileUserPlanPrice;
 use App\Models\MobileUserSubscription;
 use App\Models\ChartOfAccount;
 use App\Models\ReferralCode;
+use App\Models\ProductService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -320,7 +322,9 @@ class DashboardController extends Controller
             } else {
                 $settings = Utility::settings();
                 if ($settings['display_landing_page'] == 'on' && \Schema::hasTable('landing_page_settings')) {
-                    return view('landingpage::layouts.landingpage');
+                    $mobilePlans = MobileUserPlan::with('prices')->where('is_active', 1)->get();
+                    $companyPlans       = Plan::get();
+                    return view('landingpage::layouts.landingpage', compact('mobilePlans', 'companyPlans'));
                 } else {
                     return redirect('login');
                 }
@@ -450,6 +454,113 @@ class DashboardController extends Controller
         return $response;
     }
 
+    public function sendOTP(Request $request)
+    {
+        $firstAccountant = User::where('type', 'accountant')->oldest('id')->first();
+        $creatorId = $firstAccountant ? $firstAccountant->id : 1;
+
+        $formType = $request->input('form_type', 'user-form');
+
+        // 1. Validation
+        if ($formType === 'user-form') {
+            $validator = \Validator::make($request->all(), [
+                'full_name'                => 'required|string|max:255',
+                'email'                    => [
+                    'required',
+                    'email',
+                    Rule::unique('customers')->where(function ($query) use ($creatorId) {
+                        return $query->where('created_by', $creatorId);
+                    }),
+                ],
+                'phone'                    => 'required',
+                'password'                 => 'required|min:6|confirmed',
+                'password_confirmation'    => 'required',
+                'mobile_plan_price_id'     => 'required|exists:mobile_user_plan_prices,id',
+                'referral_discount_amount' => 'required|numeric|min:0',
+                'price_after_discount'     => 'required|numeric|min:0',
+                'billing_name'             => 'nullable|string|max:255',
+                'ice_number'               => 'nullable|string|max:255',
+            ]);
+        } else {
+            $validator = \Validator::make($request->all(), [
+                'name'                     => 'required|string|max:255',
+                'email'                    => 'required|email|unique:users,email',
+                'phone'                    => 'required',
+                'password'                 => 'required|min:6|confirmed',
+                'password_confirmation'    => 'required',
+                'company_plan_id'          => 'required|exists:plans,id',
+            ]);
+        }
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed. Please check your inputs.',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $otp = rand(100000, 999999);
+
+        Utility::getSMTPDetails(1);
+
+        try {
+            // 3. Generate a 6-digit OTP
+            $otp = rand(100000, 999999);
+            $email = $request->email;
+
+            // 4. Store in Cache for 10 minutes
+            \Cache::put('otp_' . $email, $otp, now()->addMinutes(10));
+
+            // 5. Send Mail using your custom view and settings
+            $settings = Utility::settings();
+            \Mail::send(
+                'auth.customerVerify',
+                ['token' => $otp, 'email' => $email],
+                function ($message) use ($email, $settings) {
+                    $message->from($settings['mail_username'], $settings['mail_from_name']);
+                    $message->to($email);
+                    $message->subject('Verify Your Email Address');
+                }
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email is available. A 6-digit OTP has been sent to your email.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification OTP. ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp'   => 'required|numeric'
+        ]);
+
+        $cachedOtp = Cache::get('otp_' . $request->email);
+
+        if ($cachedOtp && $cachedOtp == $request->otp) {
+            // Success: Clear the OTP so it can't be used again
+            Cache::forget('otp_' . $request->email);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP verified successfully.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid or expired OTP.'
+        ], 422);
+    }
+
     public function storeMobileCustomer(Request $request)
     {
         // 1. Validation
@@ -464,10 +575,13 @@ class DashboardController extends Controller
                 Rule::unique('customers')->where(fn($q) => $q->where('created_by', $createdBy)),
             ],
             'phone' => 'required',
-            'password' => 'required|min:6',
+            'password' => 'required|min:6|confirmed',
+            'password_confirmation' => 'required',
             'mobile_plan_price_id' => 'required|exists:mobile_user_plan_prices,id',
             'referral_discount_amount' => 'required|numeric|min:0',
             'price_after_discount' => 'required|numeric|min:0',
+            'billing_name' => 'nullable|string|max:255',
+            'ice_number' => 'nullable|string|max:255',
         ]);
 
         DB::beginTransaction();
@@ -497,6 +611,8 @@ class DashboardController extends Controller
                 'name'                => $request->full_name,
                 'email'               => $request->email,
                 'contact'             => $request->phone,
+                'billing_name'        => $request->billing_name ?? '',
+                'ice_number'          => $request->ice_number ?? '',
                 'password'            => Hash::make($request->password), // Don't forget to hash!
                 'is_b2c'              => 1,
                 'created_by'          => $createdBy,
@@ -603,6 +719,147 @@ class DashboardController extends Controller
         }
     }
 
+
+    public function storeCompany(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required',
+            'password' => 'required|min:6|confirmed',
+            'password_confirmation' => 'required',
+            'company_plan_id' => 'required|exists:plans,id',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request) {
+
+                $superAdmin = User::where('type', 'super admin')->first();
+                $psw = $request->password;
+
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'email_verified_at' => date('Y-m-d H:i:s'),
+                    'contact' => $request->phone,
+                    'lang' => !empty($default_language) ? $default_language->value : 'en',
+                    'password' => Hash::make($request->password),
+                    'type' => 'company',
+                    'plan' => $request->company_plan_id,
+                    'created_by' => $superAdmin->id,
+                    'is_enable_login' => 1,
+                    'referral_code' => Utility::generateReferralCode(),
+                ]);
+
+                $role_r = Role::findByName('company');
+                $user->assignRole($role_r);
+
+                $user->userDefaultDataRegister($user->id);
+                Utility::chartOfAccountTypeData($user->id);
+                Utility::chartOfAccountData1($user->id);
+
+                $rates = [0, 7, 10, 14, 20];
+                foreach ($rates as $rate) {
+                    Tax::firstOrCreate(
+                        ['rate' => $rate, 'created_by' => $user->id],
+                        ['name' => "VAT {$rate}%"]
+                    );
+                }
+
+                $units = ['u', 'pc', 'lot', 'pack', 'h', 'j', 'mois', 'kg', 'g', 'm', 'm²', 'L', 'ml', 'km', 'service', 'projet', 'abo', 'lic'];
+                foreach ($units as $unit) {
+                    ProductServiceUnit::firstOrCreate([
+                        'name' => $unit,
+                        'created_by' => $user->id
+                    ]);
+                }
+
+                $category = new ProductServiceCategory();
+                $category->name = 'Default Category';
+                $category->type = 'product & service';
+                $category->created_by = $user->id;
+                $category->save();
+
+                $tax = Tax::where('created_by', $user->id)->where('rate', 0)->first();
+                $unit = ProductServiceUnit::where('created_by', $user->id)->where('name', 'service')->first();
+
+                $accounts = ChartOfAccount::where('created_by', $user->id)->pluck('id', 'code');
+
+                $products = [
+                    ['name' => 'Autres dépenses', 'expense' => '6148', 'income' => '71243'],
+                    ['name' => 'Banque / Assurance', 'expense' => '61473', 'income' => '71243'],
+                    ['name' => 'Transport', 'expense' => '61431', 'income' => '71243'],
+                    ['name' => 'Cloud Services', 'expense' => '61315', 'income' => '71243'],
+                    ['name' => 'Internet', 'expense' => '61455', 'income' => '71243'],
+                    ['name' => 'Logiciels / Abonnements', 'expense' => '61378', 'income' => '71243'],
+                    ['name' => 'Comptable / Juridiques', 'expense' => '61365', 'income' => '71243'],
+                    ['name' => 'Eau / Électricité', 'expense' => '61251', 'income' => '71243'],
+                    ['name' => 'Loyer', 'expense' => '61312', 'income' => '71243'],
+                    ['name' => 'Fournitures', 'expense' => '61254', 'income' => '71243'],
+                    ['name' => 'Office Supplies', 'expense' => '61254', 'income' => '71243'],
+                    ['name' => 'Marketing / Publicités', 'expense' => '61441', 'income' => '71243'],
+                    ['name' => 'Maintenance / Réparation', 'expense' => '61335', 'income' => '71243'],
+                    ['name' => 'Restaurant', 'expense' => '61436', 'income' => '71243'],
+                    ['name' => 'Impôts / Taxes', 'expense' => '61678', 'income' => '71243'],
+                    ['name' => 'Salaires', 'expense' => '61711', 'income' => '71243'],
+                ];
+
+                foreach ($products as $item) {
+                    $sale_chartaccount_id = $accounts[$item['income']] ?? 1;
+                    $expense_chartaccount_id = $accounts[$item['expense']] ?? 1;
+
+                    ProductService::firstOrCreate(
+                        [
+                            'name' => $item['name'],
+                            'created_by' => $user->id,
+                        ],
+                        [
+                            'sku' => rand(100000, 999999),
+                            'type' => 'Product',
+                            'sale_price' => 0,
+                            'purchase_price' => 0,
+                            'quantity' => 1,
+                            'tax_id' => $tax->id,
+                            'unit_id' => $unit->id,
+                            'category_id' => $category->id,
+                            'sale_chartaccount_id' => $sale_chartaccount_id,
+                            'expense_chartaccount_id' => $expense_chartaccount_id,
+                        ]
+                    );
+                }
+
+                $categories = [
+                    'income'  => $accounts->get('7111'),
+                    'expense' => $accounts->get('61711'),
+                ];
+
+                foreach ($categories as $type => $accountId) {
+                    ProductServiceCategory::create([
+                        'name'             => 'Default Category',
+                        'type'             => $type,
+                        'chart_account_id' => $accountId,
+                        'created_by'       => $user->id,
+                    ]);
+                }
+
+                $uArr = [
+                    'email' => $user->email,
+                    'password' => $psw,
+                ];
+
+                try {
+                    $resp = Utility::sendEmailTemplate('user_created', [$user->id => $user->email], $uArr);
+                } catch (\Exception $e) {
+                    $smtp_error = __('E-Mail has been not sent due to SMTP configuration');
+                }
+            }); // End of transaction
+
+            return redirect()->route('login')->with('success', 'Company account created successfully! Please log in.');
+        } catch (\Exception $e) {
+            // If anything fails inside the transaction, it rolls back and lands here
+            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
 
     public function upgradeSubscripton(Request $request)
     {

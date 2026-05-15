@@ -817,13 +817,13 @@ $emailTemplate = App\Models\EmailTemplate::first();
                 @endif -->
                 {{-- -------  System Setting ---------- --}}
                 @if (Gate::check('manage system settings'))
-                <!-- <li class="dash-item ">
+                <li class="dash-item ">
                         <a href="{{ route('referral-program.index') }}"
                             class="dash-link {{ Request::route()->getName() == 'referral-program.index' ? ' active' : '' }}">
                             <span class="dash-micon"><i class="ti ti-discount-2"></i></span>
                             <span class="dash-mtext">{{ __('Referral Program') }}</span>
                         </a>
-                    </li> -->
+                    </li>
                 <li class="dash-item {{ Request::route()->getName() == 'settings.index' ? ' active' : '' }}">
                     <a href="{{ route('settings.index') }}" class="dash-link">
                         <span class="dash-micon"><i class="ti ti-settings"></i></span>

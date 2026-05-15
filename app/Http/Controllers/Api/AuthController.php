@@ -286,7 +286,7 @@ class AuthController extends Controller
         }
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOTP(Request $request)
     {
         $request->validate([
             'email' => 'required|email',

@@ -48,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'referral_code',
         'used_referral_code',
         'allow_super_admin_login',
+        'email_verified_at',
     ];
 
     protected $hidden = [

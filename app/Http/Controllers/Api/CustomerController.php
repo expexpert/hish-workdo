@@ -1405,16 +1405,21 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
-            'supplier_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:venders,email',
-            'telephone' => 'required|string|max:20',
+            'supplier_name' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'telephone' => 'nullable|string|max:20',
             'postal_code' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
             'ice' => 'nullable|string|max:255',
+            'if_number' => 'nullable|string|max:255',
+            'cnss_number' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
         ]);
 
         $validated['customer_id'] = $request->user()->id;
+
+        $randomEmail = 'supplier_' . Str::random(10) . '@example.com';
 
         $objVendor    = User::find(auth()->user()->companyId());
         $creator      = User::find(auth()->user()->companyId());
@@ -1425,13 +1430,16 @@ class CustomerController extends Controller
         $vender = new Vender();
         $vender->customer_id = $validated['customer_id'];
         $vender->company_name = $validated['company_name'];
-        $vender->name = $validated['supplier_name'];
-        $vender->email = $validated['email'];
-        $vender->contact = $validated['telephone'];
+        $vender->name = $validated['supplier_name'] ?? $validated['company_name'];
+        $vender->email = $validated['email'] ?? $randomEmail;
+        $vender->contact = $validated['telephone'] ?? '';
         $vender->billing_zip = $validated['postal_code'] ?? '';
         $vender->billing_city = $validated['city'] ?? '';
+        $vender->billing_address = $validated['address'] ?? '';
         $vender->commercial_register = $validated['commercial_register'] ?? '';
         $vender->ice_number = $validated['ice'] ?? '';
+        $vender->if_number = $validated['if_number'] ?? '';
+        $vender->cnss_number = $validated['cnss_number'] ?? '';
 
         $vender->created_by  = auth()->user()->companyId();
         $vender->vender_id   = $this->venderNumber();

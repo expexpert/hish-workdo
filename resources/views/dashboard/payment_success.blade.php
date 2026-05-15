@@ -4,7 +4,7 @@
 <head>
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Payment successful</title>
+    <title>Paiement réussi</title>
 
     <style>
         body {
@@ -115,3 +115,10 @@
 </body>
 
 </html>
+
+<!-- 
+<script>
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 8000);
+</script> -->
