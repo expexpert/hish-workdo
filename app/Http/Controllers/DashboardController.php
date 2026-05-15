@@ -465,13 +465,7 @@ class DashboardController extends Controller
         if ($formType === 'user-form') {
             $validator = \Validator::make($request->all(), [
                 'full_name'                => 'required|string|max:255',
-                'email'                    => [
-                    'required',
-                    'email',
-                    Rule::unique('customers')->where(function ($query) use ($creatorId) {
-                        return $query->where('created_by', $creatorId);
-                    }),
-                ],
+                'email'                    => 'required|email|unique:customers,email',
                 'phone'                    => 'required',
                 'password'                 => 'required|min:6|confirmed',
                 'password_confirmation'    => 'required',
@@ -569,11 +563,7 @@ class DashboardController extends Controller
 
         $request->validate([
             'full_name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('customers')->where(fn($q) => $q->where('created_by', $createdBy)),
-            ],
+            'email' => 'required|email|unique:customers,email',
             'phone' => 'required',
             'password' => 'required|min:6|confirmed',
             'password_confirmation' => 'required',

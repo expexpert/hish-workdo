@@ -47,13 +47,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('customers')->where(function ($query) use ($createdBy) {
-                    return $query->where('created_by', $createdBy);
-                }),
-            ],
+            'email' => 'required|email|unique:customers,email',
             'contact' => 'required|string|max:20',
             'password' => 'required|string|min:6',
 
@@ -234,13 +228,7 @@ class AuthController extends Controller
 
         // 1. Validation
         $validator = \Validator::make($request->all(), [
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('customers')->where(function ($query) use ($creatorId) {
-                    return $query->where('created_by', $creatorId);
-                }),
-            ],
+            'email' => 'required|email|unique:customers,email',
         ]);
 
         if ($validator->fails()) {
