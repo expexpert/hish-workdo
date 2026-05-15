@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyCompta - Choisissez votre plan</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <style>
         .toast-container {
             position: fixed;
@@ -581,6 +582,122 @@
                 grid-template-columns: 1fr;
             }
         }
+
+
+
+        /* Overlay */
+        #otp-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+
+            /* center content */
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal Box */
+        #otp-modal .modal-content {
+            width: 100%;
+            max-width: 420px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            position: relative;
+            animation: modalFade .25s ease;
+        }
+
+        /* Title */
+        #otp-modal .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        /* Description */
+        #otp-modal .modal-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* OTP Input */
+        #otp-input {
+            width: 100%;
+            height: 52px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 0 15px;
+            font-size: 18px;
+            letter-spacing: 4px;
+            text-align: center;
+            outline: none;
+            transition: 0.2s ease;
+            margin-bottom: 18px;
+            box-sizing: border-box;
+        }
+
+        #otp-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        /* Verify Button */
+        #submit-otp {
+            width: 100%;
+            height: 52px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        #submit-otp:hover {
+            background: #1d4ed8;
+        }
+
+        /* Close Button */
+        #otp-modal .close-modal {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: #f3f4f6;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        #otp-modal .close-modal:hover {
+            background: #e5e7eb;
+        }
+
+        /* Animation */
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
     </style>
 </head>
 
@@ -810,6 +927,10 @@
                                 <label class="form-label">Mot de passe</label>
                                 <input type="password" name="password" required class="form-input" placeholder="Créer un mot de passe">
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirmer le mot de passe</label>
+                                <input type="password" name="password_confirmation" required class="form-input" placeholder="Confirmer le mot de passe">
+                            </div>
                         </form>
 
                         <div class="summary-divider"></div>
@@ -844,8 +965,8 @@
                             <p class="guarantee-text">Garantie de remboursement de 7 jours.</p>
                         </div>
 
-                        <button type="submit" form="checkout-form" class="cta-button" id="cta-btn" disabled style="opacity:.6">
-                            Payer et commencer maintenant
+                        <button type="button" class="cta-button" id="cta-btn" form="checkout-form" disabled style="opacity:.6">
+                            Vérifier l'adresse e-mail
                         </button>
 
                         <div class="trust-indicators">
@@ -859,6 +980,138 @@
             </div>
         </div>
     </main>
+
+    <div id="otp-modal">
+        <div class="modal-content">
+
+            <button class="close-modal">&times;</button>
+
+            <h2 class="modal-title">
+                Vérification Email
+            </h2>
+
+            <p class="modal-text">
+                Nous avons envoyé un code OTP à votre adresse email.
+            </p>
+
+            <input
+                type="text"
+                id="otp-input"
+                maxlength="6"
+                placeholder="000000">
+
+            <button type="button" id="submit-otp">
+                Vérifier OTP
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            const $ctaBtn = $('#cta-btn');
+            const $form = $('#checkout-form');
+
+            $ctaBtn.on('click', function() {
+                // 1. Basic HTML5 Validation Check
+                if (!$form[0].checkValidity()) {
+                    $form[0].reportValidity();
+                    return;
+                }
+
+                // 2. Visual Loading State
+                const originalText = $ctaBtn.text();
+                $ctaBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Envoi en cours...');
+                $ctaBtn.css('opacity', '0.7');
+
+                $.ajax({
+                    url: "{{ route('send.otp') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        email: $('input[name="email"]').val(),
+                        // Optional: Send other fields if your backend validates unique phone/email
+                        full_name: $('input[name="full_name"]').val(),
+                        phone: $('input[name="phone"]').val(),
+                        billing_name: $('input[name="billing_name"]').val(),
+                        ice_number: $('input[name="ice_number"]').val(),
+                        phone: $('input[name="phone"]').val(),
+                        password: $('input[name="password"]').val(),
+                        password_confirmation: $('input[name="password_confirmation"]').val(),
+                        mobile_plan_price_id: $('input[name="mobile_plan_price_id"]').val(),
+                        plan_slug: $('input[name="plan_slug"]').val(),
+                        billing_cycle: $('input[name="billing_cycle"]').val(),
+                        referral_discount_amount: $('input[name="referral_discount_amount"]').val(),
+                        price_after_discount: $('input[name="price_after_discount"]').val(),
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#otp-modal').css('display', 'flex');
+                        } else {
+                            alert(response.message || "Erreur lors de l'envoi");
+                        }
+                    },
+                    error: function(xhr) {
+                        // 3. Error Handling
+                        let errorMessage = "Une erreur est survenue.";
+                        if (xhr.status === 422) {
+                            // Handle Laravel Validation Errors
+                            const errors = xhr.responseJSON.errors;
+                            errorMessage = Object.values(errors).flat().join('\n');
+                        } else {
+                            errorMessage = xhr.responseJSON.message || errorMessage;
+                        }
+                        alert(errorMessage);
+                    },
+                    complete: function() {
+                        // Reset button state
+                        $ctaBtn.prop('disabled', false).text(originalText);
+                        $ctaBtn.css('opacity', '1');
+                    }
+                });
+            });
+
+            // Close Modal Logic
+            $('.close-modal').on('click', function() {
+                $('#otp-modal').hide();
+            });
+
+            // OTP Verification Logic
+            $('#submit-otp').on('click', function() {
+                const $otpBtn = $(this);
+                const otpVal = $('#otp-input').val();
+
+                if (otpVal.length < 4) {
+                    alert("Veuillez entrer un code valide.");
+                    return;
+                }
+
+                $otpBtn.prop('disabled', true).text('Vérification...');
+
+                $.ajax({
+                    url: "{{ route('verify.otp') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        email: $('input[name="email"]').val(),
+                        otp: otpVal
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $form.submit();
+                        } else {
+                            alert(response.message);
+                            $otpBtn.prop('disabled', false).text('Vérifier OTP');
+                        }
+                    },
+                    error: function() {
+                        alert("Erreur de connexion");
+                        $otpBtn.prop('disabled', false).text('Vérifier OTP');
+                    }
+                });
+            });
+        });
+    </script>
 
     <script>
         setTimeout(function() {
@@ -888,7 +1141,6 @@
         let currentCycle = 'monthly';
         let currentPlan = null; // { slug, name, prices: { monthly:{price_id, price, currency, discount}, ... } }
         const referralDiscount = {{ !empty($referralDiscount) ? (int) $referralDiscount : 0 }};
-
 
 
         // Build a lookup: slug → { name, prices }

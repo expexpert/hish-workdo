@@ -98,13 +98,10 @@ class LandingPageController extends Controller
     public function sendEmail(Request $request)
     {
         $request->validate([
-            'cabinet-name' => 'required|string|max:255',
             'contact-name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'request-type' => 'required|array',
+            'subject' => 'required|string|max:255',
             'message' => 'required|string',
-            'data-usage' => 'required',
         ]);
 
         try {

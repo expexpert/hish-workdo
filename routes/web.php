@@ -126,7 +126,10 @@ Route::get('/password/resets/{lang?}', [AuthenticatedSessionController::class, '
 Route::get('/test-landing', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS', 'revalidate']);
 
 Route::get('/signup', [DashboardController::class, 'signup'])->name('signup')->middleware(['XSS', 'revalidate']);
+Route::post('/send-otp', [DashboardController::class, 'sendOTP'])->name('send.otp')->middleware(['XSS', 'revalidate']);
+Route::post('/verify-otp', [DashboardController::class, 'verifyOTP'])->name('verify.otp')->middleware(['XSS', 'revalidate']);
 Route::post('/store-mobile-customer', [DashboardController::class, 'storeMobileCustomer'])->name('mobile.customer.store')->middleware(['XSS', 'revalidate']);
+Route::post('/store-company', [DashboardController::class, 'storeCompany'])->name('company.store')->middleware(['XSS', 'revalidate']);
 Route::match(['get', 'post'], '/subscription/upgrade', [DashboardController::class, 'upgradeSubscripton'])->name('subscription.upgrade')->middleware(['XSS', 'revalidate']);
 Route::get('customer/invite/accept', [CustomerController::class, 'acceptInvitation'])->name('customer.invite.accept');
 

@@ -26,6 +26,8 @@ class Vender extends Authenticatable
         'company_name',
         'commercial_register',
         'ice_number',
+        'if_number',
+        'cnss_number',
         'avatar',
         'is_active',
         'is_enable_login',
