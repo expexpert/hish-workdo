@@ -183,7 +183,7 @@
                     Client : {{ $invoice->client->client_name }}<br>
 
                     @if($invoice->client->company_name)
-                    Company : {{ $invoice->client->company_name }}<br>
+                    Entreprise : {{ $invoice->client->company_name }}<br>
                     @endif
 
                     @if($invoice->client->city || $invoice->client->postal_code)
@@ -308,14 +308,14 @@
         </tr>
 
         <tr>
-            <td><strong>After Discount</strong></td>
+            <td><strong>Après remise</strong></td>
             <td>
                 MAD {{ number_format($totals['afterDiscount'],2,',',' ') }}
             </td>
         </tr>
 
         <tr>
-            <td><strong>Average TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
+            <td><strong>Taux de TVA<span>({{ $totals['average_tva_percentage'] }}%)</span></strong></td>
             <td>
                 MAD {{ number_format($totals['total_tva'],2,',',' ') }}
             </td>
