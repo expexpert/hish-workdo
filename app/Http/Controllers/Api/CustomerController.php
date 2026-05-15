@@ -1446,9 +1446,9 @@ class CustomerController extends Controller
         $vender->contact = $validated['telephone'] ?? '';
         $vender->billing_zip = $validated['postal_code'] ?? '';
         $vender->billing_city = $validated['city'] ?? '';
-        $vender->billing_address = $validated['address'] ?? '';
+        $vender->billing_address = $validated['billing_address'] ?? '';
         $vender->commercial_register = $validated['commercial_register'] ?? '';
-        $vender->ice_number = $validated['ice'] ?? '';
+        $vender->ice_number = $validated['ice_number'] ?? '';
         $vender->if_number = $validated['if_number'] ?? '';
         $vender->cnss_number = $validated['cnss_number'] ?? '';
 
@@ -1587,7 +1587,7 @@ class CustomerController extends Controller
         $vender->billing_zip = $validated['postal_code'] ?? $vender->billing_zip;
         $vender->billing_city = $validated['city'] ?? $vender->billing_city;
         $vender->commercial_register = $validated['commercial_register'] ?? $vender->commercial_register;
-        $vender->ice_number = $validated['ice'] ?? $vender->ice_number;
+        $vender->ice_number = $validated['ice_number'] ?? $vender->ice_number;
         $vender->if_number = $validated['if_number'] ?? $vender->if_number;
         $vender->cnss_number = $validated['cnss_number'] ?? $vender->cnss_number;
         $vender->billing_address = $validated['billing_address'] ?? $vender->billing_address;
