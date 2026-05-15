@@ -1422,10 +1422,10 @@ class CustomerController extends Controller
             'postal_code' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
-            'ice' => 'nullable|string|max:255',
+            'ice_number' => 'nullable|string|max:255',
             'if_number' => 'nullable|string|max:255',
             'cnss_number' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
+            'billing_address' => 'nullable|string|max:255',
         ]);
 
         $validated['customer_id'] = $request->user()->id;
@@ -1573,7 +1573,7 @@ class CustomerController extends Controller
             'postal_code' => 'sometimes|nullable|string|max:20',
             'city' => 'sometimes|nullable|string|max:100',
             'commercial_register' => 'nullable|string|max:255',
-            'ice' => 'nullable|string|max:255',
+            'ice_number' => 'nullable|string|max:255',
             'if_number' => 'nullable|string|max:255',
             'cnss_number' => 'nullable|string|max:255',
             'billing_address' => 'nullable|string|max:255',
