@@ -1362,10 +1362,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i data-lucide="check-circle" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
                 <span class="text-slate-700">{{ $plan->storage_limit }} de stockage</span>
               </li>
+              @if($plan->enable_chatgpt == 'on')
               <li class="flex items-start gap-2">
                 <i data-lucide="check-circle" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
-                <span class="text-slate-700">{{ $plan->enable_chatgpt }} ChatGPT</span>
+                <span class="text-slate-700">ChatGPT</span>
               </li>
+              @endif
             </ul>
           </div>
           @endforeach

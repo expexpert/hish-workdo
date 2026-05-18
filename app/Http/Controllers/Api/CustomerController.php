@@ -1105,15 +1105,16 @@ class CustomerController extends Controller
 
         $date = Carbon::createFromFormat('m-Y', $request->month_year);
 
-        $statusRecord = CustomerMonthStatus::where([
-            'customer_id' => $request->customer_id,
-            'month'       => $date->month,
-            'year'        => $date->year,
-        ])->first();
-
-        if ($statusRecord) {
-            $statusRecord->delete();
-        }
+        $statusRecord = CustomerMonthStatus::updateOrCreate(
+            [
+                'customer_id' => $request->customer_id,
+                'month'       => $date->month,
+                'year'        => $date->year,
+            ],
+            [
+                'status'      => 'IN_REVIEW',
+            ]
+        );
 
         $status = $statement->wasRecentlyCreated ? 201 : 200;
         $message = $statement->wasRecentlyCreated ? 'Statement uploaded successfully' : 'Statement updated successfully';
