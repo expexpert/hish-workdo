@@ -949,6 +949,7 @@ class DashboardController extends Controller
                 $customer->update([
                     'mobile_user_plan_id' => $plan->id,
                     'subscription_status' => 'active',
+                    'app_access_enabled'  => 1,
                 ]);
                 DB::commit();
 
